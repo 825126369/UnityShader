@@ -167,7 +167,7 @@
 -define:ENABLE_NATIVE_ARRAY_CHECKS
 -define:UNITY_TEAM_LICENSE
 -define:UNITY_PRO_LICENSE
-'Assets/PlaneShadow/ThemeReal3DCustomerShadow.cs'
+'Assets/PlaneShadow/PlaneShadow.cs'
 'Assets/SpriteMask/SpriteSoftSliceMasked.cs'
 -r:'/Applications/Unity2017/Unity copy.app/Contents/Mono/lib/mono/unity/System.Runtime.Serialization.dll'
 -r:'/Applications/Unity2017/Unity copy.app/Contents/Mono/lib/mono/unity/System.Xml.Linq.dll'

@@ -5,13 +5,10 @@
 // - no lightmap support
 // - no per-material color
 
-Shader "Customer/Theme/CrazyDollar/CustomerUnlitTextureShadow" {
+Shader "Customer/CustomerUnlitTextureShadow" {
 Properties {
     _MainTex ("Base (RGB)", 2D) = "white" {}
     [Enum(UnityEngine.Rendering.CullMode)]_CullMode ("_CullMode", Float) = 0
-
-    _WorldPosMaskPosUp("_WorldPosMaskPosUp", Vector) = (0.0, 10000.0, 0.0, 1.0)
-    _WorldPosMaskPosDown("_WorldPosMaskPosDown", Vector) = (0.0, -10000.0, 0.0, 1.0)
     
     _Stencil ("Stencil ID", Float) = 0
     [Enum(UnityEngine.Rendering.CompareFunction)]_StencilComp ("Stencil Comparison", Float) = 8
@@ -60,18 +57,13 @@ SubShader {
             struct v2f {
                 float4 vertex : SV_POSITION;
                 float2 texcoord : TEXCOORD0;
-				float4 screenPosMaskUp : TEXCOORD1;
-                float4 screenPosMaskDown : TEXCOORD2;
-                float4 vertexScreenPos : TEXCOORD3;
                 UNITY_FOG_COORDS(1)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
-
-            float4 _WorldPosMaskPosUp;
-            float4 _WorldPosMaskPosDown;
+            
 
             v2f vert (appdata_t v)
             {
@@ -80,10 +72,7 @@ SubShader {
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
-
-                o.vertexScreenPos = ComputeScreenPos(o.vertex);
-				o.screenPosMaskUp = ComputeScreenPos(mul(UNITY_MATRIX_VP, _WorldPosMaskPosUp));
-                o.screenPosMaskDown = ComputeScreenPos(mul(UNITY_MATRIX_VP, _WorldPosMaskPosDown));
+                
 
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
@@ -91,16 +80,6 @@ SubShader {
 
             fixed4 frag (v2f i) : SV_Target
             {
-                
-                float2 vertexScreenPos = i.vertexScreenPos.xy / i.vertexScreenPos.w;
-                float2 screenPosMaskDown = i.screenPosMaskDown.xy / i.screenPosMaskDown.w;
-                float2 screenPosMaskUp = i.screenPosMaskUp.xy / i.screenPosMaskUp.w;
-
-                if (vertexScreenPos.y < screenPosMaskDown.y || vertexScreenPos.y > screenPosMaskUp.y)
-                {
-                    clip(-1);
-                }
-                
                 fixed4 col = tex2D(_MainTex, i.texcoord);
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 UNITY_OPAQUE_ALPHA(col.a);
@@ -133,9 +112,6 @@ SubShader {
 
         #include "UnityCG.cginc"
 
-        float4 _WorldPosMaskPosUp;
-        float4 _WorldPosMaskPosDown;
-
         float4 _ShadowPlane;
         float4 _ShadowProjDir;
         float4 _WorldPos;
@@ -151,11 +127,7 @@ SubShader {
         struct v2f
         {
             float4 vertex : SV_POSITION;
-
-            float4 screenPosMaskUp : TEXCOORD1;
-            float4 screenPosMaskDown : TEXCOORD2;
-            float4 vertexScreenPos : TEXCOORD3;
-
+            
             float3 xlv_TEXCOORD0 : TEXCOORD4;
             float3 xlv_TEXCOORD1 : TEXCOORD5;
         };
@@ -166,37 +138,35 @@ SubShader {
             float3 worldpos = mul(unity_ObjectToWorld, v.vertex).xyz;
 
             float3 lightdir = normalize(_ShadowProjDir);
-            float3 objForwardDir = normalize(_ShadowPlane.xyz);
-            float objForwardDirDistance = _ShadowPlane.w;
+            float3 PlaneNormalDir = normalize(_ShadowPlane.xyz);
             
-            float3 LigthobjForwardDirAngle = dot(objForwardDir, lightdir.xyz);  
-            float objForwardDirDistance1 = dot(objForwardDir, worldpos - _WorldPos.xyz);
-            float objForwardDirDistance2 = objForwardDirDistance - objForwardDirDistance1;
-            float worldPosToShadowPlaneDistance = objForwardDirDistance2 / LigthobjForwardDirAngle;
+            float ObjToPlaneDistance = abs(_ShadowPlane.w);
+            // 只有法线的平面 和一个距离点，无法确定一个平面的位置，因为有两个 位置 满足这两个条件
+            float LigthPlaneNormalAngle = dot(PlaneNormalDir, lightdir.xyz);
+            if (LigthPlaneNormalAngle > 0)
+            {
+                float PlaneNormalDirDistance1 = dot(PlaneNormalDir, worldpos - _WorldPos.xyz);
+                float PlaneNormalDirDistance2 = ObjToPlaneDistance - PlaneNormalDirDistance1;
+                float worldPosToShadowPlaneDistance = PlaneNormalDirDistance2 / LigthPlaneNormalAngle; 
+                worldpos = worldpos + worldPosToShadowPlaneDistance * lightdir.xyz;
+            }
+            else if (LigthPlaneNormalAngle < 0)
+            {
+                float PlaneNormalDirDistance1 = dot(PlaneNormalDir, worldpos - _WorldPos.xyz);
+                float PlaneNormalDirDistance2 = ObjToPlaneDistance + PlaneNormalDirDistance1;
+                float worldPosToShadowPlaneDistance = PlaneNormalDirDistance2 / abs(LigthPlaneNormalAngle); 
+                worldpos = worldpos + worldPosToShadowPlaneDistance * lightdir.xyz;
+            }
             
-            worldpos = worldpos + worldPosToShadowPlaneDistance * lightdir.xyz;
             o.vertex = mul(unity_MatrixVP, float4(worldpos, 1.0));
             o.xlv_TEXCOORD0 = _WorldPos.xyz;
             o.xlv_TEXCOORD1 = worldpos;
-
-            o.vertexScreenPos = ComputeScreenPos(o.vertex);
-            o.screenPosMaskUp = ComputeScreenPos(mul(UNITY_MATRIX_VP, _WorldPosMaskPosUp));
-            o.screenPosMaskDown = ComputeScreenPos(mul(UNITY_MATRIX_VP, _WorldPosMaskPosDown));
-
+            
             return o;
         }
         
         float4 frag(v2f i) : SV_Target
         {
-            float2 vertexScreenPos = i.vertexScreenPos.xy / i.vertexScreenPos.w;
-            float2 screenPosMaskDown = i.screenPosMaskDown.xy / i.screenPosMaskDown.w;
-            float2 screenPosMaskUp = i.screenPosMaskUp.xy / i.screenPosMaskUp.w;
-
-            if (vertexScreenPos.y < screenPosMaskDown.y || vertexScreenPos.y > screenPosMaskUp.y)
-            {
-                clip(-1);
-            }
-
             float4 color = float4(0, 0, 0, 1);
 
             // // 下面两种阴影衰减公式都可以使用(当然也可以自己写衰减公式)

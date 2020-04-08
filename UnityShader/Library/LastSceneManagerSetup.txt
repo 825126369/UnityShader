@@ -1,0 +1,4 @@
+sceneSetups:
+- path: Assets/PlaneShadow/PlaneShadow.unity
+  isLoaded: 1
+  isActive: 1
