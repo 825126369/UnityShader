@@ -1,6 +1,6 @@
-﻿// Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
-
-Shader "Customer/Gaussianblur2"
+﻿//作者：许珂
+//对 SpriteRenderer 组件模糊
+Shader "Customer/Sprite-GaussBlur"
 {
     Properties
     {
@@ -25,7 +25,7 @@ Shader "Customer/Gaussianblur2"
         Tags
         {
             "Queue"="Transparent"
-            //"IgnoreProjector"="True"
+            "IgnoreProjector"="True"
             "RenderType"="Transparent"
             "PreviewType"="Plane"
             "CanUseSpriteAtlas"="True"
@@ -35,10 +35,6 @@ Shader "Customer/Gaussianblur2"
         Lighting Off
         ZWrite Off
         Blend [_SrcBlend] [_DstBlend]
-
-        GrabPass {                        
-            //Tags { "LightMode" = "Always" }
-        }
 
         Pass
         {
@@ -50,8 +46,6 @@ Shader "Customer/Gaussianblur2"
             #pragma multi_compile_local _ PIXELSNAP_ON
             #pragma multi_compile _ ETC1_EXTERNAL_ALPHA
 
-            #pragma fragmentoption ARB_precision_hint_fastest
-                
             #include "UnityCG.cginc"
             #ifdef UNITY_INSTANCING_ENABLED
 
@@ -80,8 +74,7 @@ Shader "Customer/Gaussianblur2"
             fixed4 _Color;
 			float _BlurSize;
 
-            sampler2D _GrabTexture;
-            float4 _GrabTexture_TexelSize;
+			fixed4 _MainTex_TexelSize;
 
             struct appdata_t
             {
@@ -96,7 +89,7 @@ Shader "Customer/Gaussianblur2"
                 float4 vertex   : SV_POSITION;
                 fixed4 color    : COLOR;
                 float2 texcoord : TEXCOORD0;
-                float4 grabPassPosition : TEXCOORD1;
+				float2 uv[9]: TEXCOORD1;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 			
@@ -120,52 +113,44 @@ Shader "Customer/Gaussianblur2"
                 #ifdef PIXELSNAP_ON
                 OUT.vertex = UnityPixelSnap (OUT.vertex);
                 #endif
-                
-                OUT.grabPassPosition = ComputeGrabScreenPos(OUT.vertex);
-                return OUT;
-            }
 
-            half4 GRABPIXEL(float4 grabPassPosition, int i, int j)
-            {
-                float4 grabPosUV = UNITY_PROJ_COORD(grabPassPosition); 
-                return tex2Dproj(_GrabTexture, (half4(grabPosUV.x + _GrabTexture_TexelSize.x * i * _BlurSize, grabPosUV.y + _GrabTexture_TexelSize.y * j * _BlurSize, grabPosUV.z, grabPosUV.w)));
+				float2 uv = IN.texcoord;
+				int k = 0;
+				for(int i = -1; i <= 1; i++)
+				{
+					for(int j = -1; j <= 1; j++)
+					{
+						OUT.uv[k] = uv + float2(_MainTex_TexelSize.x * i ,  _MainTex_TexelSize.y * j) * _BlurSize;
+						k++;
+					}
+				}
+
+                return OUT;
             }
 
             fixed4 SpriteFrag(v2f IN) : SV_Target
             {
-                if (true)
+                const float weightArray[3][3] = {
+                    0.0947416, 0.118318, 0.0947416,
+                    0.118318, 0.147761, 0.118318,
+                    0.0947416, 0.118318, 0.0947416
+                };
+
+                fixed4 averageColor = (0, 0, 0, 0);
+
+                int k = 0;
+                for(int i = 0; i <= 2; i++)
                 {
-                    const float weightArray[3][3] = {
-                        0.0947416, 0.118318, 0.0947416,
-                        0.118318, 0.147761, 0.118318,
-                        0.0947416, 0.118318, 0.0947416
-                    };
-
-                    half4 averageColor = fixed4(0, 0, 0, 0);
-
-                    for(int i = 0; i <= 2; i++)
+                    for(int j = 0; j <= 2; j++)
                     {
-                        for(int j = 0; j <= 2; j++)
-                        {
-                            half4 color = GRABPIXEL(IN.grabPassPosition, i - 1, j - 1);
-                            averageColor += color * weightArray[i][j];
-                        }
+                        fixed4 color = tex2D(_MainTex, IN.uv[k]);
+                        averageColor += color * weightArray[i][j];
+                        k++;
                     }
-
-                    averageColor.rgb *= averageColor.a;
-                    // fixed4 tint = tex2D(_MainTex, IN.texcoord) * IN.color;
-                    // tint.rgb *= tint.a;
-
-                    // fixed4 color2 = averageColor * tint;
-                    return averageColor;
                 }
-                else
-                {
-                    fixed4 color = tex2D(_MainTex, IN.texcoord) * IN.color;
-                    color.rgb *= color.a;
 
-                    return color;
-                }
+                averageColor.rgb *= averageColor.a;
+                return averageColor;
             }
             ENDCG
         }
