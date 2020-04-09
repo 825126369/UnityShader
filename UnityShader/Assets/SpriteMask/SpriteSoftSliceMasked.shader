@@ -133,8 +133,7 @@ Shader "Customer/SpriteSoftSliceMasked" {
 
 				float3 worldPos = mul(unity_ObjectToWorld, IN.vertex);
                 OUT.worldPos = worldPos.xyz;
-
-
+                
 			    OUT.color = IN.color * _Color * _RendererColor;
 				
 			    #ifdef PIXELSNAP_ON
@@ -161,41 +160,38 @@ Shader "Customer/SpriteSoftSliceMasked" {
             fixed GetMakAlpha(fixed3 worldPos)
             {
                 fixed fAlpha = 0.0f;
-                if (nSliceCount > 0)
-                {
-                    for (int i = 0; i < nSliceCount; i++)
-                    {
-                        float4 inMask = float4( 
-                            step(_ClipRect[i].xy, worldPos.xy), 
-                            step(worldPos.xy, _ClipRect[i].zw) 
-                        );
-                        if (all(inMask))
-                        {
-                            fixed2 maskUV0 = (worldPos.xy - _ClipRect[i].xy) / (_ClipRect[i].zw - _ClipRect[i].xy);
-                            fixed2 maskUV1 = maskUV0 * _AlphaMask_ST[i].xy + _AlphaMask_ST[i].zw;
-                            fAlpha = tex2D(_AlphaMask, maskUV1).a;
-                        }
-                    }
-                }
-                else if (nTiledSliceCount > 0)
-                {
-                    for (int i = 0; i < nTiledSliceCount; i++)
-                    {
-                        float4 inMask = float4( 
-                            step(_ClipRect[i].xy, worldPos.xy), 
-                            step(worldPos.xy, _ClipRect[i].zw) 
-                        );
-                        if (all(inMask))
-                        {
-                            fixed2 maskUV0 = (worldPos.xy - _ClipRect[i].xy) / (_ClipRect[i].zw - _ClipRect[i].xy);
-                            maskUV0 *= _TiledCount[i];
 
-                            maskUV0 = fixed2(frac(maskUV0.x), frac(maskUV0.y));
-                            fixed2 maskUV1 = maskUV0 * _AlphaMask_ST[i].xy + _AlphaMask_ST[i].zw;
-                            fAlpha = tex2D(_AlphaMask, maskUV1).a;
-                        }
-                    }
-                }
+				for (int i = 0; i < nSliceCount; i++)
+				{
+					float4 inMask = float4( 
+						step(_ClipRect[i].xy, worldPos.xy), 
+						step(worldPos.xy, _ClipRect[i].zw) 
+					);
+					if (all(inMask))
+					{
+						fixed2 maskUV0 = (worldPos.xy - _ClipRect[i].xy) / (_ClipRect[i].zw - _ClipRect[i].xy);
+						fixed2 maskUV1 = maskUV0 * _AlphaMask_ST[i].xy + _AlphaMask_ST[i].zw;
+						fAlpha = tex2D(_AlphaMask, maskUV1).a;
+					}
+				}
+				
+				for (int i = 0; i < nTiledSliceCount; i++)
+				{
+					float4 inMask = float4( 
+						step(_ClipRect[i].xy, worldPos.xy), 
+						step(worldPos.xy, _ClipRect[i].zw) 
+					);
+					if (all(inMask))
+					{
+						fixed2 maskUV0 = (worldPos.xy - _ClipRect[i].xy) / (_ClipRect[i].zw - _ClipRect[i].xy);
+						maskUV0 *= _TiledCount[i];
+
+						maskUV0 = fixed2(frac(maskUV0.x), frac(maskUV0.y));
+						fixed2 maskUV1 = maskUV0 * _AlphaMask_ST[i].xy + _AlphaMask_ST[i].zw;
+						fAlpha = tex2D(_AlphaMask, maskUV1).a;
+					}
+				}
+                
                 return fAlpha;
             }
 
@@ -204,6 +200,7 @@ Shader "Customer/SpriteSoftSliceMasked" {
 			    fixed4 c = SampleSpriteTexture (IN.texcoord) * IN.color;
                 
                 fixed fMaskAlpha = GetMakAlpha(IN.worldPos);
+
                 c.a *= fMaskAlpha;
 			    c.rgb *= c.a;
                 
