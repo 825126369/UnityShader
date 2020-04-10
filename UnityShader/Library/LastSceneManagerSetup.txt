@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/PlaneShadow/PlaneShadow.unity
+- path: Assets/Water2D/Water2D.unity
   isLoaded: 1
   isActive: 1
