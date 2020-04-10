@@ -26,17 +26,12 @@ Shader "Customer/WaterStrike"
         
         _GradTex("Gradient", 2D) = "white" {}
         _WaveSpeed("Wave Speed", Range(-10, 10)) = 1
-        _ReflectionStrength("反射 强度", Range(0, 10)) = 1
-        _ReflectionColor("反射 颜色", Color) = (1,1,1,1)
         _RefractionStrength("折射 强度", Range(0, 10)) = 0.5
         _Aspect(" W / H Aspect", Float) = 1
+		_WaveDuration("Wave Duration",Float) = 2.0
 
-		_WaveStrength("Wave Strength",Float) = 0.01
-        _WaveFactor("Wave Factor",Float) = 50
-        _TimeScale("Time Scale",Float) = 10
-		_WaveDuration("Wave Duration",Float) = 3
-		_WaveUVDistance("WaveUV Distance",Float) = 0.3
-
+        _ReflectionStrength("反射 强度", Range(0, 10)) = 1
+        _ReflectionColor("反射 颜色", Color) = (1,1,1,1)
     }
 
     SubShader
@@ -102,18 +97,15 @@ Shader "Customer/WaterStrike"
 
             sampler2D _GradTex;
             float4 _WaveCenters[100];
-			int _WaveCenters_Num = 0;
+			int _WaveCenters_Num;
             float _WaveSpeed;
-            float _ReflectionStrength;
-            float4 _ReflectionColor;
             float _RefractionStrength;
             float _Aspect;
 
+            float _ReflectionStrength;
+            float4 _ReflectionColor;
+
             float _WaveDuration;
-			float _WaveStrength;
-            float _WaveFactor;
-            float _TimeScale;
-			float _WaveUVDistance;
 
             struct appdata_t
             {
@@ -152,14 +144,14 @@ Shader "Customer/WaterStrike"
                 #ifdef PIXELSNAP_ON
                 OUT.vertex = UnityPixelSnap (OUT.vertex);
                 #endif
-
+                
 				OUT.texcoord1 = TRANSFORM_TEX(IN.texcoord, _NoiseTex);
                 return OUT;
             }
 
             float2 SamplerFromNoise(v2f IN)
 			{
-                float2 timer =  float2(_Time.x, _Time.x);
+                float2 timer = float2(_Time.x, _Time.x);
                 float2 uv = IN.texcoord1 + timer * float2(_NoiseSpeedX, _NoiseSpeedY);
 				float2 newUV = uv * _NoiseTex_ST.xy + _NoiseTex_ST.zw;
 				float4 noiseColor = tex2D(_NoiseTex, newUV);
@@ -168,18 +160,17 @@ Shader "Customer/WaterStrike"
 				return noiseColor.xy;
 			}
 
-            float wave(float2 uv, float2 origin, float time)
+            float2 wave(float2 uv, float2 origin, float time)
             {
                 float dis = length(uv - origin);
                 float t = time - dis / _WaveSpeed;
-                float offset = (tex2D(_GradTex, float2(t, 0)).a - 0.5) * 2;
+                float2 offset = (tex2D(_GradTex, float2(t, 0)).xx - 0.5) * 2;
                 return offset;
             }
 
             float2 UvWaveAll(v2f IN)
             {
-                float2 dx = float2(0.01, 0);
-                float2 dy = float2(0, 0.01);
+                float2 dxUv = float2(0.01, 0.01);
                 float2 waveOffset = float2(0, 0);
                 for(int i = 0; i < _WaveCenters_Num; i++)
 				{
@@ -189,12 +180,9 @@ Shader "Customer/WaterStrike"
                     float dis = length(p - oriPos);
                     float2 uvDir = normalize(p - oriPos);
 
-                    //float2(1, 1 / _Aspect)
-
-                    float w = wave(p, oriPos, fPlayTime);
-                    float2 dw = float2(wave(p + dx, oriPos, fPlayTime), wave(p + dy, oriPos, fPlayTime)) - w;
+                    float2 dw = wave(p + dxUv, oriPos, fPlayTime) - wave(p, oriPos, fPlayTime);
                     float2 waveOffset1 = dw * float2(_Aspect, 1) * _RefractionStrength;
-                    waveOffset1 *= (1 - saturate(fPlayTime / 2.0)) * (1 - saturate(dis / 1.0));
+                    waveOffset1 *= (1 - saturate(fPlayTime / _WaveDuration)) * (1 - saturate(dis / 1.0));
                     waveOffset += waveOffset1;
                 }
 

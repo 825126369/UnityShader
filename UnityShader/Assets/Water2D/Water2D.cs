@@ -93,7 +93,7 @@ public class Water2D : MonoBehaviour
                     mCenterClickPointUVList.Add(centerUV);
                     
                     ToTrray();
-                    mMaterial.SetVectorArray("_WaveCenters", mCenterClickPointUVList);
+                    mMaterial.SetVectorArray("_WaveCenters", mCenterClickPointUVArray);
                     mMaterial.SetFloat("_WaveCenters_Num", mCenterClickPointUVList.Count);
                 }
             }
@@ -121,7 +121,7 @@ public class Water2D : MonoBehaviour
             if (mCenterClickPointUVList.Count > 0)
             {
                 ToTrray();
-                mMaterial.SetVectorArray("_WaveCenters", mCenterClickPointUVList);
+                mMaterial.SetVectorArray("_WaveCenters", mCenterClickPointUVArray);
             }
 
             tableRemoveIndexs.Clear();
