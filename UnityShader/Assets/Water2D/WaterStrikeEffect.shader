@@ -17,18 +17,21 @@ Shader "Customer/WaterStrike"
         [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst Blend mode", Float) = 1
 
         // 用于确保 在哪个区域 噪声图 起作用
-        _MaskTex("Mask Texture", 2D) = "white" {}
+        [NoScaleOffset] _MaskTex("Mask Texture", 2D) = "white" {}
+		[NoScaleOffset] _NoiseTex1("Noise1 Texture", 2D) = "white" {}
+        [NoScaleOffset] _NoiseTex2("Noise2 Texture", 2D) = "white" {}
+        [NoScaleOffset] _NoiseTex("Noise Texture", 2D) = "white" {}
+        [NoScaleOffset] _GradTex("Gradient", 2D) = "white" {}
 
-		_NoiseTex("Noise Texture", 2D) = "white" {}
 		_NoiseIntensity ("_NoiseIntensity", Float) = 2.0
 		_NoiseSpeedX ("_NoiseSpeedX", Float) = 2.0
 		_NoiseSpeedY ("_NoiseSpeedY", Float) = 2.0
         
-        _GradTex("Gradient", 2D) = "white" {}
-        _WaveSpeed("Wave Speed", Range(-10, 10)) = 1
-        _RefractionStrength("折射 强度", Range(0, 10)) = 0.5
+        _WaveSpeed("_WaveSpeed", Range(-10, 10)) = 1
+        _WavenStrength("_WavenStrength", Range(0, 10)) = 0.5
+		_WaveDuration("_WaveDuration",Float) = 2.0
+        
         _Aspect(" W / H Aspect", Float) = 1
-		_WaveDuration("Wave Duration",Float) = 2.0
 
         _ReflectionStrength("反射 强度", Range(0, 10)) = 1
         _ReflectionColor("反射 颜色", Color) = (1,1,1,1)
@@ -87,7 +90,10 @@ Shader "Customer/WaterStrike"
             sampler2D _AlphaTex;
             float4 _Color;
             
+            sampler2D _NoiseTex1;
+            sampler2D _NoiseTex2;
             sampler2D _NoiseTex;
+
 			float4 _NoiseTex_ST;
 			sampler2D _MaskTex;
 			float4 _MaskTex_ST;
@@ -120,7 +126,6 @@ Shader "Customer/WaterStrike"
                 float4 vertex   : SV_POSITION;
                 float4 color    : COLOR;
                 float2 texcoord : TEXCOORD0;
-                float2 texcoord1 : TEXCOORD1;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -170,19 +175,19 @@ Shader "Customer/WaterStrike"
             {
                 float2 dxUv = float2(0.01, 0.01);
                 float2 waveOffset = float2(0, 0);
-                for(int i = 0; i < _WaveCenters_Num; i++)
-				{
-                    float2 p = IN.texcoord;
-                    float fPlayTime = _Time.y - _WaveCenters[i].z;
-                    float2 oriPos = _WaveCenters[i].xy;
-                    float dis = length(p - oriPos);
-                    float2 uvDir = normalize(p - oriPos);
+                // for(int i = 0; i < _WaveCenters_Num; i++)
+				// {
+                //     float2 p = IN.texcoord;
+                //     float fPlayTime = _Time.y - _WaveCenters[i].z;
+                //     float2 oriPos = _WaveCenters[i].xy;
+                //     float dis = length(p - oriPos);
+                //     float2 uvDir = normalize(p - oriPos);
 
-                    float2 dw = wave(p + dxUv, oriPos, fPlayTime) - wave(p, oriPos, fPlayTime);
-                    float2 waveOffset1 = dw * float2(_Aspect, 1) * _RefractionStrength;
-                    waveOffset1 *= (1 - saturate(fPlayTime / _WaveDuration)) * (1 - saturate(dis / 1.0));
-                    waveOffset += waveOffset1;
-                }
+                //     float2 dw = wave(p + dxUv, oriPos, fPlayTime) - wave(p, oriPos, fPlayTime);
+                //     float2 waveOffset1 = dw * float2(_Aspect, 1) * _RefractionStrength;
+                //     waveOffset1 *= (1 - saturate(fPlayTime / _WaveDuration)) * (1 - saturate(dis / 1.0));
+                //     waveOffset += waveOffset1;
+                // }
 
                 return waveOffset;
             }

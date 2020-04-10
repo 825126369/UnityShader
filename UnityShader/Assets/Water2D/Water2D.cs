@@ -15,7 +15,25 @@ public class Water2D : MonoBehaviour
     
     void Start()
     {
+        mSprite = transform.GetComponent(typeof(SpriteRenderer)) as SpriteRenderer;
+        mMaterial = mSprite.sharedMaterial;
 
+        SetNoiseTexture();
+        mMaterial.SetTexture("_GradTex", GetGradTexture());
+        mMaterial.SetTexture("_MainTex", mSprite.sprite.texture);
+
+        GetComponentsInChildren(true, mBoxList);
+
+        ToTrray();
+        mMaterial.SetFloat("_WaveCenters_Num", mCenterClickPointUVList.Count);
+        mMaterial.SetVectorArray("_WaveCenters", mCenterClickPointUVArray);
+
+        mMaterial.SetFloat("_Aspect", mSprite.bounds.size.x / mSprite.bounds.size.y);
+        mMaterial.SetFloat("_WaveDuration", fWaveDuration);
+    }
+
+    Texture2D GetGradTexture()
+    {
         AnimationCurve waveform = new AnimationCurve(
             new Keyframe(0.00f, 0.50f, 0, 0),
             new Keyframe(0.05f, 1.00f, 0, 0),
@@ -41,19 +59,20 @@ public class Water2D : MonoBehaviour
 
         gradTexture.Apply();
 
-        mSprite = transform.GetComponent(typeof(SpriteRenderer)) as SpriteRenderer;
-        mMaterial = mSprite.sharedMaterial;
-        mMaterial.SetTexture("_GradTex", gradTexture);
-        mMaterial.SetTexture("_MainTex", mSprite.sprite.texture);
+        return gradTexture;
+    }
 
-        GetComponentsInChildren(true, mBoxList);
-
-        ToTrray();
-        mMaterial.SetFloat("_WaveCenters_Num", mCenterClickPointUVList.Count);
-        mMaterial.SetVectorArray("_WaveCenters", mCenterClickPointUVArray);
-
-        mMaterial.SetFloat("_Aspect", mSprite.bounds.size.x / mSprite.bounds.size.y);
-        mMaterial.SetFloat("_WaveDuration", fWaveDuration);
+    void SetNoiseTexture()
+    {
+        float scale1 = 2f;
+        float scale2 = 3;
+        float scale3 = 10;
+        Texture2D _NoiseTex1 = NoiseTextureCreater.GetNoiseTexture(scale1);
+        Texture2D _NoiseTex2 = NoiseTextureCreater.GetNoiseTexture(scale2);
+        Texture2D _NoiseTex = NoiseTextureCreater.GetNoiseTextureByScaleAdd1(scale1, scale2, scale3);
+        mMaterial.SetTexture("_NoiseTex1", _NoiseTex1);
+        mMaterial.SetTexture("_NoiseTex2",_NoiseTex2);
+        mMaterial.SetTexture("_NoiseTex", _NoiseTex);
     }
 
     void OnRenderImage(Texture source, RenderTexture destination)
