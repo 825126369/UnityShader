@@ -145,18 +145,16 @@ Shader "Customer/WaterStrike"
                 OUT.vertex = UnityPixelSnap (OUT.vertex);
                 #endif
                 
-				OUT.texcoord1 = TRANSFORM_TEX(IN.texcoord, _NoiseTex);
                 return OUT;
             }
 
             float2 SamplerFromNoise(v2f IN)
 			{
                 float2 timer = float2(_Time.x, _Time.x);
-                float2 uv = IN.texcoord1 + timer * float2(_NoiseSpeedX, _NoiseSpeedY);
-				float2 newUV = uv * _NoiseTex_ST.xy + _NoiseTex_ST.zw;
+                float2 newUV = IN.texcoord + timer * float2(_NoiseSpeedX, _NoiseSpeedY);
 				float4 noiseColor = tex2D(_NoiseTex, newUV);
-				noiseColor = (noiseColor * 2 - 1) * 0.01;
-                noiseColor *= _NoiseIntensity;
+				noiseColor = (noiseColor * 2 - 1);
+                noiseColor *= _NoiseIntensity * 0.01;
 				return noiseColor.xy;
 			}
 
