@@ -62,6 +62,14 @@ Material:
         m_Texture: {fileID: 2800000, guid: f9650e120179942c3b03af8a91bc2e00, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _NoiseTex1:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTex2:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -85,8 +93,8 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _NoiseIntensity: 2
-    - _NoiseSpeedX: 5
-    - _NoiseSpeedY: 5
+    - _NoiseSpeedX: 2
+    - _NoiseSpeedY: 2
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _ReflectionStrength: 1
@@ -98,9 +106,10 @@ Material:
     - _UVSec: 0
     - _WaveDuration: 2
     - _WaveFactor: 8.09
-    - _WaveSpeed: 1
+    - _WaveSpeed: 4
     - _WaveStrength: 0.02
     - _WaveUVDistance: 0.1
+    - _WavenStrength: 0.5
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

@@ -66,10 +66,10 @@ public class Water2D : MonoBehaviour
     {
         float scale1 = 2f;
         float scale2 = 3;
-        float scale3 = 10;
+        float scale3 = 6;
         Texture2D _NoiseTex1 = NoiseTextureCreater.GetNoiseTexture(scale1);
         Texture2D _NoiseTex2 = NoiseTextureCreater.GetNoiseTexture(scale2);
-        Texture2D _NoiseTex = NoiseTextureCreater.GetNoiseTextureByScaleAdd1(scale1, scale2, scale3);
+        Texture2D _NoiseTex = NoiseTextureCreater.GetNoiseTextureByScaleAdd(scale1, scale2, scale3);
         mMaterial.SetTexture("_NoiseTex1", _NoiseTex1);
         mMaterial.SetTexture("_NoiseTex2",_NoiseTex2);
         mMaterial.SetTexture("_NoiseTex", _NoiseTex);

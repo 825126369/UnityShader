@@ -30,7 +30,7 @@ Shader "Customer/WaterStrike"
         _WaveSpeed("_WaveSpeed", Range(-10, 10)) = 1
         _WavenStrength("_WavenStrength", Range(0, 10)) = 0.5
 		_WaveDuration("_WaveDuration",Float) = 2.0
-        
+
         _Aspect(" W / H Aspect", Float) = 1
 
         _ReflectionStrength("反射 强度", Range(0, 10)) = 1
@@ -155,13 +155,14 @@ Shader "Customer/WaterStrike"
 
             float2 SamplerFromNoise(v2f IN)
 			{
-                float2 timer = float2(_Time.x, _Time.x);
-                float2 newUV = IN.texcoord + timer * float2(_NoiseSpeedX, _NoiseSpeedY);
-				float4 noiseColor = tex2D(_NoiseTex, newUV);
-				noiseColor = (noiseColor * 2 - 1);
-                noiseColor *= _NoiseIntensity * 0.01;
-				return noiseColor.xy;
+                // 这个newUV 是个重复性的UV
+                float2 newUV = IN.texcoord + _Time.x * float2(_NoiseSpeedX, _NoiseSpeedY);
+				float2 noiseOffset = tex2D(_NoiseTex, newUV).xy;
+				//noiseColor = (noiseColor * 2 - 1);
+                noiseOffset *= _NoiseIntensity * 0.01;
+				return noiseOffset;
 			}
+
 
             float2 wave(float2 uv, float2 origin, float time)
             {
@@ -197,9 +198,8 @@ Shader "Customer/WaterStrike"
                 float2 waveOffset = UvWaveAll(IN);
 				float2 noiseOffset = SamplerFromNoise(IN);
 				float maskWaterAlpha = tex2D(_MaskTex, IN.texcoord).a;
-
                 float4 color = tex2D(_MainTex, IN.texcoord + (waveOffset + noiseOffset) * maskWaterAlpha);
-
+                
                 #if ETC1_EXTERNAL_ALPHA
                     float4 alpha = tex2D (_AlphaTex, IN.texcoord);
                     color.a = lerp (color.a, alpha.r, _EnableExternalAlpha);
