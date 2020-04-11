@@ -27,8 +27,8 @@ Shader "Customer/WaterStrike"
 		_NoiseSpeedX ("_NoiseSpeedX", Float) = 2.0
 		_NoiseSpeedY ("_NoiseSpeedY", Float) = 2.0
         
-        _WaveSpeed("_WaveSpeed", Range(-10, 10)) = 1
-        _WavenStrength("_WavenStrength", Range(0, 10)) = 0.5
+        _WaveSpeed("_WaveSpeed", Range(0, 10)) = 1
+        _WaveStrength("_WaveStrength", Range(0, 10)) = 0.5
 		_WaveDuration("_WaveDuration",Float) = 2.0
 
         _Aspect(" W / H Aspect", Float) = 1
@@ -105,7 +105,7 @@ Shader "Customer/WaterStrike"
             float4 _WaveCenters[100];
 			int _WaveCenters_Num;
             float _WaveSpeed;
-            float _RefractionStrength;
+            float _WaveStrength;
             float _Aspect;
 
             float _ReflectionStrength;
@@ -158,7 +158,7 @@ Shader "Customer/WaterStrike"
                 // 这个newUV 是个重复性的UV
                 float2 newUV = IN.texcoord + _Time.x * float2(_NoiseSpeedX, _NoiseSpeedY);
 				float2 noiseOffset = tex2D(_NoiseTex, newUV).xy;
-				//noiseColor = (noiseColor * 2 - 1);
+				noiseOffset = (noiseOffset * 2 - 1);
                 noiseOffset *= _NoiseIntensity * 0.01;
 				return noiseOffset;
 			}
@@ -168,27 +168,28 @@ Shader "Customer/WaterStrike"
             {
                 float dis = length(uv - origin);
                 float t = time - dis / _WaveSpeed;
-                float2 offset = (tex2D(_GradTex, float2(t, 0)).xx - 0.5) * 2;
+                float2 offset = (tex2D(_GradTex, float2(t, 0)).aa - 0.5) * 2;
                 return offset;
             }
 
             float2 UvWaveAll(v2f IN)
             {
-                float2 dxUv = float2(0.01, 0.01);
-                float2 waveOffset = float2(0, 0);
-                // for(int i = 0; i < _WaveCenters_Num; i++)
-				// {
-                //     float2 p = IN.texcoord;
-                //     float fPlayTime = _Time.y - _WaveCenters[i].z;
-                //     float2 oriPos = _WaveCenters[i].xy;
-                //     float dis = length(p - oriPos);
-                //     float2 uvDir = normalize(p - oriPos);
+                float2 dxy = float2(0.01, 0.01);
 
-                //     float2 dw = wave(p + dxUv, oriPos, fPlayTime) - wave(p, oriPos, fPlayTime);
-                //     float2 waveOffset1 = dw * float2(_Aspect, 1) * _RefractionStrength;
-                //     waveOffset1 *= (1 - saturate(fPlayTime / _WaveDuration)) * (1 - saturate(dis / 1.0));
-                //     waveOffset += waveOffset1;
-                // }
+                float2 waveOffset = float2(0, 0);
+                for(int i = 0; i < _WaveCenters_Num; i++)
+				{
+                    float2 p = IN.texcoord * fixed2(_Aspect, 1);
+                    float fPlayTime = _Time.y - _WaveCenters[i].z;
+                    float2 oriPos = _WaveCenters[i].xy * fixed2(_Aspect, 1);
+                    float dis = length(p - oriPos);
+                    
+                    float2 dw = wave(p + dxy, oriPos, fPlayTime) - wave(p, oriPos, fPlayTime);
+                    float2 waveOffset1 = dw * _WaveStrength;
+                    waveOffset1 *=  fixed2(1, 1 /_Aspect);
+                    waveOffset1 *= (1 - saturate(fPlayTime / _WaveDuration)) * (1 - saturate(dis));
+                    waveOffset += waveOffset1;
+                }
 
                 return waveOffset;
             }

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Water2D : MonoBehaviour 
 {
-    public float fWaveDuration = 2.0f;
+    private float fWaveDuration = 2.0f;
     private Material mMaterial;
     private List<BoxCollider2D> mBoxList = new List<BoxCollider2D>();
     private const int nVectorBufferCount = 100;
@@ -64,12 +64,39 @@ public class Water2D : MonoBehaviour
 
     void SetNoiseTexture()
     {
-        float scale1 = 2f;
-        float scale2 = 3;
-        float scale3 = 6;
-        Texture2D _NoiseTex1 = NoiseTextureCreater.GetNoiseTexture(scale1);
-        Texture2D _NoiseTex2 = NoiseTextureCreater.GetNoiseTexture(scale2);
-        Texture2D _NoiseTex = NoiseTextureCreater.GetNoiseTextureByScaleAdd(scale1, scale2, scale3);
+        NoiseTextureCreater.NoiseInfo mNoiseInfo1 = new NoiseTextureCreater.NoiseInfo();
+        {
+            mNoiseInfo1.fFrequency = 2f;
+            mNoiseInfo1.fWeight = 5f;
+        }
+
+        NoiseTextureCreater.NoiseInfo mNoiseInfo2 = new NoiseTextureCreater.NoiseInfo();
+        {
+            mNoiseInfo2.fFrequency = 3f;
+            mNoiseInfo2.fWeight = 4f;
+        }
+
+        NoiseTextureCreater.NoiseInfo mNoiseInfo3 = new NoiseTextureCreater.NoiseInfo();
+        {
+            mNoiseInfo3.fFrequency = 5f;
+            mNoiseInfo3.fWeight = 3f;
+        }
+
+        NoiseTextureCreater.NoiseInfo mNoiseInfo4 = new NoiseTextureCreater.NoiseInfo();
+        {
+            mNoiseInfo4.fFrequency = 7f;
+            mNoiseInfo4.fWeight = 2f;
+        }
+
+        NoiseTextureCreater.NoiseInfo mNoiseInfo5 = new NoiseTextureCreater.NoiseInfo();
+        {
+            mNoiseInfo5.fFrequency = 8f;
+            mNoiseInfo5.fWeight = 1f;
+        }
+
+        Texture2D _NoiseTex1 = NoiseTextureCreater.GetNoiseTexture(mNoiseInfo1.fFrequency);
+        Texture2D _NoiseTex2 = NoiseTextureCreater.GetNoiseTexture(mNoiseInfo2.fFrequency);
+        Texture2D _NoiseTex = NoiseTextureCreater.GetNoiseTextureByScaleAdd(mNoiseInfo1, mNoiseInfo2, mNoiseInfo3, mNoiseInfo4, mNoiseInfo5);
         mMaterial.SetTexture("_NoiseTex1", _NoiseTex1);
         mMaterial.SetTexture("_NoiseTex2",_NoiseTex2);
         mMaterial.SetTexture("_NoiseTex", _NoiseTex);
@@ -114,6 +141,8 @@ public class Water2D : MonoBehaviour
                     ToTrray();
                     mMaterial.SetVectorArray("_WaveCenters", mCenterClickPointUVArray);
                     mMaterial.SetFloat("_WaveCenters_Num", mCenterClickPointUVList.Count);
+
+                    Debug.Log("点击水面");
                 }
             }
 

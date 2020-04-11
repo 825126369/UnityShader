@@ -59,7 +59,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NoiseTex:
-        m_Texture: {fileID: 2800000, guid: f9650e120179942c3b03af8a91bc2e00, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NoiseTex1:
@@ -80,7 +80,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - PixelSnap: 0
-    - _Aspect: 1
+    - _Aspect: 1.7777778
     - _BlendOption: 0
     - _BumpScale: 1
     - _Cutoff: 0.5
@@ -92,9 +92,9 @@ Material:
     - _GlossyReflections: 1
     - _Metallic: 0
     - _Mode: 0
-    - _NoiseIntensity: 2
-    - _NoiseSpeedX: 2
-    - _NoiseSpeedY: 2
+    - _NoiseIntensity: 5
+    - _NoiseSpeedX: 5
+    - _NoiseSpeedY: 5
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _ReflectionStrength: 1
@@ -105,11 +105,11 @@ Material:
     - _TimeScale: 1
     - _UVSec: 0
     - _WaveDuration: 2
-    - _WaveFactor: 8.09
-    - _WaveSpeed: 4
-    - _WaveStrength: 0.02
+    - _WaveFactor: 2
+    - _WaveSpeed: 0.2
+    - _WaveStrength: 1
     - _WaveUVDistance: 0.1
-    - _WavenStrength: 0.5
+    - _WavenStrength: 10
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/Water2D/Water2D.unity
+- path: Assets/PerlinNoise/PerlinNoise.unity
   isLoaded: 1
   isActive: 1
