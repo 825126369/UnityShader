@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/PerlinNoise/PerlinNoise.unity
+- path: Assets/TextBeat/TextBeat.unity
   isLoaded: 1
   isActive: 1

@@ -55,8 +55,6 @@ Shader "Customer/SpriteSoftSliceMasked" {
 		Pass
 		{
 		CGPROGRAM
-// Upgrade NOTE: excluded shader from DX11, OpenGL ES 2.0 because it uses unsized arrays
-#pragma exclude_renderers d3d11 gles
 			#pragma vertex SpriteVert
 			#pragma fragment SpriteFrag
 			#pragma target 2.0
