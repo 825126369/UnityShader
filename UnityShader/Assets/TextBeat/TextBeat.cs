@@ -7,14 +7,9 @@ using UnityEngine.UI;
 
 public class TextBeat : BaseMeshEffect 
 {
-    public class UIVertexInfo
-    {
-        public string text;
-        public List<UIVertex> input = new List<UIVertex>();
-    }
-    
-    public int value = 1000;
-    public int targetValue = 1000000000;
+    public bool bUseNoGCStringBuilder = true;
+    public UInt64 value = 1000;
+    public UInt64 targetValue = 1000000000;
 	public float fAlphaTime = 0.5f;
     public float fUpdateTextMaxTime = 0.5f;
     private float fBeginUpdateTextTime;
@@ -31,26 +26,32 @@ public class TextBeat : BaseMeshEffect
 
     private int oneSize = 6;
 
-    Queue<UIVertexInfo> mUIVertexInfoList = new Queue<UIVertexInfo>();
-
     private Text mText;
     private StringBuilder mStringBuilder;
     private StringBuilder lastStringBuilder;
     private String mString;
     private String lastString;
+    private int nMaxStringBuilerCapacity = 16;
 
     protected override void Start()
     {
         mText = GetComponent<Text>();
 
-        mStringBuilder = new StringBuilder(64);
-        mStringBuilder.GarbageFreeClear();
-        mString = mStringBuilder.GetGarbageFreeString();
-        mText.text = mString;
+        if (bUseNoGCStringBuilder)
+        {
+            mStringBuilder = new StringBuilder(nMaxStringBuilerCapacity);
+            mStringBuilder.GarbageFreeClear();
+            mString = mStringBuilder.GetGarbageFreeString();
 
-        lastStringBuilder = new StringBuilder(64);
-        lastStringBuilder.GarbageFreeClear();
-        lastString = lastStringBuilder.GetGarbageFreeString();
+            lastStringBuilder = new StringBuilder(nMaxStringBuilerCapacity);
+            lastStringBuilder.GarbageFreeClear();
+            lastString = lastStringBuilder.GetGarbageFreeString();
+
+            UpdateText(value);
+        }else
+        {
+            lastString = mText.text;
+        }
     }
 
     private void Update()
@@ -58,21 +59,32 @@ public class TextBeat : BaseMeshEffect
         if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime && orFinishAni1())
         {
             fBeginUpdateTextTime = Time.time;
-            value = value + UnityEngine.Random.Range(1, 10000);
+            value = value + (UInt64)UnityEngine.Random.Range(1, 10000);
 
-            mStringBuilder.GarbageFreeClear();
-            mStringBuilder.ConcatFormat<int>("{0}", value);
-            mText.text = mString;
-
-            mText.SetLayoutDirty();
-            mText.SetVerticesDirty();
-            //mText.FontTextureChanged();
+            UpdateText(value);
         }
 
         if(!orFinishAni1())
         {
             mText.SetVerticesDirty();
-            mText.SetMaterialDirty();
+        }
+    }
+
+    private void UpdateText(UInt64 value)
+    {
+        if(bUseNoGCStringBuilder)
+        {
+            mStringBuilder.GarbageFreeClear();
+            mStringBuilder.ConcatFormat<UInt64>("{0}", value);
+            mText.text = mString;
+
+            mText.cachedTextGenerator.Invalidate();
+            mText.SetVerticesDirty();
+            mText.SetLayoutDirty();
+        }
+        else
+        {
+            mText.text = value.ToString();
         }
     }
 
@@ -157,8 +169,14 @@ public class TextBeat : BaseMeshEffect
         {
             if (!bInitLastInput)
             {
-                lastStringBuilder.GarbageFreeClear();
-                lastStringBuilder.ConcatFormat<string>("{0}", mText.text);
+                if (bUseNoGCStringBuilder)
+                {
+                    lastStringBuilder.GarbageFreeClear();
+                    lastStringBuilder.ConcatFormat<string>("{0}", mText.text);
+                }else
+                {
+                    lastString = mText.text;
+                }
 
                 LastInput.Clear();
                 vh.GetUIVertexStream(LastInput);

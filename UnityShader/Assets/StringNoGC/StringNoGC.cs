@@ -8,18 +8,18 @@ public static class StringBuilderExtensions
     // Since A-Z don't sit next to 0-9 in the ascii table.
     private static readonly char[] ms_digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
-    private static readonly uint ms_default_decimal_places = 5; //< Matches standard .NET formatting dp's
+    private static readonly UInt64 ms_default_decimal_places = 5; //< Matches standard .NET formatting dp's
     private static readonly char ms_default_pad_char = '0';
 
     //! Convert a given unsigned integer value to a string and concatenate onto the stringbuilder. Any base value allowed.
-    public static StringBuilder Concat(this StringBuilder string_builder, uint uint_val, uint pad_amount, char pad_char, uint base_val)
+    public static StringBuilder Concat(this StringBuilder string_builder, UInt64 UInt64_val, UInt64 pad_amount, char pad_char, UInt64 base_val)
     {
         Debug.Assert(pad_amount >= 0);
         Debug.Assert(base_val > 0 && base_val <= 16);
 
         // Calculate length of integer when written out
-        uint length = 0;
-        uint length_calc = uint_val;
+        UInt64 length = 0;
+        UInt64 length_calc = UInt64_val;
 
         do
         {
@@ -39,9 +39,9 @@ public static class StringBuilderExtensions
             strpos--;
 
             // Lookup from static char array, to cover hex values too
-            string_builder[strpos] = ms_digits[uint_val % base_val];
+            string_builder[strpos] = ms_digits[UInt64_val % base_val];
 
-            uint_val /= base_val;
+            UInt64_val /= base_val;
             length--;
         }
 
@@ -49,28 +49,28 @@ public static class StringBuilderExtensions
     }
 
     //! Convert a given unsigned integer value to a string and concatenate onto the stringbuilder. Assume no padding and base ten.
-    public static StringBuilder Concat(this StringBuilder string_builder, uint uint_val)
+    public static StringBuilder Concat(this StringBuilder string_builder, UInt64 UInt64_val)
     {
-        string_builder.Concat(uint_val, 0, ms_default_pad_char, 10);
+        string_builder.Concat(UInt64_val, 0, ms_default_pad_char, 10);
         return string_builder;
     }
 
     //! Convert a given unsigned integer value to a string and concatenate onto the stringbuilder. Assume base ten.
-    public static StringBuilder Concat(this StringBuilder string_builder, uint uint_val, uint pad_amount)
+    public static StringBuilder Concat(this StringBuilder string_builder, UInt64 UInt64_val, UInt64 pad_amount)
     {
-        string_builder.Concat(uint_val, pad_amount, ms_default_pad_char, 10);
+        string_builder.Concat(UInt64_val, pad_amount, ms_default_pad_char, 10);
         return string_builder;
     }
 
     //! Convert a given unsigned integer value to a string and concatenate onto the stringbuilder. Assume base ten.
-    public static StringBuilder Concat(this StringBuilder string_builder, uint uint_val, uint pad_amount, char pad_char)
+    public static StringBuilder Concat(this StringBuilder string_builder, UInt64 UInt64_val, UInt64 pad_amount, char pad_char)
     {
-        string_builder.Concat(uint_val, pad_amount, pad_char, 10);
+        string_builder.Concat(UInt64_val, pad_amount, pad_char, 10);
         return string_builder;
     }
 
     //! Convert a given signed integer value to a string and concatenate onto the stringbuilder. Any base value allowed.
-    public static StringBuilder Concat(this StringBuilder string_builder, int int_val, uint pad_amount, char pad_char, uint base_val)
+    public static StringBuilder Concat(this StringBuilder string_builder, int int_val, UInt64 pad_amount, char pad_char, UInt64 base_val)
     {
         Debug.Assert(pad_amount >= 0);
         Debug.Assert(base_val > 0 && base_val <= 16);
@@ -79,12 +79,12 @@ public static class StringBuilderExtensions
         if (int_val < 0)
         {
             string_builder.Append('-');
-            uint uint_val = uint.MaxValue - ((uint)int_val) + 1; //< This is to deal with Int32.MinValue
-            string_builder.Concat(uint_val, pad_amount, pad_char, base_val);
+            UInt64 UInt64_val = UInt64.MaxValue - ((UInt64)int_val) + 1; //< This is to deal with Int32.MinValue
+            string_builder.Concat(UInt64_val, pad_amount, pad_char, base_val);
         }
         else
         {
-            string_builder.Concat((uint)int_val, pad_amount, pad_char, base_val);
+            string_builder.Concat((UInt64)int_val, pad_amount, pad_char, base_val);
         }
 
         return string_builder;
@@ -98,21 +98,21 @@ public static class StringBuilderExtensions
     }
 
     //! Convert a given signed integer value to a string and concatenate onto the stringbuilder. Assume base ten.
-    public static StringBuilder Concat(this StringBuilder string_builder, int int_val, uint pad_amount)
+    public static StringBuilder Concat(this StringBuilder string_builder, int int_val, UInt64 pad_amount)
     {
         string_builder.Concat(int_val, pad_amount, ms_default_pad_char, 10);
         return string_builder;
     }
 
     //! Convert a given signed integer value to a string and concatenate onto the stringbuilder. Assume base ten.
-    public static StringBuilder Concat(this StringBuilder string_builder, int int_val, uint pad_amount, char pad_char)
+    public static StringBuilder Concat(this StringBuilder string_builder, int int_val, UInt64 pad_amount, char pad_char)
     {
         string_builder.Concat(int_val, pad_amount, pad_char, 10);
         return string_builder;
     }
 
     //! Convert a given float value to a string and concatenate onto the stringbuilder
-    public static StringBuilder Concat(this StringBuilder string_builder, float float_val, uint decimal_places, uint pad_amount, char pad_char)
+    public static StringBuilder Concat(this StringBuilder string_builder, float float_val, UInt64 decimal_places, UInt64 pad_amount, char pad_char)
     {
         Debug.Assert(pad_amount >= 0);
 
@@ -160,7 +160,7 @@ public static class StringBuilderExtensions
             remainder += 0.5f;
 
             // All done, print that as an int!
-            string_builder.Concat((uint)remainder, 0, '0', 10);
+            string_builder.Concat((UInt64)remainder, 0, '0', 10);
         }
         return string_builder;
     }
@@ -173,14 +173,14 @@ public static class StringBuilderExtensions
     }
 
     //! Convert a given float value to a string and concatenate onto the stringbuilder. Assumes no padding.
-    public static StringBuilder Concat(this StringBuilder string_builder, float float_val, uint decimal_places)
+    public static StringBuilder Concat(this StringBuilder string_builder, float float_val, UInt64 decimal_places)
     {
         string_builder.Concat(float_val, decimal_places, 0, ms_default_pad_char);
         return string_builder;
     }
 
     //! Convert a given float value to a string and concatenate onto the stringbuilder.
-    public static StringBuilder Concat(this StringBuilder string_builder, float float_val, uint decimal_places, uint pad_amount)
+    public static StringBuilder Concat(this StringBuilder string_builder, float float_val, UInt64 decimal_places, UInt64 pad_amount)
     {
         string_builder.Concat(float_val, decimal_places, pad_amount, ms_default_pad_char);
         return string_builder;
@@ -230,9 +230,9 @@ public static class StringBuilderExtensions
                     string_builder.Append(format_string, verbatim_range_start, index - verbatim_range_start);
                 }
 
-                uint base_value = 10;
-                uint padding = 0;
-                uint decimal_places = 5; // Default decimal places in .NET libs
+                UInt64 base_value = 10;
+                UInt64 padding = 0;
+                UInt64 decimal_places = 5; // Default decimal places in .NET libs
 
                 index++;
                 char format_char = format_string[index];
@@ -268,7 +268,7 @@ public static class StringBuilderExtensions
                             // Specify amount of padding ( "{0:X8}" for example pads hex to eight characters
                             if ((format_string[index] >= '0') && (format_string[index] <= '9'))
                             {
-                                padding = (uint)(format_string[index] - '0');
+                                padding = (UInt64)(format_string[index] - '0');
                                 index++;
                             }
                         }
@@ -321,10 +321,15 @@ public static class StringBuilderExtensions
     }
 
     //! The worker method. This does a garbage-free conversion of a generic type, and uses the garbage-free Concat() to add to the stringbuilder
-    private static void ConcatFormatValue<T>(this StringBuilder string_builder, T arg, uint padding, uint base_value, uint decimal_places) where T : IConvertible
+    private static void ConcatFormatValue<T>(this StringBuilder string_builder, T arg, UInt64 padding, UInt64 base_value, UInt64 decimal_places) where T : IConvertible
     {
         switch (arg.GetTypeCode())
         {
+            case System.TypeCode.UInt64:
+                {
+                    string_builder.Concat(arg.ToUInt64(System.Globalization.NumberFormatInfo.CurrentInfo), padding, '0', base_value);
+                    break;
+                }
             case System.TypeCode.UInt32:
                 {
                     string_builder.Concat(arg.ToUInt32(System.Globalization.NumberFormatInfo.CurrentInfo), padding, '0', base_value);
