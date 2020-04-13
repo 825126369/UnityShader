@@ -181,7 +181,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: '                                                                '
+  m_Text: '53513           '
 --- !u!222 &311517762
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -196,13 +196,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 311517759}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 017c84a9b2e8d0543a1e818449de6cff, type: 3}
+  m_Script: {fileID: 11500000, guid: 715ab9887c4234bbd887a35c0c46a914, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  value: 1334828
+  bUseNoGCStringBuilder: 1
+  value: 53513
   targetValue: 1000000000
-  fAlphaTime: 0.3
-  fUpdateTextMaxTime: 1
+  fAlphaTime: 0.5
+  fUpdateTextMaxTime: 0.5
   Height: 100
 --- !u!1 &665419506
 GameObject:
