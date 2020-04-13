@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,7 +19,6 @@ public class TextBeat : BaseMeshEffect
     public float fUpdateTextMaxTime = 0.5f;
     private float fBeginUpdateTextTime;
     
-    private string lastString;
     private float fBeginAniTime = -100f;
 	public float Height = 100;
 
@@ -33,11 +34,23 @@ public class TextBeat : BaseMeshEffect
     Queue<UIVertexInfo> mUIVertexInfoList = new Queue<UIVertexInfo>();
 
     private Text mText;
+    private StringBuilder mStringBuilder;
+    private StringBuilder lastStringBuilder;
+    private String mString;
+    private String lastString;
 
     protected override void Start()
     {
         mText = GetComponent<Text>();
-        lastString = mText.text;
+
+        mStringBuilder = new StringBuilder(64);
+        mStringBuilder.GarbageFreeClear();
+        mString = mStringBuilder.GetGarbageFreeString();
+        mText.text = mString;
+
+        lastStringBuilder = new StringBuilder(64);
+        lastStringBuilder.GarbageFreeClear();
+        lastString = lastStringBuilder.GetGarbageFreeString();
     }
 
     private void Update()
@@ -45,13 +58,21 @@ public class TextBeat : BaseMeshEffect
         if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime && orFinishAni1())
         {
             fBeginUpdateTextTime = Time.time;
-            value = value + 1;
-            mText.text = value.ToString();
+            value = value + UnityEngine.Random.Range(1, 10000);
+
+            mStringBuilder.GarbageFreeClear();
+            mStringBuilder.ConcatFormat<int>("{0}", value);
+            mText.text = mString;
+
+            mText.SetLayoutDirty();
+            mText.SetVerticesDirty();
+            //mText.FontTextureChanged();
         }
 
         if(!orFinishAni1())
         {
-            mText.FontTextureChanged();
+            mText.SetVerticesDirty();
+            mText.SetMaterialDirty();
         }
     }
 
@@ -132,41 +153,41 @@ public class TextBeat : BaseMeshEffect
 
     public override void ModifyMesh(VertexHelper vh)
     {
-        if (!string.IsNullOrEmpty(mText.text))
+        if (orFinishAni())
         {
-            if (orFinishAni())
+            if (!bInitLastInput)
             {
-                if (!bInitLastInput)
-                {
-                    lastString = mText.text;
+                lastStringBuilder.GarbageFreeClear();
+                lastStringBuilder.ConcatFormat<string>("{0}", mText.text);
 
-                    LastInput.Clear();
-                    vh.GetUIVertexStream(LastInput);
-                    bInitLastInput = true;
+                LastInput.Clear();
+                vh.GetUIVertexStream(LastInput);
+                bInitLastInput = true;
 
-                    Debug.Log("LastInput.Count: " + LastInput.Count);
-                }
-
-                bLastBuild = false;
-
-                if (mText.text != lastString)
-                {
-                    fBeginAniTime = Time.time;
-                    input.Clear();
-                    vh.GetUIVertexStream(input);
-                    bInitLastInput = false;
-
-                    Debug.Log("input.Count: " + input.Count);
-                }
-            }else
-            {
-                vh.Clear();
-                output.Clear();
-                outputIndices.Clear();
-                PlayAni(vh);
-                vh.AddUIVertexStream(output, outputIndices);
-                bLastBuild = true;
+                Debug.Log("LastInput.Count: " + LastInput.Count);
             }
+
+            bLastBuild = false;
+
+            if (mText.text != lastString)
+            {
+                fBeginAniTime = Time.time;
+                input.Clear();
+                vh.GetUIVertexStream(input);
+                bInitLastInput = false;
+
+                Debug.Log("input.Count: " + input.Count);
+            }
+        }
+
+        if (!orFinishAni())
+        {
+            vh.Clear();
+            output.Clear();
+            outputIndices.Clear();
+            PlayAni(vh);
+            vh.AddUIVertexStream(output, outputIndices);
+            bLastBuild = true;
         }
     }
 }
