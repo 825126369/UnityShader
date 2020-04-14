@@ -8,33 +8,38 @@ using UnityEngine.UI;
 public class UGUITextBeat : BaseMeshEffect 
 {
     public bool bUseNoGCStringBuilder = true;
-    public UInt64 value = 1000;
-    public UInt64 targetValue = 1000000000;
-	public float fAlphaTime = 0.5f;
+    public char prefix = '$';
+    public UInt64 value = 10000000000;
+    public UInt64 targetValue = 1000000000000000;
     public float fUpdateTextMaxTime = 0.5f;
-    private float fBeginUpdateTextTime;
-    
-    private float fBeginAniTime = -100f;
-	public float Height = 100;
 
-    List<UIVertex> LastInput = new List<UIVertex>();
-    List<UIVertex> input = new List<UIVertex>();
-    List<UIVertex> output = new List<UIVertex>();
-    List<int> outputIndices = new List<int>();
+    public float fAlphaTime = 0.5f;
+    public float Height = 100;
+
+    private float fBeginUpdateTextTime;
+    private float fBeginAniTime = -100f;
+    
+    private List<UIVertex> LastInput = new List<UIVertex>();
+    private List<UIVertex> input = new List<UIVertex>();
+    private static List<UIVertex> output = new List<UIVertex>();
+    private static List<int> outputIndices = new List<int>();
+
     private bool bInitLastInput = false;
     private bool bLastBuild = true;
-
-    private int oneSize = 6;
 
     private Text mText;
     private StringBuilder mStringBuilder;
     private StringBuilder lastStringBuilder;
     private String mString;
     private String lastString;
-    private int nMaxStringBuilerCapacity = 16;
+
+    private const int oneSize = 6;
+    private const int UInt64Length = 20;
+    private int nMaxStringBuilerCapacity;
 
     protected override void Start()
     {
+        nMaxStringBuilerCapacity = UInt64Length + 1;
         mText = GetComponent<Text>();
 
         if (bUseNoGCStringBuilder)
@@ -68,7 +73,7 @@ public class UGUITextBeat : BaseMeshEffect
         if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime && orFinishAni1())
         {
             fBeginUpdateTextTime = Time.time;
-            value = value + (UInt64)UnityEngine.Random.Range(1, 10000);
+            value = value + (UInt64)UnityEngine.Random.Range(1, 1000000000);
 
             UpdateText(value);
         }
@@ -85,6 +90,7 @@ public class UGUITextBeat : BaseMeshEffect
         {
             InitNoGCStringBuilder();
             mStringBuilder.GarbageFreeClear();
+            mStringBuilder.Append(prefix);
             mStringBuilder.AppendUInt64(value);
             mStringBuilder.Align(mText.alignment);
             mText.text = mString;
@@ -95,7 +101,7 @@ public class UGUITextBeat : BaseMeshEffect
         }
         else
         {
-            mText.text = value.ToString();
+            mText.text = prefix + value.ToString();
         }
     }
 
