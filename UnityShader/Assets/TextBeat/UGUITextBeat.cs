@@ -73,7 +73,8 @@ public class UGUITextBeat : BaseMeshEffect
         if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime && orFinishAni1())
         {
             fBeginUpdateTextTime = Time.time;
-            value = value + (UInt64)UnityEngine.Random.Range(1, 1000000000);
+            //value = value + (UInt64)UnityEngine.Random.Range(1, 1000000000);
+            value = value + 1;
 
             UpdateText(value);
         }

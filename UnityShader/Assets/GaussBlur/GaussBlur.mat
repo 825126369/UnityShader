@@ -29,7 +29,7 @@ Material:
     m_Floats:
     - PixelSnap: 0
     - _BlendOption: 0
-    - _BlurSize: 5
+    - _BlurSize: 3
     - _DstBlend: 10
     - _EnableExternalAlpha: 0
     - _SrcBlend: 1
