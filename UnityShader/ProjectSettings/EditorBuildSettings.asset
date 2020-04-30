@@ -4,4 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/SpriteMask/SpriteMask.unity
+    guid: 47697f83ec55c4e61b0fd0c01fa96725
+  m_configObjects: {}

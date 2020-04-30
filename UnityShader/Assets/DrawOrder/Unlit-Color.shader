@@ -25,7 +25,6 @@ Properties {
 
     _ZWrite ("_ZWrite", Float) = 0
     [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest ("_ZTest", Float) = 4
-    _AlphaTestValue("_AlphaTestValue",range(0, 1)) = 0.3
 }
 
 SubShader {
@@ -43,13 +42,13 @@ SubShader {
 
     ZWrite [_ZWrite]
     ZTest [_ZTest]
-
-    AlphaTest Greater [_AlphaTestValue]
-    
+            
     BlendOp [_BlendOption]
 	Blend [_SrcBlend] [_DstBlend]
     Cull [_CullMode]
-
+        
+    ColorMask [_ColorMask]
+    
     Pass {
         CGPROGRAM
             #pragma vertex vert
