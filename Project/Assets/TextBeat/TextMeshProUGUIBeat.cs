@@ -4,10 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class TextMeshProUGUIBeat : TextMeshProUGUI
+namespace TextBeat
 {
-    protected override void OnPopulateMesh(VertexHelper toFill)
+    public class TextMeshProUGUIBeat : TextMeshProUGUI
     {
-        base.OnPopulateMesh(toFill);
+        protected override void OnPopulateMesh(VertexHelper toFill)
+        {
+            base.OnPopulateMesh(toFill);
+        }
     }
 }
