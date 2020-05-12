@@ -470,8 +470,8 @@ MonoBehaviour:
   prefix: 36
   value: 123
   targetValue: 10
-  fUpdateTextMaxTime: 1
-  fAlphaTime: 1
+  fUpdateTextMaxTime: 0.2
+  fAlphaTime: 0.2
   fAniHeight: 1.5
 --- !u!114 &826221193
 MonoBehaviour:

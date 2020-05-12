@@ -21,8 +21,6 @@ namespace TextBeat
         private float fBeginUpdateTextTime;
         private float fBeginAniTime = -100f;
 
-        private bool hasTextChanged;
-
         private TextMeshProMeshInfo lastInput = new TextMeshProMeshInfo();
         private TextMeshProMeshInfo Input = new TextMeshProMeshInfo();
 
@@ -168,13 +166,13 @@ namespace TextBeat
 
             int nMeshCount = mText.textInfo.meshInfo.Length;
 
-            for (int i = 0; i < Input.characterCount; i++)
+            for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
             {
-                int materialIndex = Input.m_TMP_CharacterInfos[i].materialReferenceIndex;
+                int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
                 bool bChanged = false;
-                if (i < lastInput.characterCount)
+                if (i < lastInput.mListCharacterInfo.Count)
                 {
-                    bChanged = lastInput.m_TMP_CharacterInfos[i].character != Input.m_TMP_CharacterInfos[i].character;
+                    bChanged = lastInput.mListCharacterInfo[i].character != Input.mListCharacterInfo[i].character;
                 }
                 else
                 {
@@ -183,19 +181,19 @@ namespace TextBeat
                 
                 if (bChanged)
                 {
-                    if (i < lastInput.characterCount)
+                    if (i < lastInput.mListCharacterInfo.Count)
                     {
-                        int LastMaterialIndex = lastInput.m_TMP_CharacterInfos[i].materialReferenceIndex;
+                        int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
                         AddIndices(outputVertexs.Count);
                         for (int j = 0; j < oneSize; j++)
                         {
                             int nOirIndex = i * oneSize + j;
-                            Vector3 oriPos = lastInput.m_TMP_MeshInfos[LastMaterialIndex].vertices[nOirIndex];
-                            Color32 oriColor32 = lastInput.m_TMP_MeshInfos[LastMaterialIndex].colors32[nOirIndex];
-                            Vector2 uv0 = lastInput.m_TMP_MeshInfos[LastMaterialIndex].uvs0[nOirIndex];
-                            Vector2 uv2 = lastInput.m_TMP_MeshInfos[LastMaterialIndex].uvs2[nOirIndex];
-                            Vector3 normal = lastInput.m_TMP_MeshInfos[LastMaterialIndex].normals[nOirIndex];
-                            Vector4 tangent = lastInput.m_TMP_MeshInfos[LastMaterialIndex].tangents[nOirIndex];
+                            Vector3 oriPos = lastInput.mListMeshInfo[LastMaterialIndex].vertices[nOirIndex];
+                            Color32 oriColor32 = lastInput.mListMeshInfo[LastMaterialIndex].colors32[nOirIndex];
+                            Vector2 uv0 = lastInput.mListMeshInfo[LastMaterialIndex].uvs0[nOirIndex];
+                            Vector2 uv2 = lastInput.mListMeshInfo[LastMaterialIndex].uvs2[nOirIndex];
+                            Vector3 normal = lastInput.mListMeshInfo[LastMaterialIndex].normals[nOirIndex];
+                            Vector4 tangent = lastInput.mListMeshInfo[LastMaterialIndex].tangents[nOirIndex];
 
                             Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
                             Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
@@ -207,12 +205,12 @@ namespace TextBeat
                     for (int j = 0; j < oneSize; j++)
                     {
                         int nOirIndex = i * oneSize + j;
-                        Vector3 oriPos = Input.m_TMP_MeshInfos[materialIndex].vertices[nOirIndex];
-                        Color32 oriColor32 = Input.m_TMP_MeshInfos[materialIndex].colors32[nOirIndex];
-                        Vector2 uv0 = Input.m_TMP_MeshInfos[materialIndex].uvs0[nOirIndex];
-                        Vector2 uv2 = Input.m_TMP_MeshInfos[materialIndex].uvs2[nOirIndex];
-                        Vector3 normal = Input.m_TMP_MeshInfos[materialIndex].normals[nOirIndex];
-                        Vector4 tangent = Input.m_TMP_MeshInfos[materialIndex].tangents[nOirIndex];
+                        Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
+                        Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
+                        Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
+                        Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
+                        Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
+                        Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
 
                         Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
                         Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
@@ -226,12 +224,12 @@ namespace TextBeat
                     for (int j = 0; j < oneSize; j++)
                     {
                         int nOirIndex = i * oneSize + j;
-                        Vector3 oriPos = Input.m_TMP_MeshInfos[materialIndex].vertices[nOirIndex];
-                        Color32 oriColor32 = Input.m_TMP_MeshInfos[materialIndex].colors32[nOirIndex];
-                        Vector2 uv0 = Input.m_TMP_MeshInfos[materialIndex].uvs0[nOirIndex];
-                        Vector2 uv2 = Input.m_TMP_MeshInfos[materialIndex].uvs2[nOirIndex];
-                        Vector3 normal = Input.m_TMP_MeshInfos[materialIndex].normals[nOirIndex];
-                        Vector4 tangent = Input.m_TMP_MeshInfos[materialIndex].tangents[nOirIndex];
+                        Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
+                        Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
+                        Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
+                        Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
+                        Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
+                        Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
                         AddVertexInfo(oriPos, oriColor32, uv0, uv2, normal, tangent);
                     };
                 }
@@ -247,7 +245,7 @@ namespace TextBeat
             Debug.Assert(mText.textInfo.meshInfo.Length == 1);
             Debug.Assert(outputVertexs.Count / 4 * 6 == outputIndices.Count, outputVertexs.Count + " | " + outputIndices.Count);
 
-            for (int i = 0; i < mText.textInfo.meshInfo.Length; i++)
+            for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
                 mText.textInfo.meshInfo[i].mesh.Clear();
 
@@ -267,22 +265,14 @@ namespace TextBeat
         {
             if (obj == mText)
             {
-                hasTextChanged = true;
-
-                if (hasTextChanged)
+                if (orFinishAni1())
                 {
-                    hasTextChanged = false;
-
-                    if (orFinishAni1())
+                    if (mText.text != lastString)
                     {
-                        if (mText.text != lastString)
-                        {
-                            bLastBuild = false;
-                            fBeginAniTime = Time.time;
-                            TextBeatUtility.CopyTo(Input, mText.textInfo);
-                            Debug.Log("String: " + mText.text);
-                            PlayAni();
-                        }
+                        bLastBuild = false;
+                        fBeginAniTime = Time.time;
+                        TextBeatUtility.CopyTo(Input, mText.textInfo);
+                        PlayAni();
                     }
                 }
             }
@@ -300,22 +290,6 @@ namespace TextBeat
             
             while (true)
             {
-                if (hasTextChanged)
-                {
-                    hasTextChanged = false;
-
-                    if (orFinishAni1())
-                    {
-                        if (mText.text != lastString)
-                        {
-                            bLastBuild = false;
-                            fBeginAniTime = Time.time;
-                            TextBeatUtility.CopyTo(Input, mText.textInfo);
-                            Debug.Log("String: " + mText.text);
-                        }
-                    }
-                }
-
                 if (!orFinishAni())
                 {
                     PlayAni();
@@ -329,8 +303,8 @@ namespace TextBeat
                         lastString = mText.text;
                         TextBeatUtility.CopyTo(lastInput, mText.textInfo);
                         bLastBuild = true;
-                        Debug.Log("lastString: " + mText.text);
 
+                        // 这里必须得重新ReSize 顶点信息，ReSize 完毕后，得重新赋值，否则会出现 某一帧 看不到的 Bug
                         for (int i = 0; i < mText.textInfo.meshInfo.Length; i++)
                         {
                             int nReSize = outputVertexs.Count / 4;
