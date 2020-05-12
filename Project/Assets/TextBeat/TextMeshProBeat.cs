@@ -95,7 +95,7 @@ namespace TextBeat
             {
                 fBeginUpdateTextTime = Time.time;
                 value = value + 1;
-                value = 100 + (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
+                value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
                 UpdateText(value);
             }
         }
@@ -242,12 +242,12 @@ namespace TextBeat
 
         public void UpdateMesh()
         {
-            Debug.Assert(mText.textInfo.meshInfo.Length == 1);
-            Debug.Assert(outputVertexs.Count / 4 * 6 == outputIndices.Count, outputVertexs.Count + " | " + outputIndices.Count);
+            //Debug.Assert(mText.textInfo.meshInfo.Length == 1);
+            //Debug.Assert(outputVertexs.Count / 4 * 6 == outputIndices.Count, outputVertexs.Count + " | " + outputIndices.Count);
 
             for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
-                mText.textInfo.meshInfo[i].mesh.Clear();
+                mText.textInfo.meshInfo[i].mesh.Clear(false);
 
                 mText.textInfo.meshInfo[i].mesh.SetVertices(outputVertexs);
                 mText.textInfo.meshInfo[i].mesh.SetUVs(0, outputuv0s);
@@ -305,68 +305,29 @@ namespace TextBeat
                         bLastBuild = true;
 
                         // 这里必须得重新ReSize 顶点信息，ReSize 完毕后，得重新赋值，否则会出现 某一帧 看不到的 Bug
-                        for (int i = 0; i < mText.textInfo.meshInfo.Length; i++)
+                        for (int i = 0; i < mText.textInfo.materialCount; i++)
                         {
-                            int nReSize = outputVertexs.Count / 4;
-                            mText.textInfo.meshInfo[i].ResizeMeshInfo(nReSize);
+                            if (mText.textInfo.meshInfo[i].vertices.Length < outputVertexs.Count)
+                            {
+                                int nReSize = outputVertexs.Count / 4;
+                                mText.textInfo.meshInfo[i].ResizeMeshInfo(nReSize);
+                                
+                                mText.textInfo.meshInfo[i].mesh.SetVertices(outputVertexs);
+                                mText.textInfo.meshInfo[i].mesh.SetUVs(0, outputuv0s);
+                                mText.textInfo.meshInfo[i].mesh.SetUVs(1, outputuv1s);
+                                mText.textInfo.meshInfo[i].mesh.SetColors(outputColors);
+                                mText.textInfo.meshInfo[i].mesh.SetNormals(outnormals);
+                                mText.textInfo.meshInfo[i].mesh.SetTangents(outtangents);
+                                mText.textInfo.meshInfo[i].mesh.SetTriangles(outputIndices, 0);
+                            }
                         }
-
-                        RefreshOriMesh();
                     }
                 }
 
                 loopCount += 1;
-                yield return 0;
+                yield return null;
             }
         }
-
-        public void RefreshOriMesh()
-        {
-            for (int i = 0; i < mText.textInfo.meshInfo.Length; i++)
-            {
-                for(int j = 0; j< outputVertexs.Count; j++)
-                {
-                    mText.textInfo.meshInfo[i].vertices[j] = outputVertexs[j];
-                }
-
-                for (int j = 0; j < outputuv0s.Count; j++)
-                {
-                    mText.textInfo.meshInfo[i].uvs0[j] = outputuv0s[j];
-                }
-
-                for (int j = 0; j < outputuv1s.Count; j++)
-                {
-                    mText.textInfo.meshInfo[i].uvs2[j] = outputuv1s[j];
-                }
-
-                for (int j = 0; j < outputColors.Count; j++)
-                {
-                    mText.textInfo.meshInfo[i].colors32[j] = outputColors[j];
-                }
-
-                for (int j = 0; j < outnormals.Count; j++)
-                {
-                    mText.textInfo.meshInfo[i].normals[j] = outnormals[j];
-                }
-
-                for (int j = 0; j < outtangents.Count; j++)
-                {
-                    mText.textInfo.meshInfo[i].tangents[j] = outtangents[j];
-                }
-
-                for (int j = 0; j < outputIndices.Count; j++)
-                {
-                    mText.textInfo.meshInfo[i].triangles[j] = outputIndices[j];
-                }
-                
-                mText.textInfo.meshInfo[i].mesh.SetVertices(outputVertexs);
-                mText.textInfo.meshInfo[i].mesh.SetUVs(0, outputuv0s);
-                mText.textInfo.meshInfo[i].mesh.SetUVs(1, outputuv1s);
-                mText.textInfo.meshInfo[i].mesh.SetColors(outputColors);
-                mText.textInfo.meshInfo[i].mesh.SetNormals(outnormals);
-                mText.textInfo.meshInfo[i].mesh.SetTangents(outtangents);
-                mText.textInfo.meshInfo[i].mesh.SetTriangles(outputIndices, 0);
-            }
-        }
+  
     }
 }
