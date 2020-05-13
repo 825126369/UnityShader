@@ -13,12 +13,12 @@ namespace TextBeat
         public string prefix = string.Empty;
         public UInt64 value = 10000000000;
         public UInt64 targetValue = 1000000000000000;
-        public float fUpdateTextMaxTime = 0.5f;
-
         public float fAlphaTime = 0.5f;
         public float fAniHeight = 100;
 
+        public float fUpdateTextMaxTime = 0.5f;
         private float fBeginUpdateTextTime;
+
         private float fBeginAniTime = -100f;
 
         private TextMeshProMeshInfo lastInput = new TextMeshProMeshInfo();
@@ -188,7 +188,8 @@ namespace TextBeat
 
             float fTimePercent = Mathf.Clamp01((Time.time - fBeginAniTime) / fAlphaTime);
 
-            int nMeshCount = mText.textInfo.meshInfo.Length;
+            int nLastVisibleIndex = 0;
+            int nNowVisibleIndex = 0;
 
             for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
             {
@@ -202,16 +203,16 @@ namespace TextBeat
                 {
                     bChanged = true;
                 }
-                
+
                 if (bChanged)
                 {
-                    if (i < lastInput.mListCharacterInfo.Count)
+                    if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
                     {
                         int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
                         AddIndices(outputVertexs.Count);
                         for (int j = 0; j < oneSize; j++)
                         {
-                            int nOirIndex = i * oneSize + j;
+                            int nOirIndex = nLastVisibleIndex * oneSize + j;
                             Vector3 oriPos = lastInput.mListMeshInfo[LastMaterialIndex].vertices[nOirIndex];
                             Color32 oriColor32 = lastInput.mListMeshInfo[LastMaterialIndex].colors32[nOirIndex];
                             Vector2 uv0 = lastInput.mListMeshInfo[LastMaterialIndex].uvs0[nOirIndex];
@@ -224,40 +225,53 @@ namespace TextBeat
                             AddVertexInfo(targetPos, targetColor32, uv0, uv2, normal, tangent);
                         }
                     }
-                    
-                    AddIndices(outputVertexs.Count);
-                    for (int j = 0; j < oneSize; j++)
+
+                    if (Input.mListCharacterInfo[i].isVisible)
                     {
-                        int nOirIndex = i * oneSize + j;
+                        AddIndices(outputVertexs.Count);
+                        for (int j = 0; j < oneSize; j++)
+                        {
+                            int nOirIndex = nNowVisibleIndex * oneSize + j;
+                            Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
+                            Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
+                            Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
+                            Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
+                            Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
+                            Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
 
-                        Debug.Assert(Input.mListMeshInfo[materialIndex].vertices.Count > nOirIndex, nOirIndex + " | " + Input.mListMeshInfo[materialIndex].vertices.Count);
-                        Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
-                        Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
-                        Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
-                        Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
-                        Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
-                        Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
-
-                        Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
-                        Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
-                        AddVertexInfo(targetPos, targetColor32, uv0, uv2, normal, tangent);
-                    };
+                            Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
+                            Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
+                            AddVertexInfo(targetPos, targetColor32, uv0, uv2, normal, tangent);
+                        };
+                    }
                 }
                 else
                 {
-
-                    AddIndices(outputVertexs.Count);
-                    for (int j = 0; j < oneSize; j++)
+                    if (Input.mListCharacterInfo[i].isVisible)
                     {
-                        int nOirIndex = i * oneSize + j;
-                        Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
-                        Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
-                        Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
-                        Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
-                        Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
-                        Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
-                        AddVertexInfo(oriPos, oriColor32, uv0, uv2, normal, tangent);
-                    };
+                        AddIndices(outputVertexs.Count);
+                        for (int j = 0; j < oneSize; j++)
+                        {
+                            int nOirIndex = nNowVisibleIndex * oneSize + j;
+                            Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
+                            Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
+                            Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
+                            Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
+                            Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
+                            Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
+                            AddVertexInfo(oriPos, oriColor32, uv0, uv2, normal, tangent);
+                        };
+                    }
+                }
+
+                if (Input.mListCharacterInfo[i].isVisible)
+                {
+                    nNowVisibleIndex++;
+                }
+
+                if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
+                {
+                    nLastVisibleIndex++;
                 }
 
             }
@@ -331,22 +345,27 @@ namespace TextBeat
                     bLastBuild = true;
 
                     // 这里必须得重新ReSize 顶点信息，ReSize 完毕后，得重新赋值，否则会出现 某一帧 看不到的 Bug
-                    for (int i = 0; i < mText.textInfo.materialCount; i++)
-                    {
-                        if (mText.textInfo.meshInfo[i].vertices.Length < outputVertexs.Count)
-                        {
-                            int nReSize = outputVertexs.Count / 4;
-                            mText.textInfo.meshInfo[i].ResizeMeshInfo(nReSize);
-                                
-                            mText.textInfo.meshInfo[i].mesh.SetVertices(outputVertexs);
-                            mText.textInfo.meshInfo[i].mesh.SetUVs(0, outputuv0s);
-                            mText.textInfo.meshInfo[i].mesh.SetUVs(1, outputuv1s);
-                            mText.textInfo.meshInfo[i].mesh.SetColors(outputColors);
-                            mText.textInfo.meshInfo[i].mesh.SetNormals(outnormals);
-                            mText.textInfo.meshInfo[i].mesh.SetTangents(outtangents);
-                            mText.textInfo.meshInfo[i].mesh.SetTriangles(outputIndices, 0);
-                        }
-                    }
+                    RefreshMeshSize();
+                }
+            }
+        }
+
+        void RefreshMeshSize()
+        {
+            for (int i = 0; i < mText.textInfo.materialCount; i++)
+            {
+                if (mText.textInfo.meshInfo[i].vertices.Length < outputVertexs.Count)
+                {
+                    int nReSize = outputVertexs.Count / 4;
+                    mText.textInfo.meshInfo[i].ResizeMeshInfo(nReSize);
+
+                    mText.textInfo.meshInfo[i].mesh.SetVertices(outputVertexs);
+                    mText.textInfo.meshInfo[i].mesh.SetUVs(0, outputuv0s);
+                    mText.textInfo.meshInfo[i].mesh.SetUVs(1, outputuv1s);
+                    mText.textInfo.meshInfo[i].mesh.SetColors(outputColors);
+                    mText.textInfo.meshInfo[i].mesh.SetNormals(outnormals);
+                    mText.textInfo.meshInfo[i].mesh.SetTangents(outtangents);
+                    mText.textInfo.meshInfo[i].mesh.SetTriangles(outputIndices, 0);
                 }
             }
         }

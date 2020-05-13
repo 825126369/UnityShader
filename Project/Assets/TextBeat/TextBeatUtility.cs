@@ -30,6 +30,7 @@ namespace TextBeat
         {
             public char character;
             public int materialReferenceIndex;
+            public bool isVisible;
         }
 
         public List<MeshInfo> mListMeshInfo = new List<MeshInfo>();
@@ -129,6 +130,7 @@ namespace TextBeat
 
                 mCharacterInfo.character = mInputInfo.characterInfo[i].character;
                 mCharacterInfo.materialReferenceIndex = mInputInfo.characterInfo[i].materialReferenceIndex;
+                mCharacterInfo.isVisible = mInputInfo.characterInfo[i].isVisible;
                 mOutInfo.mListCharacterInfo.Add(mCharacterInfo);
             }
         }

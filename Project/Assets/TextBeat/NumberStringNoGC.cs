@@ -4,9 +4,16 @@ using UnityEngine;
 
 namespace TextBeat
 {
+    public class NumberString
+    {
+        StringBuilder mString;
+    }
+
     public static class NumberStringNoGC
     {
         private static readonly char[] ms_digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+        private static char Placeholder = '^';
 
         public static StringBuilder AppendUInt64(this StringBuilder string_builder, UInt64 UInt64_val)
         {
@@ -42,7 +49,7 @@ namespace TextBeat
             int nLeftSpaceCount = 0;
             for (int i = 0; i < string_builder.Capacity; i++)
             {
-                if (string_builder[i] == ' ')
+                if (string_builder[i] == Placeholder)
                 {
                     nLeftSpaceCount = nLeftSpaceCount + 1;
                 }
@@ -55,7 +62,7 @@ namespace TextBeat
             int nRightSpaceCount = 0;
             for (int i = string_builder.Capacity - 1; i >= 0; i--)
             {
-                if (string_builder[i] == ' ')
+                if (string_builder[i] == Placeholder)
                 {
                     nRightSpaceCount = nRightSpaceCount + 1;
                 }
@@ -77,7 +84,7 @@ namespace TextBeat
 
                     for (int i = 0; i < offset; i++)
                     {
-                        string_builder[string_builder.Capacity - 1 - nRightSpaceCount - i] = ' ';
+                        string_builder[string_builder.Capacity - 1 - nRightSpaceCount - i] = Placeholder;
                     }
                 }
                 else
@@ -89,7 +96,7 @@ namespace TextBeat
 
                     for (int i = 0; i < offset; i++)
                     {
-                        string_builder[nLeftSpaceCount + i] = ' ';
+                        string_builder[nLeftSpaceCount + i] = Placeholder;
                     }
                 }
             }
@@ -164,7 +171,7 @@ namespace TextBeat
         public static void GarbageFreeClear(this StringBuilder string_builder)
         {
             string_builder.Length = 0;
-            string_builder.Append(' ', string_builder.Capacity);
+            string_builder.Append(Placeholder, string_builder.Capacity);
             string_builder.Length = 0;
         }
     }
