@@ -13,6 +13,8 @@ namespace TextBeat
         public string prefix = string.Empty;
         public UInt64 value = 10000000000;
         public UInt64 targetValue = 1000000000000000;
+        public bool bImmediatelyToTargetValue = false;
+
         public float fAlphaTime = 0.5f;
         public float fAniHeight = 100;
 
@@ -40,7 +42,6 @@ namespace TextBeat
         private bool bLastBuild = false;
 
         private const int UInt64Length = 20;
-        private int nMaxStringBuilerCapacity;
         private const int oneSize = 4;
 
         void Awake()
@@ -68,15 +69,22 @@ namespace TextBeat
             {
                 lastString = mText.text;
             }
-
+            
             mText.ForceMeshUpdate();
             TextBeatUtility.CopyTo(lastInput, mText.textInfo);
             bLastBuild = true;
+
+            InitMaxMeshSize(); 
+        }
+
+        private int GetCharacterMaxCount()
+        {
+            return UInt64Length + prefix.Length;
         }
         
         private void InitNoGCStringBuilder()
         {
-            nMaxStringBuilerCapacity = UInt64Length + prefix.Length;
+            int nMaxStringBuilerCapacity = GetCharacterMaxCount();
             if (mStringBuilder == null || mStringBuilder.Capacity < nMaxStringBuilerCapacity)
             {
                 mStringBuilder = new StringBuilder(nMaxStringBuilerCapacity);
@@ -93,14 +101,31 @@ namespace TextBeat
 
         private void Update()
         {
-            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime && orCanChangeText())
+            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
             {
-                fBeginUpdateTextTime = Time.time;
-                value = value + 1;
-                //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
-                UpdateText(prefix, value);
-            }
+                if (orCanChangeText())
+                {
+                    fBeginUpdateTextTime = Time.time;
+                    if (bImmediatelyToTargetValue)
+                    {
+                        value = targetValue;
+                        bImmediatelyToTargetValue = false;
+                        UpdateText(prefix, value);
+                    }
+                    else if (value < targetValue)
+                    {
+                        value = value + (UInt64)UnityEngine.Random.Range(1, 100);
+                        UpdateText(prefix, value);
+                    }
 
+                    //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
+                    //UpdateText(prefix, value);
+                }
+            }
+        }
+
+        private void LateUpdate()
+        {
             BuildAni();
         }
 
@@ -345,30 +370,44 @@ namespace TextBeat
                     bLastBuild = true;
 
                     // 这里必须得重新ReSize 顶点信息，ReSize 完毕后，得重新赋值，否则会出现 某一帧 看不到的 Bug
-                    RefreshMeshSize();
+                    //RefreshMeshSize();
                 }
             }
         }
 
-        void RefreshMeshSize()
+        //void RefreshMeshSize()
+        //{
+        //    for (int i = 0; i < mText.textInfo.materialCount; i++)
+        //    {
+        //        if (mText.textInfo.meshInfo[i].vertices.Length < mText.textInfo.meshInfo[i].mesh.vertices.Length)
+        //        {
+        //            int nReSize = mText.textInfo.meshInfo[i].mesh.vertices.Length / 4;
+        //            mText.textInfo.meshInfo[i].ResizeMeshInfo(nReSize);
+
+        //            //mText.textInfo.meshInfo[i].mesh.SetVertices(outputVertexs);
+        //            //mText.textInfo.meshInfo[i].mesh.SetUVs(0, outputuv0s);
+        //            //mText.textInfo.meshInfo[i].mesh.SetUVs(1, outputuv1s);
+        //            //mText.textInfo.meshInfo[i].mesh.SetColors(outputColors);
+        //            //mText.textInfo.meshInfo[i].mesh.SetNormals(outnormals);
+        //            //mText.textInfo.meshInfo[i].mesh.SetTangents(outtangents);
+        //            //mText.textInfo.meshInfo[i].mesh.SetTriangles(outputIndices, 0);
+        //        }
+        //    }
+        //}
+
+        void InitMaxMeshSize()
         {
+            // 因为一直报错: Mesh.vertices is too small. The supplied vertex array has less vertices than are referenced by the triangles array.
+            // 所以 初始化的时候就把尺寸调到最大
+            int nMaxStringBuilerCapacity = GetCharacterMaxCount() * 2;
             for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
-                if (mText.textInfo.meshInfo[i].vertices.Length < outputVertexs.Count)
+                if (mText.textInfo.meshInfo[i].vertices.Length / 4 < nMaxStringBuilerCapacity)
                 {
-                    int nReSize = outputVertexs.Count / 4;
-                    mText.textInfo.meshInfo[i].ResizeMeshInfo(nReSize);
-
-                    mText.textInfo.meshInfo[i].mesh.SetVertices(outputVertexs);
-                    mText.textInfo.meshInfo[i].mesh.SetUVs(0, outputuv0s);
-                    mText.textInfo.meshInfo[i].mesh.SetUVs(1, outputuv1s);
-                    mText.textInfo.meshInfo[i].mesh.SetColors(outputColors);
-                    mText.textInfo.meshInfo[i].mesh.SetNormals(outnormals);
-                    mText.textInfo.meshInfo[i].mesh.SetTangents(outtangents);
-                    mText.textInfo.meshInfo[i].mesh.SetTriangles(outputIndices, 0);
+                    mText.textInfo.meshInfo[i].ResizeMeshInfo(nMaxStringBuilerCapacity);
                 }
             }
         }
-  
+
     }
 }

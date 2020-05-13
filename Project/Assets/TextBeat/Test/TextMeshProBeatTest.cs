@@ -9,30 +9,48 @@ public class TextMeshProBeatTest : MonoBehaviour
     private float fBeginUpdateTextTime;
     public float fAlphaTime = 0.5f;
     public float fAniHeight = 100;
+        
+    public int[] nMultuile = new int[4]
+    {
+        10000, 30000, 2000000, 50000000,
+    };
 
-    public TextMeshProBeat[] mTextMeshProBeat;
-    
+    public float[] AddCoef = new float[4]
+    {
+            0.0123f, 0.02789f, 0.0323432f, 0.042470f,
+    };
+     
+    public TextMeshProBeat[] mTextMeshProBeatList = new TextMeshProBeat[4];
+
+    private float fLastTime = 0.0f;
+    public float fSwitchInternalTime = 5.0f;
+
     void Start()
     {
-        mTextMeshProBeat.fAlphaTime = fAlphaTime;
-        mTextMeshProBeat.fAniHeight = fAniHeight;
-    }
-
-    private void ResetValue()
-    {
-
+        for (int i = 0; i < mTextMeshProBeatList.Length; i++)
+        {
+            mTextMeshProBeatList[i].fAlphaTime = fAlphaTime;
+            mTextMeshProBeatList[i].fAniHeight = fAniHeight;
+            mTextMeshProBeatList[i].value = (ulong)UnityEngine.Random.Range(1, 10000);
+            mTextMeshProBeatList[i].targetValue = mTextMeshProBeatList[i].value;
+        }
     }
 
     private void Update()
     {
-        if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime && orCanChangeText())
+        for (int i = 0; i < mTextMeshProBeatList.Length; i++)
         {
-            fBeginUpdateTextTime = Time.time;
-            value = value + 1;
-            //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
-            UpdateText(prefix, value);
+            mTextMeshProBeatList[i].targetValue += (ulong)(nMultuile[i] * AddCoef[i]);
         }
 
-        BuildAni();
+        if (Time.time - fLastTime > fSwitchInternalTime)
+        {
+            fLastTime = Time.time;
+
+            for (int i = 0; i < mTextMeshProBeatList.Length; i++)
+            {
+                mTextMeshProBeatList[i].bImmediatelyToTargetValue = true;
+            }
+        }
     }
 }
