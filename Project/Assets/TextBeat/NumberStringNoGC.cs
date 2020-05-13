@@ -139,6 +139,22 @@ namespace TextBeat
             }
         }
 
+        public static StringBuilder Align(this StringBuilder string_builder, TMPro.TextAlignmentOptions align)
+        {
+            if (align == TMPro.TextAlignmentOptions.Left || align == TMPro.TextAlignmentOptions.BottomLeft || align == TMPro.TextAlignmentOptions.TopLeft)
+            {
+                return Align(string_builder, TextAlignment.Left);
+            }
+            else if (align == TMPro.TextAlignmentOptions.Center || align == TMPro.TextAlignmentOptions.Top || align == TMPro.TextAlignmentOptions.Bottom)
+            {
+                return Align(string_builder, TextAlignment.Center);
+            }
+            else
+            {
+                return Align(string_builder, TextAlignment.Right);
+            }
+        }
+
 
         public static string GetGarbageFreeString(this StringBuilder string_builder)
         {
