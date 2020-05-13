@@ -6,9 +6,9 @@ using System;
 
 namespace TextBeat
 {
-    public class TextMeshProMeshInfo
+    public class TextMeshProMeshInfo : InterfaceCanRecycleObj
     {   
-        public class MeshInfo
+        public class MeshInfo : InterfaceCanRecycleObj
         {
             public List<Vector3> vertices = new List<Vector3>();
             public List<Vector3> normals = new List<Vector3>();
@@ -17,41 +17,74 @@ namespace TextBeat
             public List<Vector2> uvs2 = new List<Vector2>();
             public List<Color32> colors32 = new List<Color32>();
             public List<int> triangles = new List<int>();
+
+            public void Clear()
+            {
+                vertices.Clear();
+                uvs0.Clear();
+                uvs2.Clear();
+                colors32.Clear();
+                normals.Clear();
+                tangents.Clear();
+                triangles.Clear();
+            }
         }
 
-        public class CharacterInfo
+        public class CharacterInfo : InterfaceCanRecycleObj
         {
             public char character;
             public int materialReferenceIndex;
             public bool isVisible;
+
+            // 是否在做动画
+            public bool isPlayingAni = false;
+
+            public void Clear()
+            {
+                isPlayingAni = false;
+            }
         }
 
         public List<MeshInfo> mListMeshInfo = new List<MeshInfo>();
         public List<CharacterInfo> mListCharacterInfo = new List<CharacterInfo>();
-
-        public static Queue<CharacterInfo> mCharacterInfoPool = new Queue<CharacterInfo>();
-        public static Queue<MeshInfo> mMeshInfoPool = new Queue<MeshInfo>();
         
         public void Clear()
         {
             for (int i = 0; i < mListMeshInfo.Count; i++)
             {
-                mMeshInfoPool.Enqueue(mListMeshInfo[i]);
+                ObjectPool<MeshInfo>.recycle(mListMeshInfo[i]);
+            }
+            
+            for (int i = 0; i < mListCharacterInfo.Count; i++)
+            {
+                ObjectPool<CharacterInfo>.recycle(mListCharacterInfo[i]);
             }
 
             mListMeshInfo.Clear();
-
-
-            for (int i = 0; i < mListCharacterInfo.Count; i++)
-            {
-                mCharacterInfoPool.Enqueue(mListCharacterInfo[i]);
-            }
-
             mListCharacterInfo.Clear();
         }
     }
-    
-    public class TextBeatUtility
+
+    public class InputInfo : InterfaceCanRecycleObj
+    {
+        public float fBeginAniTime;
+        public TextMeshProMeshInfo Input;
+
+        public InputInfo()
+        {
+            Input = ObjectPool<TextMeshProMeshInfo>.Pop();
+        }
+
+        public void Clear()
+        {
+            if(Input != null)
+            {
+                ObjectPool<TextMeshProMeshInfo>.recycle(Input);
+            }
+        }
+    }
+
+    public static class TextBeatUtility
     {
         public static void CopyTo(TextMeshProMeshInfo mOutInfo, TMP_TextInfo mInputInfo)
         {
@@ -59,21 +92,8 @@ namespace TextBeat
 
             for(int i = 0; i < mInputInfo.materialCount; i++)
             {
-                TextMeshProMeshInfo.MeshInfo mMeshInfo = null;
-                if (TextMeshProMeshInfo.mMeshInfoPool.Count == 0)
-                {
-                    mMeshInfo = new TextMeshProMeshInfo.MeshInfo();
-                }else
-                {
-                    mMeshInfo = TextMeshProMeshInfo.mMeshInfoPool.Dequeue();
-                }
-
-                mMeshInfo.vertices.Clear();
-                mMeshInfo.uvs0.Clear();
-                mMeshInfo.uvs2.Clear();
-                mMeshInfo.colors32.Clear();
-                mMeshInfo.normals.Clear();
-                mMeshInfo.tangents.Clear();
+                TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
+                mMeshInfo.Clear();
                 
                 for (int j = 0; j < mInputInfo.meshInfo[i].vertices.Length; j++)
                 {
@@ -110,15 +130,8 @@ namespace TextBeat
             
             for(int i = 0; i < mInputInfo.characterCount; i++)
             {
-                TextMeshProMeshInfo.CharacterInfo mCharacterInfo = null;
-                if(TextMeshProMeshInfo.mCharacterInfoPool.Count == 0)
-                {
-                    mCharacterInfo = new TextMeshProMeshInfo.CharacterInfo();
-                }
-                else
-                {
-                    mCharacterInfo = TextMeshProMeshInfo.mCharacterInfoPool.Dequeue();
-                }
+                TextMeshProMeshInfo.CharacterInfo mCharacterInfo = ObjectPool<TextMeshProMeshInfo.CharacterInfo>.Pop();
+                mCharacterInfo.Clear();
 
                 mCharacterInfo.character = mInputInfo.characterInfo[i].character;
                 mCharacterInfo.materialReferenceIndex = mInputInfo.characterInfo[i].materialReferenceIndex;

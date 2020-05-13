@@ -25,6 +25,7 @@ namespace TextBeat
 
         private TextMeshProMeshInfo lastInput = new TextMeshProMeshInfo();
         private TextMeshProMeshInfo Input = new TextMeshProMeshInfo();
+        private List<InputInfo> InputList = new List<InputInfo>();
         private static List<TextMeshProMeshInfo.MeshInfo> outputMeshInfoList = new List<TextMeshProMeshInfo.MeshInfo>();
 
         private TMP_Text mText;
@@ -231,98 +232,105 @@ namespace TextBeat
         {
             ClearOutputMeshInfoList();
 
-            float fTimePercent = Mathf.Clamp01((Time.time - fBeginAniTime) / fAlphaTime);
-
-            int nLastVisibleIndex = 0;
-            int nNowVisibleIndex = 0;
-
-            for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
+            for (int k = 0; k < InputList.Count; k++)
             {
-                int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
-                bool bChanged = false;
-                if (i < lastInput.mListCharacterInfo.Count)
-                {
-                    bChanged = lastInput.mListCharacterInfo[i].character != Input.mListCharacterInfo[i].character;
-                }
-                else
-                {
-                    bChanged = true;
-                }
+                int nLastVisibleIndex = 0;
+                int nNowVisibleIndex = 0;
 
-                if (bChanged)
+                float fBeginAniTime = InputList[k].fBeginAniTime;
+                TextMeshProMeshInfo Input = InputList[k].Input;
+                float fTimePercent = Mathf.Clamp01((Time.time - fBeginAniTime) / fAlphaTime);
+
+                for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
                 {
-                    if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
+                    int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
+                    bool bChanged = false;
+                    if (i < lastInput.mListCharacterInfo.Count)
                     {
-                        int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
+                        bChanged = lastInput.mListCharacterInfo[i].character != Input.mListCharacterInfo[i].character;
+                    }
+                    else
+                    {
+                        bChanged = true;
+                    }
 
-                        int nBeginVertexIndex = outputMeshInfoList[LastMaterialIndex].vertices.Count;
-                        AddIndices(LastMaterialIndex, nBeginVertexIndex);
-                        for (int j = 0; j < oneSize; j++)
+                    if (bChanged)
+                    {
+                        if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
                         {
-                            int nOirIndex = nLastVisibleIndex * oneSize + j;
-                            Vector3 oriPos = lastInput.mListMeshInfo[LastMaterialIndex].vertices[nOirIndex];
-                            Color32 oriColor32 = lastInput.mListMeshInfo[LastMaterialIndex].colors32[nOirIndex];
-                            Vector2 uv0 = lastInput.mListMeshInfo[LastMaterialIndex].uvs0[nOirIndex];
-                            Vector2 uv2 = lastInput.mListMeshInfo[LastMaterialIndex].uvs2[nOirIndex];
-                            Vector3 normal = lastInput.mListMeshInfo[LastMaterialIndex].normals[nOirIndex];
-                            Vector4 tangent = lastInput.mListMeshInfo[LastMaterialIndex].tangents[nOirIndex];
+                            int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
 
-                            Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
-                            Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
-                            AddVertexInfo(LastMaterialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
+                            int nBeginVertexIndex = outputMeshInfoList[LastMaterialIndex].vertices.Count;
+                            AddIndices(LastMaterialIndex, nBeginVertexIndex);
+                            for (int j = 0; j < oneSize; j++)
+                            {
+                                int nOirIndex = nLastVisibleIndex * oneSize + j;
+                                Vector3 oriPos = lastInput.mListMeshInfo[LastMaterialIndex].vertices[nOirIndex];
+                                Color32 oriColor32 = lastInput.mListMeshInfo[LastMaterialIndex].colors32[nOirIndex];
+                                Vector2 uv0 = lastInput.mListMeshInfo[LastMaterialIndex].uvs0[nOirIndex];
+                                Vector2 uv2 = lastInput.mListMeshInfo[LastMaterialIndex].uvs2[nOirIndex];
+                                Vector3 normal = lastInput.mListMeshInfo[LastMaterialIndex].normals[nOirIndex];
+                                Vector4 tangent = lastInput.mListMeshInfo[LastMaterialIndex].tangents[nOirIndex];
+
+                                Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
+                                Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
+                                AddVertexInfo(LastMaterialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
+                            }
+
+                            lastInput.mListCharacterInfo[i].isPlayingAni = true;
+                        }
+
+                        if (Input.mListCharacterInfo[i].isVisible)
+                        {
+                            int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
+                            AddIndices(materialIndex, nBeginVertexIndex);
+                            for (int j = 0; j < oneSize; j++)
+                            {
+                                int nOirIndex = nNowVisibleIndex * oneSize + j;
+                                Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
+                                Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
+                                Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
+                                Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
+                                Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
+                                Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
+
+                                Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
+                                Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
+                                AddVertexInfo(materialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
+                            };
+                        }
+                    }
+                    else
+                    {
+                        if (Input.mListCharacterInfo[i].isVisible)
+                        {
+                            int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
+                            AddIndices(materialIndex, nBeginVertexIndex);
+                            for (int j = 0; j < oneSize; j++)
+                            {
+                                int nOirIndex = nNowVisibleIndex * oneSize + j;
+                                Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
+                                Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
+                                Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
+                                Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
+                                Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
+                                Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
+                                AddVertexInfo(materialIndex, oriPos, oriColor32, uv0, uv2, normal, tangent);
+                            };
                         }
                     }
 
                     if (Input.mListCharacterInfo[i].isVisible)
                     {
-                        int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
-                        AddIndices(materialIndex, nBeginVertexIndex);
-                        for (int j = 0; j < oneSize; j++)
-                        {
-                            int nOirIndex = nNowVisibleIndex * oneSize + j;
-                            Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
-                            Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
-                            Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
-                            Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
-                            Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
-                            Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
-
-                            Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
-                            Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
-                            AddVertexInfo(materialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
-                        };
+                        nNowVisibleIndex++;
                     }
-                }
-                else
-                {
-                    if (Input.mListCharacterInfo[i].isVisible)
+
+                    if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
                     {
-                        int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
-                        AddIndices(materialIndex, nBeginVertexIndex);
-                        for (int j = 0; j < oneSize; j++)
-                        {
-                            int nOirIndex = nNowVisibleIndex * oneSize + j;
-                            Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
-                            Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
-                            Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
-                            Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
-                            Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
-                            Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
-                            AddVertexInfo(materialIndex, oriPos, oriColor32, uv0, uv2, normal, tangent);
-                        };
+                        nLastVisibleIndex++;
                     }
-                }
 
-                if (Input.mListCharacterInfo[i].isVisible)
-                {
-                    nNowVisibleIndex++;
                 }
-
-                if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
-                {
-                    nLastVisibleIndex++;
-                }
-
             }
 
             UpdateMesh();
@@ -353,13 +361,19 @@ namespace TextBeat
         {
             if (obj == mText)
             {
-                if (orCanChangeText())
+                //if (orCanChangeText())
                 {
                     if (mText.text != lastString)
                     {
                         bLastBuild = false;
                         fBeginAniTime = Time.time;
                         TextBeatUtility.CopyTo(Input, mText.textInfo);
+
+                        InputInfo mInput = ObjectPool<InputInfo>.Pop();
+                        mInput.fBeginAniTime = Time.time;
+                        TextBeatUtility.CopyTo(mInput.Input, mText.textInfo);
+                        InputList.Add(mInput);
+
                         PlayAni();
                     }
                 }
