@@ -6,15 +6,8 @@ using System;
 
 namespace TextBeat
 {
-    public enum TextBeatAlign
-    {
-        Left,
-        Right,
-        Center,
-    }
-
     public class TextMeshProMeshInfo
-    {
+    {   
         public class MeshInfo
         {
             public List<Vector3> vertices = new List<Vector3>();
@@ -38,8 +31,7 @@ namespace TextBeat
 
         public static Queue<CharacterInfo> mCharacterInfoPool = new Queue<CharacterInfo>();
         public static Queue<MeshInfo> mMeshInfoPool = new Queue<MeshInfo>();
-
-
+        
         public void Clear()
         {
             for (int i = 0; i < mListMeshInfo.Count; i++)
