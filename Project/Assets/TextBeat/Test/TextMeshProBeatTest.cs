@@ -40,19 +40,19 @@ public class TextMeshProBeatTest : MonoBehaviour
 
     private void Update()
     {
-        for (int i = 0; i < mTextMeshProBeatList.Length; i++)
-        {
-            mTextMeshProBeatList[i].value = (ulong)UnityEngine.Random.Range(1, 10000);
-        }
+        //for (int i = 0; i < mTextMeshProBeatList.Length; i++)
+        //{
+        //    mTextMeshProBeatList[i].targetValue = (ulong)UnityEngine.Random.Range(1, 10000);
+        //}
 
-        if (Time.time - fLastTime > fSwitchInternalTime)
-        {
-            fLastTime = Time.time;
+        //if (Time.time - fLastTime > fSwitchInternalTime)
+        //{
+        //    fLastTime = Time.time;
 
-            for (int i = 0; i < mTextMeshProBeatList.Length; i++)
-            {
-                mTextMeshProBeatList[i].bImmediatelyToTargetValue = true;
-            }
-        }
+        //    for (int i = 0; i < mTextMeshProBeatList.Length; i++)
+        //    {
+        //        mTextMeshProBeatList[i].bImmediatelyToTargetValue = true;
+        //    }
+        //}
     }
 }

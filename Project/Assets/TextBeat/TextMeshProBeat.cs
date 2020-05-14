@@ -28,6 +28,9 @@ namespace TextBeat
         private List<float> mWorldAniBeginTimeList = new List<float>();
         private List<bool> mWorldisPlayingAniList = new List<bool>();
 
+        private List<int> mVisibleCharacterList1 = new List<int>();
+        private List<int> mVisibleCharacterList2 = new List<int>();
+
         private static List<TextMeshProMeshInfo.MeshInfo> outputMeshInfoList = new List<TextMeshProMeshInfo.MeshInfo>();
 
         private TMP_Text mText;
@@ -279,10 +282,34 @@ namespace TextBeat
             }
         }
 
+        private void ResetVisibleCharacterList()
+        {
+            if (mVisibleCharacterList1.Count < mText.textInfo.materialCount || mVisibleCharacterList2.Count < mText.textInfo.materialCount)
+            {
+                mVisibleCharacterList1.Clear();
+                mVisibleCharacterList2.Clear();
+
+                for (int i = 0; i < mText.textInfo.materialCount; i++)
+                {
+                    mVisibleCharacterList1.Add(0);
+                    mVisibleCharacterList2.Add(0);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < mText.textInfo.materialCount; i++)
+                {
+                    mVisibleCharacterList1[i] = 0;
+                    mVisibleCharacterList2[i] = 0;
+                }
+            }
+        }
+
         private void FillInput()
         {
-            int nWillInputVisibleIndex = 0;
-            int nInputVisibleIndex = 0;
+            ResetVisibleCharacterList();
+            List<int> nWillInputVisibleIndex = mVisibleCharacterList1;
+            List<int> nInputVisibleIndex = mVisibleCharacterList2;
             
             ReSizeWorldAniBeginTimeList(mWillFillInput, Input);
 
@@ -316,7 +343,7 @@ namespace TextBeat
             }
 
             // 填充Input
-                for (int i = 0; i < mWillFillInput.mListCharacterInfo.Count; i++)
+            for (int i = 0; i < mWillFillInput.mListCharacterInfo.Count; i++)
             {
                 if (orOneWoldFinishAni(i))
                 {
@@ -330,7 +357,7 @@ namespace TextBeat
                         bChanged = true;
                     }
 
-                    if(bForceChangeOffsetXMeshInfo)
+                    if (bForceChangeOffsetXMeshInfo)
                     {
                         bChanged = true;
                     }
@@ -342,8 +369,8 @@ namespace TextBeat
                         {
                             int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
 
-                            int nBeginIndex = nInputVisibleIndex * oneSize;
-                            int nOtherBeginIndex = nWillInputVisibleIndex * oneSize;
+                            int nBeginIndex = nInputVisibleIndex[materialIndex] * oneSize;
+                            int nOtherBeginIndex = nWillInputVisibleIndex[WillmaterialIndex] * oneSize;
                             if (Input.mListCharacterInfo[i].isVisible && mWillFillInput.mListCharacterInfo[i].isVisible)
                             {
                                 Input.mListMeshInfo[materialIndex].ReplaceQuad(nBeginIndex, mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
@@ -366,7 +393,7 @@ namespace TextBeat
                         {
                             if (mWillFillInput.mListCharacterInfo[i].isVisible)
                             {
-                                int nOtherBeginIndex = nWillInputVisibleIndex * oneSize;
+                                int nOtherBeginIndex = nWillInputVisibleIndex[WillmaterialIndex] * oneSize;
                                 Input.mListMeshInfo[WillmaterialIndex].AddQuad(mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
                             }
 
@@ -379,36 +406,36 @@ namespace TextBeat
 
                 if (mWillFillInput.mListCharacterInfo[i].isVisible)
                 {
-                    nWillInputVisibleIndex++;
+                    int WillmaterialIndex = mWillFillInput.mListCharacterInfo[i].materialReferenceIndex;
+                    nWillInputVisibleIndex[WillmaterialIndex]++;
                 }
 
                 if (i < Input.mListCharacterInfo.Count && Input.mListCharacterInfo[i].isVisible)
                 {
-                    nInputVisibleIndex++;
+                    int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
+                    nInputVisibleIndex[materialIndex]++;
                 }
             }
 
             for (int i = mWillFillInput.mListCharacterInfo.Count; i < Input.mListCharacterInfo.Count; i++)
             {
-                if (i < Input.mListCharacterInfo.Count && Input.mListCharacterInfo[i].isVisible)
+                if (Input.mListCharacterInfo[i].isVisible)
                 {
-                    nInputVisibleIndex++;
+                    int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
+                    nInputVisibleIndex[materialIndex]++;
                 }
             }
 
-            nInputVisibleIndex--;
-
             for (int i = Input.mListCharacterInfo.Count - 1; i >= mWillFillInput.mListCharacterInfo.Count; i--)
             {
+                int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
                 if (orOneWoldFinishAni(i))
                 {
                     if (Input.mListCharacterInfo[i].isVisible)
                     {
-                        int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
-                        int nBeginIndex = nInputVisibleIndex * oneSize;
+                        nInputVisibleIndex[materialIndex]--;
+                        int nBeginIndex = nInputVisibleIndex[materialIndex] * oneSize;
                         Input.mListMeshInfo[materialIndex].RemoveQuadAt(nBeginIndex);
-
-                        nInputVisibleIndex--;
                     }
 
                     Input.mListCharacterInfo.RemoveAt(i);
@@ -423,10 +450,11 @@ namespace TextBeat
 
         private void FillLastInput()
         {
-            int nLastVisibleIndex = 0;
-            int nNowVisibleIndex = 0;
             ReSizeWorldAniBeginTimeList(lastInput, Input);
 
+            ResetVisibleCharacterList();
+            List<int> nLastVisibleIndex = mVisibleCharacterList1;
+            List<int> nNowVisibleIndex = mVisibleCharacterList2;
 
             for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
             {
@@ -438,8 +466,8 @@ namespace TextBeat
                     {
                         int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
 
-                        int nBeginIndex = nLastVisibleIndex * oneSize;
-                        int nOtherBeginIndex = nNowVisibleIndex * oneSize;
+                        int nBeginIndex = nLastVisibleIndex[LastMaterialIndex] * oneSize;
+                        int nOtherBeginIndex = nNowVisibleIndex[materialIndex] * oneSize;
                         if (lastInput.mListCharacterInfo[i].isVisible && Input.mListCharacterInfo[i].isVisible)
                         {
                             lastInput.mListMeshInfo[LastMaterialIndex].ReplaceQuad(nBeginIndex, Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
@@ -462,7 +490,7 @@ namespace TextBeat
                     {
                         if (Input.mListCharacterInfo[i].isVisible)
                         {
-                            int nOtherBeginIndex = nNowVisibleIndex * oneSize;
+                            int nOtherBeginIndex = nNowVisibleIndex[materialIndex] * oneSize;
                             lastInput.mListMeshInfo[materialIndex].AddQuad(Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
                         }
 
@@ -474,12 +502,14 @@ namespace TextBeat
 
                 if (Input.mListCharacterInfo[i].isVisible)
                 {
-                    nNowVisibleIndex++;
+                    int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
+                    nNowVisibleIndex[materialIndex]++;
                 }
 
                 if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
                 {
-                    nLastVisibleIndex++;
+                    int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
+                    nLastVisibleIndex[LastMaterialIndex]++;
                 }
             }
 
@@ -487,23 +517,21 @@ namespace TextBeat
             {
                 if (lastInput.mListCharacterInfo[i].isVisible)
                 {
-                    nLastVisibleIndex++;
+                    int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
+                    nLastVisibleIndex[LastMaterialIndex]++;
                 }
             }
 
-            nLastVisibleIndex--;
-
             for (int i = lastInput.mListCharacterInfo.Count - 1; i >= Input.mListCharacterInfo.Count; i--)
             {
+                int materialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
                 if (orOneWoldFinishAni(i) && mWorldisPlayingAniList[i])
                 {
                     if (lastInput.mListCharacterInfo[i].isVisible)
                     {
-                        int materialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
-                        int nBeginIndex = nLastVisibleIndex * oneSize;
+                        nLastVisibleIndex[materialIndex]--;
+                        int nBeginIndex = nLastVisibleIndex[materialIndex] * oneSize;
                         lastInput.mListMeshInfo[materialIndex].RemoveQuadAt(nBeginIndex);
-
-                        nLastVisibleIndex--;
                     }
 
                     lastInput.mListCharacterInfo.RemoveAt(i);
@@ -518,7 +546,7 @@ namespace TextBeat
 
             FillLastInput();
             FillInput();
-
+            
             for(int i = 0; i < mWorldisPlayingAniList.Count; i++)
             {
                 if (orOneWoldFinishAni(i) && mWorldisPlayingAniList[i])
@@ -527,8 +555,9 @@ namespace TextBeat
                 }
             }
 
-            int nLastVisibleIndex = 0;
-            int nNowVisibleIndex = 0;
+            ResetVisibleCharacterList();
+            List<int> nLastVisibleIndex = mVisibleCharacterList1;
+            List<int> nNowVisibleIndex = mVisibleCharacterList2;
 
             ReSizeWorldAniBeginTimeList(Input, lastInput);
 
@@ -571,7 +600,7 @@ namespace TextBeat
                         AddIndices(LastMaterialIndex, nBeginVertexIndex);
                         for (int j = 0; j < oneSize; j++)
                         {
-                            int nOirIndex = nLastVisibleIndex * oneSize + j;
+                            int nOirIndex = nLastVisibleIndex[LastMaterialIndex] * oneSize + j;
                             Vector3 oriPos = lastInput.mListMeshInfo[LastMaterialIndex].vertices[nOirIndex];
                             Color32 oriColor32 = lastInput.mListMeshInfo[LastMaterialIndex].colors32[nOirIndex];
                             Vector2 uv0 = lastInput.mListMeshInfo[LastMaterialIndex].uvs0[nOirIndex];
@@ -591,7 +620,7 @@ namespace TextBeat
                         AddIndices(materialIndex, nBeginVertexIndex);
                         for (int j = 0; j < oneSize; j++)
                         {
-                            int nOirIndex = nNowVisibleIndex * oneSize + j;
+                            int nOirIndex = nNowVisibleIndex[materialIndex] * oneSize + j;
                             Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
                             Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
                             Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
@@ -615,7 +644,7 @@ namespace TextBeat
                         AddIndices(materialIndex, nBeginVertexIndex);
                         for (int j = 0; j < oneSize; j++)
                         {
-                            int nOirIndex = nNowVisibleIndex * oneSize + j;
+                            int nOirIndex = nNowVisibleIndex[materialIndex] * oneSize + j;
                             Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
                             Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
                             Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
@@ -629,18 +658,21 @@ namespace TextBeat
 
                 if (Input.mListCharacterInfo[i].isVisible)
                 {
-                    nNowVisibleIndex++;
+                    nNowVisibleIndex[materialIndex]++;
                 }
 
                 if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
                 {
-                    nLastVisibleIndex++;
+                    int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
+                    nLastVisibleIndex[LastMaterialIndex]++;
                 }
 
             }
 
             for (int i = Input.mListCharacterInfo.Count; i < lastInput.mListCharacterInfo.Count; i++)
             {
+                int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
+
                 if (orOneWoldFinishAni(i))
                 {
                     bool bChanged = true;
@@ -649,22 +681,21 @@ namespace TextBeat
                         bChanged = false;
                     }
 
-                    if (bChanged)
+                    if (bChanged && !mWorldisPlayingAniList[i])
                     {
                         mWorldAniBeginTimeList[i] = Time.time;
+                        mWorldisPlayingAniList[i] = true;
                     }
                 }
 
                 if (!orOneWoldFinishAni(i))
                 {
                     float fTimePercent = Mathf.Clamp01((Time.time - mWorldAniBeginTimeList[i]) / fAlphaTime);
-
-                    int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
                     int nBeginVertexIndex = outputMeshInfoList[LastMaterialIndex].vertices.Count;
                     AddIndices(LastMaterialIndex, nBeginVertexIndex);
                     for (int j = 0; j < oneSize; j++)
                     {
-                        int nOirIndex = nLastVisibleIndex * oneSize + j;
+                        int nOirIndex = nLastVisibleIndex[LastMaterialIndex] * oneSize + j;
                         Vector3 oriPos = lastInput.mListMeshInfo[LastMaterialIndex].vertices[nOirIndex];
                         Color32 oriColor32 = lastInput.mListMeshInfo[LastMaterialIndex].colors32[nOirIndex];
                         Vector2 uv0 = lastInput.mListMeshInfo[LastMaterialIndex].uvs0[nOirIndex];
@@ -680,7 +711,7 @@ namespace TextBeat
 
                 if (lastInput.mListCharacterInfo[i].isVisible)
                 {
-                    nLastVisibleIndex++;
+                    nLastVisibleIndex[LastMaterialIndex]++;
                 }
 
             }
