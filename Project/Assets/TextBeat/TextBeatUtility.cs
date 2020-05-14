@@ -18,6 +18,42 @@ namespace TextBeat
             public List<Color32> colors32 = new List<Color32>();
             public List<int> triangles = new List<int>();
 
+            public void ReplaceQuad(int nBeginVertex, MeshInfo OtherMeshInfo, int nOhterBeginVertex)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    vertices[nBeginVertex + i] = OtherMeshInfo.vertices[nOhterBeginVertex + i];
+                    normals[nBeginVertex + i] = OtherMeshInfo.normals[nOhterBeginVertex + i];
+                    tangents[nBeginVertex + i] = OtherMeshInfo.tangents[nOhterBeginVertex + i];
+                    uvs0[nBeginVertex + i] = OtherMeshInfo.uvs0[nOhterBeginVertex + i];
+                    uvs2[nBeginVertex + i] = OtherMeshInfo.uvs2[nOhterBeginVertex + i];
+                    colors32[nBeginVertex + i] = OtherMeshInfo.colors32[nOhterBeginVertex + i];
+                }
+            }
+
+            public void AddQuad(MeshInfo OtherMeshInfo, int nOhterBeginVertex)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    vertices.Add(OtherMeshInfo.vertices[nOhterBeginVertex + i]);
+                    normals.Add(OtherMeshInfo.normals[nOhterBeginVertex + i]);
+                    tangents.Add(OtherMeshInfo.tangents[nOhterBeginVertex + i]);
+                    uvs0.Add(OtherMeshInfo.uvs0[nOhterBeginVertex + i]);
+                    uvs2.Add(OtherMeshInfo.uvs2[nOhterBeginVertex + i]);
+                    colors32.Add(OtherMeshInfo.colors32[nOhterBeginVertex + i]);
+                }
+            }
+
+            public void RemoveQuadAt(int nBeginVertex)
+            {
+                vertices.RemoveRange(nBeginVertex, 4);
+                normals.RemoveRange(nBeginVertex, 4);
+                tangents.RemoveRange(nBeginVertex, 4);
+                uvs0.RemoveRange(nBeginVertex, 4);
+                uvs2.RemoveRange(nBeginVertex, 4);
+                colors32.RemoveRange(nBeginVertex, 4);
+            }
+
             public void Clear()
             {
                 vertices.Clear();
@@ -36,12 +72,16 @@ namespace TextBeat
             public int materialReferenceIndex;
             public bool isVisible;
 
-            // 是否在做动画
-            public bool isPlayingAni = false;
+            public void ReplaceCharacter(CharacterInfo OtherCharacterInfo)
+            {
+                character = OtherCharacterInfo.character;
+                materialReferenceIndex = OtherCharacterInfo.materialReferenceIndex;
+                isVisible = OtherCharacterInfo.isVisible;
+            }
 
             public void Clear()
             {
-                isPlayingAni = false;
+                
             }
         }
 
@@ -62,21 +102,6 @@ namespace TextBeat
 
             mListMeshInfo.Clear();
             mListCharacterInfo.Clear();
-        }
-    }
-
-    internal class TextMeshProInputInfo : InterfaceCanRecycleObj
-    {
-        public float fBeginAniTime;
-        public TextMeshProMeshInfo Input = null;
-
-        public void Clear()
-        {
-            if(Input != null)
-            {
-                ObjectPool<TextMeshProMeshInfo>.recycle(Input);
-                Input = null;
-            }
         }
     }
 

@@ -22,7 +22,11 @@ namespace TextBeat
         private float fBeginUpdateTextTime;
 
         private TextMeshProMeshInfo lastInput = new TextMeshProMeshInfo();
-        private List<TextMeshProInputInfo> InputList = new List<TextMeshProInputInfo>();
+        private TextMeshProMeshInfo Input = new TextMeshProMeshInfo();
+
+        private TextMeshProMeshInfo mWillFillInput = new TextMeshProMeshInfo();
+        private List<float> mWorldAniBeginTimeList = new List<float>();
+        private List<bool> mWorldisPlayingAniList = new List<bool>();
 
         private static List<TextMeshProMeshInfo.MeshInfo> outputMeshInfoList = new List<TextMeshProMeshInfo.MeshInfo>();
 
@@ -61,10 +65,13 @@ namespace TextBeat
             {
                 lastString = mText.text;
             }
-            
+
+            UpdateText(prefix, value);
             mText.ForceMeshUpdate();
             TextBeatUtility.CopyTo(lastInput, mText.textInfo);
             bLastBuild = true;
+
+            ReSizeWorldAniBeginTimeList(lastInput, lastInput);
 
             InitMaxMeshSize(); 
         }
@@ -95,24 +102,22 @@ namespace TextBeat
         {
             if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
             {
-                if (orCanChangeText())
+                fBeginUpdateTextTime = Time.time;
+                if (bImmediatelyToTargetValue)
                 {
-                    fBeginUpdateTextTime = Time.time;
-                    if (bImmediatelyToTargetValue)
-                    {
-                        value = targetValue;
-                        bImmediatelyToTargetValue = false;
-                        UpdateText(prefix, value);
-                    }
-                    else if (value < targetValue)
-                    {
-                        value = value + (UInt64)UnityEngine.Random.Range(1, 100);
-                        UpdateText(prefix, value);
-                    }
-
-                    //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
-                    //UpdateText(prefix, value);
+                    value = targetValue;
+                    bImmediatelyToTargetValue = false;
+                    UpdateText(prefix, value);
                 }
+                else if (value < targetValue)
+                {
+                    //value = value + (UInt64)UnityEngine.Random.Range(1, 100);
+                    value++;
+                    UpdateText(prefix, value);
+                }
+
+                //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
+                //UpdateText(prefix, value);
             }
         }
 
@@ -162,23 +167,14 @@ namespace TextBeat
             }
         }
 
-        private bool orFinishAni()
+        private bool orOneWoldFinishAni(int index)
         {
-            for (int k = 0; k < InputList.Count; k++)
-            {
-                float fBeginAniTime = InputList[k].fBeginAniTime;
-                if (Time.time - fBeginAniTime <= fAlphaTime)
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return Time.time - mWorldAniBeginTimeList[index] > fAlphaTime;
         }
 
-        private bool orCanChangeText()
+        private bool orFinishAni()
         {
-            return orFinishAni() && bLastBuild;
+            return true;
         }
 
         private void AddVertexInfo(int materialIndex, Vector3 pos, Color32 color, Vector2 uv0, Vector2 uv1, Vector3 normal, Vector4 tangent)
@@ -218,39 +214,241 @@ namespace TextBeat
             }
         }
 
-
-        private void ClearInputMeshInfoList()
+        private void ReSizeWorldAniBeginTimeList(TextMeshProMeshInfo Input, TextMeshProMeshInfo lastInput)
         {
-            InputList.RemoveAll((TextMeshProInputInfo t) =>
+            int nMaxLength = Mathf.Max(Input.mListCharacterInfo.Count, lastInput.mListCharacterInfo.Count);
+            for (int i = mWorldAniBeginTimeList.Count; i < nMaxLength; i++)
             {
-                float fBeginAniTime = t.fBeginAniTime;
-                bool bRemove = Time.time - fBeginAniTime > fAlphaTime;
-                if(bRemove)
+                mWorldAniBeginTimeList.Add(-fAlphaTime);
+                mWorldisPlayingAniList.Add(false);
+            }
+        }
+
+        private void FillInput()
+        {
+            int nWillInputVisibleIndex = 0;
+            int nInputVisibleIndex = 0;
+
+            if (Input.mListMeshInfo.Count == 0)
+            {
+                for (int i = 0; i < mText.textInfo.materialCount; i++)
                 {
-                    ObjectPool<TextMeshProInputInfo>.recycle(t);
+                    TextMeshProMeshInfo.MeshInfo mTextMeshProMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
+                    Input.mListMeshInfo.Add(mTextMeshProMeshInfo);
+                }
+            }
+            
+            ReSizeWorldAniBeginTimeList(mWillFillInput, Input);
+            for (int i = 0; i < mWillFillInput.mListCharacterInfo.Count; i++)
+            {
+                if (orOneWoldFinishAni(i))
+                {
+                    bool bChanged = false;
+                    if (i < Input.mListCharacterInfo.Count)
+                    {
+                        bChanged = mWillFillInput.mListCharacterInfo[i].character != Input.mListCharacterInfo[i].character;
+                    }
+                    else
+                    {
+                        bChanged = true;
+                    }
+
+                    if (bChanged)
+                    {
+                        int WillmaterialIndex = mWillFillInput.mListCharacterInfo[i].materialReferenceIndex;
+                        if (i < Input.mListCharacterInfo.Count)
+                        {
+                            int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
+
+                            int nBeginIndex = nInputVisibleIndex * oneSize;
+                            int nOtherBeginIndex = nWillInputVisibleIndex * oneSize;
+                            if (Input.mListCharacterInfo[i].isVisible && mWillFillInput.mListCharacterInfo[i].isVisible)
+                            {
+                                Input.mListMeshInfo[materialIndex].ReplaceQuad(nBeginIndex, mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
+                            }
+                            else
+                            {
+                                if (Input.mListCharacterInfo[i].isVisible)
+                                {
+                                    Input.mListMeshInfo[materialIndex].RemoveQuadAt(nBeginIndex);
+                                }
+                                else if (mWillFillInput.mListCharacterInfo[i].isVisible)
+                                {
+                                    Input.mListMeshInfo[materialIndex].AddQuad(mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
+                                }
+                            }
+
+                            Input.mListCharacterInfo[i].ReplaceCharacter(mWillFillInput.mListCharacterInfo[i]);
+                        }
+                        else
+                        {
+                            if (mWillFillInput.mListCharacterInfo[i].isVisible)
+                            {
+                                int nOtherBeginIndex = nWillInputVisibleIndex * oneSize;
+                                Input.mListMeshInfo[WillmaterialIndex].AddQuad(mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
+                            }
+
+                            TextMeshProMeshInfo.CharacterInfo characterInfo = ObjectPool<TextMeshProMeshInfo.CharacterInfo>.Pop();
+                            characterInfo.ReplaceCharacter(mWillFillInput.mListCharacterInfo[i]);
+                            Input.mListCharacterInfo.Add(characterInfo);
+                        }
+                    }
                 }
 
-                return bRemove;
-            });
+                if (mWillFillInput.mListCharacterInfo[i].isVisible)
+                {
+                    nWillInputVisibleIndex++;
+                }
+
+                if (i < Input.mListCharacterInfo.Count && Input.mListCharacterInfo[i].isVisible)
+                {
+                    nInputVisibleIndex++;
+                }
+            }
+
+            for (int i = mWillFillInput.mListCharacterInfo.Count; i < Input.mListCharacterInfo.Count; i++)
+            {
+                if (i < Input.mListCharacterInfo.Count && Input.mListCharacterInfo[i].isVisible)
+                {
+                    nInputVisibleIndex++;
+                }
+            }
+
+            nInputVisibleIndex--;
+
+            for (int i = Input.mListCharacterInfo.Count - 1; i >= mWillFillInput.mListCharacterInfo.Count; i--)
+            {
+                if (orOneWoldFinishAni(i))
+                {
+                    if (Input.mListCharacterInfo[i].isVisible)
+                    {
+                        int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
+                        int nBeginIndex = nInputVisibleIndex * oneSize;
+                        Input.mListMeshInfo[materialIndex].RemoveQuadAt(nBeginIndex);
+
+                        nInputVisibleIndex--;
+                    }
+
+                    Input.mListCharacterInfo.RemoveAt(i);
+                }
+            }
+        }
+
+        private void FillLastInput()
+        {
+            int nLastVisibleIndex = 0;
+            int nNowVisibleIndex = 0;
+
+            ReSizeWorldAniBeginTimeList(lastInput, Input);
+            for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
+            {
+                if (orOneWoldFinishAni(i) && mWorldisPlayingAniList[i])
+                {
+                    int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
+
+                    if (i < lastInput.mListCharacterInfo.Count)
+                    {
+                        int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
+
+                        int nBeginIndex = nLastVisibleIndex * oneSize;
+                        int nOtherBeginIndex = nNowVisibleIndex * oneSize;
+                        if (lastInput.mListCharacterInfo[i].isVisible && Input.mListCharacterInfo[i].isVisible)
+                        {
+                            lastInput.mListMeshInfo[LastMaterialIndex].ReplaceQuad(nBeginIndex, Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
+                        }
+                        else
+                        {
+                            if (lastInput.mListCharacterInfo[i].isVisible)
+                            {
+                                lastInput.mListMeshInfo[LastMaterialIndex].RemoveQuadAt(nBeginIndex);
+                            }
+                            else if (Input.mListCharacterInfo[i].isVisible)
+                            {
+                                lastInput.mListMeshInfo[LastMaterialIndex].AddQuad(Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
+                            }
+                        }
+
+                        lastInput.mListCharacterInfo[i].ReplaceCharacter(Input.mListCharacterInfo[i]);
+                    }
+                    else
+                    {
+                        if (Input.mListCharacterInfo[i].isVisible)
+                        {
+                            int nOtherBeginIndex = nNowVisibleIndex * oneSize;
+                            lastInput.mListMeshInfo[materialIndex].AddQuad(Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
+                        }
+
+                        TextMeshProMeshInfo.CharacterInfo characterInfo = ObjectPool<TextMeshProMeshInfo.CharacterInfo>.Pop();
+                        characterInfo.ReplaceCharacter(Input.mListCharacterInfo[i]);
+                        lastInput.mListCharacterInfo.Add(characterInfo);
+                    }
+                }
+
+                if (Input.mListCharacterInfo[i].isVisible)
+                {
+                    nNowVisibleIndex++;
+                }
+
+                if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
+                {
+                    nLastVisibleIndex++;
+                }
+            }
+
+            for (int i = Input.mListCharacterInfo.Count; i < lastInput.mListCharacterInfo.Count; i++)
+            {
+                if (lastInput.mListCharacterInfo[i].isVisible)
+                {
+                    nLastVisibleIndex++;
+                }
+            }
+
+            nLastVisibleIndex--;
+
+            for (int i = lastInput.mListCharacterInfo.Count - 1; i >= Input.mListCharacterInfo.Count; i--)
+            {
+                if (orOneWoldFinishAni(i) && mWorldisPlayingAniList[i])
+                {
+                    if (lastInput.mListCharacterInfo[i].isVisible)
+                    {
+                        int materialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
+                        int nBeginIndex = nLastVisibleIndex * oneSize;
+                        lastInput.mListMeshInfo[materialIndex].RemoveQuadAt(nBeginIndex);
+
+                        nLastVisibleIndex--;
+                    }
+
+                    lastInput.mListCharacterInfo.RemoveAt(i);
+                }
+            }
+
         }
 
         private void PlayAni()
         {
             ClearOutputMeshInfoList();
-            ClearInputMeshInfoList();
 
-            for (int k = 0; k < InputList.Count; k++)
+            FillLastInput();
+            FillInput();
+
+            for(int i = 0; i < mWorldisPlayingAniList.Count; i++)
             {
-                int nLastVisibleIndex = 0;
-                int nNowVisibleIndex = 0;
-
-                float fBeginAniTime = InputList[k].fBeginAniTime;
-                TextMeshProMeshInfo Input = InputList[k].Input;
-                float fTimePercent = Mathf.Clamp01((Time.time - fBeginAniTime) / fAlphaTime);
-
-                for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
+                if (orOneWoldFinishAni(i) && mWorldisPlayingAniList[i])
                 {
-                    int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
+                    mWorldisPlayingAniList[i] = false;
+                }
+            }
+
+            int nLastVisibleIndex = 0;
+            int nNowVisibleIndex = 0;
+
+            ReSizeWorldAniBeginTimeList(Input, lastInput);
+
+            for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
+            {
+                int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
+                if (orOneWoldFinishAni(i))
+                {
                     bool bChanged = false;
                     if (i < lastInput.mListCharacterInfo.Count)
                     {
@@ -261,85 +459,144 @@ namespace TextBeat
                         bChanged = true;
                     }
 
-                    if (bChanged)
+                    if (!Input.mListCharacterInfo[i].isVisible)
                     {
-                        if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
-                        {
-                            int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
-
-                            int nBeginVertexIndex = outputMeshInfoList[LastMaterialIndex].vertices.Count;
-                            AddIndices(LastMaterialIndex, nBeginVertexIndex);
-                            for (int j = 0; j < oneSize; j++)
-                            {
-                                int nOirIndex = nLastVisibleIndex * oneSize + j;
-                                Vector3 oriPos = lastInput.mListMeshInfo[LastMaterialIndex].vertices[nOirIndex];
-                                Color32 oriColor32 = lastInput.mListMeshInfo[LastMaterialIndex].colors32[nOirIndex];
-                                Vector2 uv0 = lastInput.mListMeshInfo[LastMaterialIndex].uvs0[nOirIndex];
-                                Vector2 uv2 = lastInput.mListMeshInfo[LastMaterialIndex].uvs2[nOirIndex];
-                                Vector3 normal = lastInput.mListMeshInfo[LastMaterialIndex].normals[nOirIndex];
-                                Vector4 tangent = lastInput.mListMeshInfo[LastMaterialIndex].tangents[nOirIndex];
-
-                                Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
-                                Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
-                                AddVertexInfo(LastMaterialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
-                            }
-
-                            lastInput.mListCharacterInfo[i].isPlayingAni = true;
-                        }
-
-                        if (Input.mListCharacterInfo[i].isVisible)
-                        {
-                            int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
-                            AddIndices(materialIndex, nBeginVertexIndex);
-                            for (int j = 0; j < oneSize; j++)
-                            {
-                                int nOirIndex = nNowVisibleIndex * oneSize + j;
-                                Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
-                                Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
-                                Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
-                                Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
-                                Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
-                                Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
-
-                                Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
-                                Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
-                                AddVertexInfo(materialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
-                            };
-                        }
+                        bChanged = false;
                     }
-                    else
+
+                    if (bChanged && !mWorldisPlayingAniList[i])
                     {
-                        if (Input.mListCharacterInfo[i].isVisible)
+                        mWorldisPlayingAniList[i] = true;
+                        mWorldAniBeginTimeList[i] = Time.time;
+                    }
+                }
+
+                if (!orOneWoldFinishAni(i))
+                {
+                    float fTimePercent = Mathf.Clamp01((Time.time - mWorldAniBeginTimeList[i]) / fAlphaTime);
+
+                    if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
+                    {
+                        int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
+
+                        int nBeginVertexIndex = outputMeshInfoList[LastMaterialIndex].vertices.Count;
+                        AddIndices(LastMaterialIndex, nBeginVertexIndex);
+                        for (int j = 0; j < oneSize; j++)
                         {
-                            int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
-                            AddIndices(materialIndex, nBeginVertexIndex);
-                            for (int j = 0; j < oneSize; j++)
-                            {
-                                int nOirIndex = nNowVisibleIndex * oneSize + j;
-                                Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
-                                Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
-                                Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
-                                Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
-                                Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
-                                Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
-                                AddVertexInfo(materialIndex, oriPos, oriColor32, uv0, uv2, normal, tangent);
-                            };
+                            int nOirIndex = nLastVisibleIndex * oneSize + j;
+                            Vector3 oriPos = lastInput.mListMeshInfo[LastMaterialIndex].vertices[nOirIndex];
+                            Color32 oriColor32 = lastInput.mListMeshInfo[LastMaterialIndex].colors32[nOirIndex];
+                            Vector2 uv0 = lastInput.mListMeshInfo[LastMaterialIndex].uvs0[nOirIndex];
+                            Vector2 uv2 = lastInput.mListMeshInfo[LastMaterialIndex].uvs2[nOirIndex];
+                            Vector3 normal = lastInput.mListMeshInfo[LastMaterialIndex].normals[nOirIndex];
+                            Vector4 tangent = lastInput.mListMeshInfo[LastMaterialIndex].tangents[nOirIndex];
+
+                            Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
+                            Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
+                            AddVertexInfo(LastMaterialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
                         }
                     }
 
                     if (Input.mListCharacterInfo[i].isVisible)
                     {
-                        nNowVisibleIndex++;
-                    }
+                        int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
+                        AddIndices(materialIndex, nBeginVertexIndex);
+                        for (int j = 0; j < oneSize; j++)
+                        {
+                            int nOirIndex = nNowVisibleIndex * oneSize + j;
+                            Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
+                            Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
+                            Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
+                            Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
+                            Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
+                            Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
 
-                    if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
-                    {
-                        nLastVisibleIndex++;
-                    }
+                            Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
+                            Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
+                            AddVertexInfo(materialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
+                        };
 
+
+                    }
                 }
+                else
+                {
+                    if (Input.mListCharacterInfo[i].isVisible)
+                    {
+                        int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
+                        AddIndices(materialIndex, nBeginVertexIndex);
+                        for (int j = 0; j < oneSize; j++)
+                        {
+                            int nOirIndex = nNowVisibleIndex * oneSize + j;
+                            Vector3 oriPos = Input.mListMeshInfo[materialIndex].vertices[nOirIndex];
+                            Color32 oriColor32 = Input.mListMeshInfo[materialIndex].colors32[nOirIndex];
+                            Vector2 uv0 = Input.mListMeshInfo[materialIndex].uvs0[nOirIndex];
+                            Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
+                            Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
+                            Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
+                            AddVertexInfo(materialIndex, oriPos, oriColor32, uv0, uv2, normal, tangent);
+                        };
+                    }
+                }
+
+                if (Input.mListCharacterInfo[i].isVisible)
+                {
+                    nNowVisibleIndex++;
+                }
+
+                if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
+                {
+                    nLastVisibleIndex++;
+                }
+
             }
 
+            for (int i = Input.mListCharacterInfo.Count; i < lastInput.mListCharacterInfo.Count; i++)
+            {
+                if (orOneWoldFinishAni(i))
+                {
+                    bool bChanged = true;
+                    if (!lastInput.mListCharacterInfo[i].isVisible)
+                    {
+                        bChanged = false;
+                    }
+
+                    if (bChanged)
+                    {
+                        mWorldAniBeginTimeList[i] = Time.time;
+                    }
+                }
+
+                if (!orOneWoldFinishAni(i))
+                {
+                    float fTimePercent = Mathf.Clamp01((Time.time - mWorldAniBeginTimeList[i]) / fAlphaTime);
+
+                    int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
+                    int nBeginVertexIndex = outputMeshInfoList[LastMaterialIndex].vertices.Count;
+                    AddIndices(LastMaterialIndex, nBeginVertexIndex);
+                    for (int j = 0; j < oneSize; j++)
+                    {
+                        int nOirIndex = nLastVisibleIndex * oneSize + j;
+                        Vector3 oriPos = lastInput.mListMeshInfo[LastMaterialIndex].vertices[nOirIndex];
+                        Color32 oriColor32 = lastInput.mListMeshInfo[LastMaterialIndex].colors32[nOirIndex];
+                        Vector2 uv0 = lastInput.mListMeshInfo[LastMaterialIndex].uvs0[nOirIndex];
+                        Vector2 uv2 = lastInput.mListMeshInfo[LastMaterialIndex].uvs2[nOirIndex];
+                        Vector3 normal = lastInput.mListMeshInfo[LastMaterialIndex].normals[nOirIndex];
+                        Vector4 tangent = lastInput.mListMeshInfo[LastMaterialIndex].tangents[nOirIndex];
+
+                        Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
+                        Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
+                        AddVertexInfo(LastMaterialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
+                    }
+                }
+
+                if (lastInput.mListCharacterInfo[i].isVisible)
+                {
+                    nLastVisibleIndex++;
+                }
+
+            }
+            
             UpdateMesh();
         }
         
@@ -368,51 +625,33 @@ namespace TextBeat
         {
             if (obj == mText)
             {
-                if (orCanChangeText())
+                //if (mText.text != lastString)
                 {
-                    if (mText.text != lastString)
-                    {
-                        bLastBuild = false;
-                        TextMeshProInputInfo mInput = ObjectPool<TextMeshProInputInfo>.Pop();
-                        mInput.fBeginAniTime = Time.time;
-                        mInput.Input = ObjectPool<TextMeshProMeshInfo>.Pop();
-                        TextBeatUtility.CopyTo(mInput.Input, mText.textInfo);
-                        InputList.Add(mInput);
-                        PlayAni();
-                    }
+                    bLastBuild = false;
+                    TextBeatUtility.CopyTo(mWillFillInput, mText.textInfo);
+                    PlayAni();
                 }
             }
         }
 
         void BuildAni()
         {
-            if (!orFinishAni())
+            //if (!orFinishAni())
             {
                 PlayAni();
-                bLastBuild = false;
             }
-            else
+
+            //if (orFinishAni())
             {
-
-                if (!bLastBuild)
+                if (bUseNoGCStringBuilder)
                 {
-                    ClearInputMeshInfoList();
-                    if (bUseNoGCStringBuilder)
-                    {
-                        InitNoGCStringBuilder();
-                        lastStringBuilder.GarbageFreeClear();
-                        lastStringBuilder.Append(mText.text);
-                    }
-                    else
-                    {
-                        lastString = mText.text;
-                    }
-                    
-                    TextBeatUtility.CopyTo(lastInput, mText.textInfo);
-                    bLastBuild = true;
-
-                    // 这里必须得重新ReSize 顶点信息，ReSize 完毕后，得重新赋值，否则会出现 某一帧 看不到的 Bug
-                    //RefreshMeshSize();
+                    InitNoGCStringBuilder();
+                    lastStringBuilder.GarbageFreeClear();
+                    lastStringBuilder.Append(mText.text);
+                }
+                else
+                {
+                    lastString = mText.text;
                 }
             }
         }

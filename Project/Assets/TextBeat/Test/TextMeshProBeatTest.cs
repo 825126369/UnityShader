@@ -29,6 +29,7 @@ public class TextMeshProBeatTest : MonoBehaviour
     {
         for (int i = 0; i < mTextMeshProBeatList.Length; i++)
         {
+            mTextMeshProBeatList[i].fUpdateTextMaxTime = fUpdateTextMaxTime;
             mTextMeshProBeatList[i].fAlphaTime = fAlphaTime;
             mTextMeshProBeatList[i].fAniHeight = fAniHeight;
             mTextMeshProBeatList[i].value = (ulong)UnityEngine.Random.Range(1, 10000);
