@@ -21,11 +21,9 @@ namespace TextBeat
         public float fUpdateTextMaxTime = 0f;
         private float fBeginUpdateTextTime;
 
-        private float fBeginAniTime = -100f;
-
         private TextMeshProMeshInfo lastInput = new TextMeshProMeshInfo();
-        private TextMeshProMeshInfo Input = new TextMeshProMeshInfo();
-        private List<InputInfo> InputList = new List<InputInfo>();
+        private List<TextMeshProInputInfo> InputList = new List<TextMeshProInputInfo>();
+
         private static List<TextMeshProMeshInfo.MeshInfo> outputMeshInfoList = new List<TextMeshProMeshInfo.MeshInfo>();
 
         private TMP_Text mText;
@@ -166,7 +164,16 @@ namespace TextBeat
 
         private bool orFinishAni()
         {
-            return Time.time - fBeginAniTime > fAlphaTime;
+            for (int k = 0; k < InputList.Count; k++)
+            {
+                float fBeginAniTime = InputList[k].fBeginAniTime;
+                if (Time.time - fBeginAniTime <= fAlphaTime)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private bool orCanChangeText()
@@ -199,38 +206,38 @@ namespace TextBeat
         {
             for (int i = 0; i < outputMeshInfoList.Count; i++)
             {
-                TextMeshProMeshInfo.mMeshInfoPool.Enqueue(outputMeshInfoList[i]);
+                ObjectPool<TextMeshProMeshInfo.MeshInfo>.recycle(outputMeshInfoList[i]);
             }
 
             outputMeshInfoList.Clear();
 
             for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
-                TextMeshProMeshInfo.MeshInfo mMeshInfo = null;
-                if (TextMeshProMeshInfo.mMeshInfoPool.Count == 0)
-                {
-                    mMeshInfo = new TextMeshProMeshInfo.MeshInfo();
-                }
-                else
-                {
-                    mMeshInfo = TextMeshProMeshInfo.mMeshInfoPool.Dequeue();
-                }
-
-                mMeshInfo.vertices.Clear();
-                mMeshInfo.colors32.Clear();
-                mMeshInfo.uvs0.Clear();
-                mMeshInfo.uvs2.Clear();
-                mMeshInfo.normals.Clear();
-                mMeshInfo.tangents.Clear();
-                mMeshInfo.triangles.Clear();
-
+                TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
                 outputMeshInfoList.Add(mMeshInfo);
             }
+        }
+
+
+        private void ClearInputMeshInfoList()
+        {
+            InputList.RemoveAll((TextMeshProInputInfo t) =>
+            {
+                float fBeginAniTime = t.fBeginAniTime;
+                bool bRemove = Time.time - fBeginAniTime > fAlphaTime;
+                if(bRemove)
+                {
+                    ObjectPool<TextMeshProInputInfo>.recycle(t);
+                }
+
+                return bRemove;
+            });
         }
 
         private void PlayAni()
         {
             ClearOutputMeshInfoList();
+            ClearInputMeshInfoList();
 
             for (int k = 0; k < InputList.Count; k++)
             {
@@ -361,19 +368,16 @@ namespace TextBeat
         {
             if (obj == mText)
             {
-                //if (orCanChangeText())
+                if (orCanChangeText())
                 {
                     if (mText.text != lastString)
                     {
                         bLastBuild = false;
-                        fBeginAniTime = Time.time;
-                        TextBeatUtility.CopyTo(Input, mText.textInfo);
-
-                        InputInfo mInput = ObjectPool<InputInfo>.Pop();
+                        TextMeshProInputInfo mInput = ObjectPool<TextMeshProInputInfo>.Pop();
                         mInput.fBeginAniTime = Time.time;
+                        mInput.Input = ObjectPool<TextMeshProMeshInfo>.Pop();
                         TextBeatUtility.CopyTo(mInput.Input, mText.textInfo);
                         InputList.Add(mInput);
-
                         PlayAni();
                     }
                 }
@@ -392,6 +396,7 @@ namespace TextBeat
 
                 if (!bLastBuild)
                 {
+                    ClearInputMeshInfoList();
                     if (bUseNoGCStringBuilder)
                     {
                         InitNoGCStringBuilder();

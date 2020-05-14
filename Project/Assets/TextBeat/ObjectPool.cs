@@ -17,6 +17,7 @@ namespace TextBeat
 		{
 			if (!mPoolQueue.Contains(array))
 			{
+				array.Clear();
 				mPoolQueue.Enqueue(array);
 			}
 		}

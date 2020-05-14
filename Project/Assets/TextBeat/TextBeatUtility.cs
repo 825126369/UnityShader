@@ -6,7 +6,7 @@ using System;
 
 namespace TextBeat
 {
-    public class TextMeshProMeshInfo : InterfaceCanRecycleObj
+    internal class TextMeshProMeshInfo : InterfaceCanRecycleObj
     {   
         public class MeshInfo : InterfaceCanRecycleObj
         {
@@ -65,26 +65,22 @@ namespace TextBeat
         }
     }
 
-    public class InputInfo : InterfaceCanRecycleObj
+    internal class TextMeshProInputInfo : InterfaceCanRecycleObj
     {
         public float fBeginAniTime;
-        public TextMeshProMeshInfo Input;
-
-        public InputInfo()
-        {
-            Input = ObjectPool<TextMeshProMeshInfo>.Pop();
-        }
+        public TextMeshProMeshInfo Input = null;
 
         public void Clear()
         {
             if(Input != null)
             {
                 ObjectPool<TextMeshProMeshInfo>.recycle(Input);
+                Input = null;
             }
         }
     }
 
-    public static class TextBeatUtility
+    internal static class TextBeatUtility
     {
         public static void CopyTo(TextMeshProMeshInfo mOutInfo, TMP_TextInfo mInputInfo)
         {
