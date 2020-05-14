@@ -32,9 +32,7 @@ namespace TextBeat
 
         private TMP_Text mText;
         private StringBuilder mStringBuilder;
-        private StringBuilder lastStringBuilder;
         private String mString;
-        private String lastString;
 
         private const int UInt64Length = 20;
         private const int oneSize = 4;
@@ -60,19 +58,12 @@ namespace TextBeat
             {
                 InitNoGCStringBuilder();
             }
-            else
-            {
-                lastString = mText.text;
-            }
 
             UpdateText(prefix, value);
             mText.ForceMeshUpdate();
-            TextBeatUtility.CopyTo(lastInput, mText.textInfo);
-            TextBeatUtility.CopyTo(Input, mText.textInfo);
-
             ReSizeWorldAniBeginTimeList(lastInput, lastInput);
-
-            InitMaxMeshSize(); 
+            InitMaxMeshSize();
+            ForceChangeLastInputOffsetXMeshInfo();
         }
 
         private int GetCharacterMaxCount()
@@ -88,12 +79,6 @@ namespace TextBeat
                 mStringBuilder = new StringBuilder(nMaxStringBuilerCapacity);
                 mStringBuilder.GarbageFreeClear();
                 mString = mStringBuilder.GetGarbageFreeString();
-
-                lastStringBuilder = new StringBuilder(nMaxStringBuilerCapacity);
-                lastStringBuilder.GarbageFreeClear();
-                lastString = lastStringBuilder.GetGarbageFreeString();
-
-                UpdateText(prefix, value);
             }
         }
 
@@ -110,8 +95,26 @@ namespace TextBeat
                 }
                 else if (value < targetValue)
                 {
-                    //value = value + (UInt64)UnityEngine.Random.Range(1, 100);
-                    value++;
+                    //value += (UInt64)UnityEngine.Random.Range(1, 9);
+                    value ++;
+
+                    if (value > targetValue)
+                    {
+                        value = targetValue;
+                    }
+                    
+                    UpdateText(prefix, value);
+                }
+                else if (value > targetValue)
+                {
+                    //value -= (UInt64)UnityEngine.Random.Range(1, 9);
+                    value--;
+
+                    if (value < targetValue)
+                    {
+                        value = targetValue;
+                    }
+
                     UpdateText(prefix, value);
                 }
 
@@ -123,6 +126,27 @@ namespace TextBeat
         private void LateUpdate()
         {
             BuildAni();
+        }
+
+        public void UpdateText()
+        {
+            if (bUseNoGCStringBuilder)
+            {
+                InitNoGCStringBuilder();
+                mStringBuilder.GarbageFreeClear();
+                mStringBuilder.Append(prefix);
+                mStringBuilder.AppendUInt64(value);
+                mStringBuilder.Align(mText.alignment);
+                mText.text = mString;
+
+                mText.havePropertiesChanged = true;
+                mText.SetVerticesDirty();
+                mText.SetLayoutDirty();
+            }
+            else
+            {
+                mText.text = prefix + value.ToString();
+            }
         }
 
         public void UpdateText(string prefixStr, UInt64 value)
@@ -218,8 +242,40 @@ namespace TextBeat
             int nMaxLength = Mathf.Max(Input.mListCharacterInfo.Count, lastInput.mListCharacterInfo.Count);
             for (int i = mWorldAniBeginTimeList.Count; i < nMaxLength; i++)
             {
-                mWorldAniBeginTimeList.Add(-fAlphaTime);
+                mWorldAniBeginTimeList.Add(-fAlphaTime - 1.0f);
                 mWorldisPlayingAniList.Add(false);
+            }
+        }
+
+        private void InitTextMeshProMeshInfo(TextMeshProMeshInfo mOutInfo)
+        {
+            if (mOutInfo.mListMeshInfo.Count == 0)
+            {
+                mOutInfo.Clear();
+
+                for (int i = 0; i < mText.textInfo.materialCount; i++)
+                {
+                    TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
+                    mOutInfo.mListMeshInfo.Add(mMeshInfo);
+                }
+            }
+        }
+
+        private void ForceChangeLastInputOffsetXMeshInfo()
+        {   
+            for (int k = 0; k < mText.textInfo.materialCount; k++)
+            {
+                if (lastInput.mListMeshInfo[k].vertices.Count > 0)
+                {
+                    float fOffsetX = Input.mListMeshInfo[k].vertices[0].x - lastInput.mListMeshInfo[k].vertices[0].x;
+
+                    List<Vector3> vertices = lastInput.mListMeshInfo[k].vertices;
+                    for (int i = 0; i < vertices.Count; i++)
+                    {
+                        Vector3 oriPos = vertices[i];
+                        vertices[i] = oriPos + new Vector3(fOffsetX, 0, 0);
+                    }
+                }
             }
         }
 
@@ -230,21 +286,37 @@ namespace TextBeat
             
             ReSizeWorldAniBeginTimeList(mWillFillInput, Input);
 
-            bool bChangeAll = mWillFillInput.mListCharacterInfo.Count != Input.mListCharacterInfo.Count;
-            if (TextBeatUtility.GetAlign(mText.alignment) == TextBeatAlign.Left)
+            bool bInputCountEqual = mWillFillInput.mListCharacterInfo.Count == Input.mListCharacterInfo.Count;
+            bool bForceChangeOffsetXMeshInfo = false;
+            if (!bInputCountEqual)
             {
-                bChangeAll = false;
-            }
-            else if (TextBeatUtility.GetAlign(mText.alignment) == TextBeatAlign.Right)
-            {
-                bChangeAll = false;
-            }
-            else if (TextBeatUtility.GetAlign(mText.alignment) == TextBeatAlign.Center)
-            {
-                bChangeAll = true;
+                if (TextBeatUtility.GetAlign(mText.alignment) == TextBeatAlign.Left)
+                {
+                    bForceChangeOffsetXMeshInfo = false;
+                }
+                else if (TextBeatUtility.GetAlign(mText.alignment) == TextBeatAlign.Right)
+                {
+                    bForceChangeOffsetXMeshInfo = true;
+                }
+                else if (TextBeatUtility.GetAlign(mText.alignment) == TextBeatAlign.Center)
+                {
+                    bForceChangeOffsetXMeshInfo = true; // 顶点位置 都改变了
+                }
             }
 
-            for (int i = 0; i < mWillFillInput.mListCharacterInfo.Count; i++)
+            if (bForceChangeOffsetXMeshInfo)
+            {
+                for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
+                {
+                    if (!orOneWoldFinishAni(i))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            // 填充Input
+                for (int i = 0; i < mWillFillInput.mListCharacterInfo.Count; i++)
             {
                 if (orOneWoldFinishAni(i))
                 {
@@ -254,6 +326,11 @@ namespace TextBeat
                         bChanged = mWillFillInput.mListCharacterInfo[i].character != Input.mListCharacterInfo[i].character;
                     }
                     else
+                    {
+                        bChanged = true;
+                    }
+
+                    if(bForceChangeOffsetXMeshInfo)
                     {
                         bChanged = true;
                     }
@@ -337,14 +414,20 @@ namespace TextBeat
                     Input.mListCharacterInfo.RemoveAt(i);
                 }
             }
+
+            if (bForceChangeOffsetXMeshInfo)
+            {
+                ForceChangeLastInputOffsetXMeshInfo();
+            }
         }
 
         private void FillLastInput()
         {
             int nLastVisibleIndex = 0;
             int nNowVisibleIndex = 0;
-
             ReSizeWorldAniBeginTimeList(lastInput, Input);
+
+
             for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
             {
                 if (orOneWoldFinishAni(i) && mWorldisPlayingAniList[i])
@@ -630,6 +713,10 @@ namespace TextBeat
         {
             if (obj == mText)
             {
+                InitTextMeshProMeshInfo(lastInput);
+                InitTextMeshProMeshInfo(Input);
+                InitTextMeshProMeshInfo(mWillFillInput);
+
                 if (!mWillFillInput.Equal(mText))
                 {
                     TextBeatUtility.CopyTo(mWillFillInput, mText.textInfo);

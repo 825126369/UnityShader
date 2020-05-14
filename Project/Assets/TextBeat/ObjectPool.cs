@@ -15,11 +15,8 @@ namespace TextBeat
 
 		public static void recycle(T array)
 		{
-			if (!mPoolQueue.Contains(array))
-			{
-				array.Clear();
-				mPoolQueue.Enqueue(array);
-			}
+			array.Clear();
+			mPoolQueue.Enqueue(array);
 		}
 
 		public static T Pop()

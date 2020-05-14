@@ -6,7 +6,7 @@ using System;
 
 namespace TextBeat
 {
-    internal enum TextBeatAlign
+    public enum TextBeatAlign
     {
         Left,
         Right,
@@ -170,11 +170,11 @@ namespace TextBeat
         {
             mOutInfo.Clear();
 
-            for(int i = 0; i < mInputInfo.materialCount; i++)
+            for (int i = 0; i < mInputInfo.materialCount; i++)
             {
                 TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
-                mMeshInfo.Clear();
-                
+                mOutInfo.mListMeshInfo.Add(mMeshInfo);
+
                 for (int j = 0; j < mInputInfo.meshInfo[i].vertices.Length; j++)
                 {
                     mMeshInfo.vertices.Add(mInputInfo.meshInfo[i].vertices[j]);
@@ -204,14 +204,11 @@ namespace TextBeat
                 {
                     mMeshInfo.tangents.Add(mInputInfo.meshInfo[i].tangents[j]);
                 }
-
-                mOutInfo.mListMeshInfo.Add(mMeshInfo);
             }
             
             for(int i = 0; i < mInputInfo.characterCount; i++)
             {
                 TextMeshProMeshInfo.CharacterInfo mCharacterInfo = ObjectPool<TextMeshProMeshInfo.CharacterInfo>.Pop();
-                mCharacterInfo.Clear();
 
                 mCharacterInfo.character = mInputInfo.characterInfo[i].character;
                 mCharacterInfo.materialReferenceIndex = mInputInfo.characterInfo[i].materialReferenceIndex;

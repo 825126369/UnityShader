@@ -32,8 +32,9 @@ public class TextMeshProBeatTest : MonoBehaviour
             mTextMeshProBeatList[i].fUpdateTextMaxTime = fUpdateTextMaxTime;
             mTextMeshProBeatList[i].fAlphaTime = fAlphaTime;
             mTextMeshProBeatList[i].fAniHeight = fAniHeight;
+            
+            mTextMeshProBeatList[i].targetValue = 0;
             mTextMeshProBeatList[i].value = (ulong)UnityEngine.Random.Range(1, 10000);
-            mTextMeshProBeatList[i].targetValue = mTextMeshProBeatList[i].value;
         }
     }
 
@@ -41,7 +42,7 @@ public class TextMeshProBeatTest : MonoBehaviour
     {
         for (int i = 0; i < mTextMeshProBeatList.Length; i++)
         {
-            mTextMeshProBeatList[i].targetValue += (ulong)(nMultuile[i] * AddCoef[i]);
+            mTextMeshProBeatList[i].value = (ulong)UnityEngine.Random.Range(1, 10000);
         }
 
         if (Time.time - fLastTime > fSwitchInternalTime)
