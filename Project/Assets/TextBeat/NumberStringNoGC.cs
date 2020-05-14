@@ -37,7 +37,7 @@ namespace TextBeat
             return string_builder;
         }
 
-        public static StringBuilder Align(this StringBuilder string_builder, TextAlignment align)
+        public static StringBuilder Align(this StringBuilder string_builder, TextBeatAlign align)
         {
             string_builder.Length = string_builder.Capacity;
 
@@ -67,7 +67,7 @@ namespace TextBeat
                 }
             }
 
-            if (align == TextAlignment.Center)
+            if (align == TextBeatAlign.Center)
             {
                 int offset = (nLeftSpaceCount - nRightSpaceCount) / 2;
                 if (offset > 0)
@@ -95,7 +95,7 @@ namespace TextBeat
                     }
                 }
             }
-            else if (align == TextAlignment.Right)
+            else if (align == TextBeatAlign.Right)
             {
                 int offset = nRightSpaceCount;
                 if (offset > 0)
@@ -108,7 +108,7 @@ namespace TextBeat
                     }
                 }
             }
-            else if (align == TextAlignment.Left)
+            else if (align == TextBeatAlign.Left)
             {
                 int offset = nLeftSpaceCount;
                 if (offset > 0)
@@ -127,34 +127,12 @@ namespace TextBeat
 
         public static StringBuilder Align(this StringBuilder string_builder, TextAnchor align)
         {
-            if (align == TextAnchor.LowerLeft || align == TextAnchor.MiddleLeft || align == TextAnchor.UpperLeft)
-            {
-                return Align(string_builder, TextAlignment.Left);
-            }
-            else if (align == TextAnchor.LowerCenter || align == TextAnchor.MiddleCenter || align == TextAnchor.UpperCenter)
-            {
-                return Align(string_builder, TextAlignment.Center);
-            }
-            else
-            {
-                return Align(string_builder, TextAlignment.Right);
-            }
+            return Align(string_builder, TextBeatUtility.GetAlign(align));
         }
 
         public static StringBuilder Align(this StringBuilder string_builder, TMPro.TextAlignmentOptions align)
         {
-            if (align == TMPro.TextAlignmentOptions.Left || align == TMPro.TextAlignmentOptions.BottomLeft || align == TMPro.TextAlignmentOptions.TopLeft)
-            {
-                return Align(string_builder, TextAlignment.Left);
-            }
-            else if (align == TMPro.TextAlignmentOptions.Center || align == TMPro.TextAlignmentOptions.Top || align == TMPro.TextAlignmentOptions.Bottom)
-            {
-                return Align(string_builder, TextAlignment.Center);
-            }
-            else
-            {
-                return Align(string_builder, TextAlignment.Right);
-            }
+            return Align(string_builder, TextBeatUtility.GetAlign(align));
         }
 
 

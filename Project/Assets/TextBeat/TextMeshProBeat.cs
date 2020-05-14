@@ -35,7 +35,6 @@ namespace TextBeat
         private StringBuilder lastStringBuilder;
         private String mString;
         private String lastString;
-        private bool bLastBuild = false;
 
         private const int UInt64Length = 20;
         private const int oneSize = 4;
@@ -69,7 +68,7 @@ namespace TextBeat
             UpdateText(prefix, value);
             mText.ForceMeshUpdate();
             TextBeatUtility.CopyTo(lastInput, mText.textInfo);
-            bLastBuild = true;
+            TextBeatUtility.CopyTo(Input, mText.textInfo);
 
             ReSizeWorldAniBeginTimeList(lastInput, lastInput);
 
@@ -228,17 +227,23 @@ namespace TextBeat
         {
             int nWillInputVisibleIndex = 0;
             int nInputVisibleIndex = 0;
-
-            if (Input.mListMeshInfo.Count == 0)
-            {
-                for (int i = 0; i < mText.textInfo.materialCount; i++)
-                {
-                    TextMeshProMeshInfo.MeshInfo mTextMeshProMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
-                    Input.mListMeshInfo.Add(mTextMeshProMeshInfo);
-                }
-            }
             
             ReSizeWorldAniBeginTimeList(mWillFillInput, Input);
+
+            bool bChangeAll = mWillFillInput.mListCharacterInfo.Count != Input.mListCharacterInfo.Count;
+            if (TextBeatUtility.GetAlign(mText.alignment) == TextBeatAlign.Left)
+            {
+                bChangeAll = false;
+            }
+            else if (TextBeatUtility.GetAlign(mText.alignment) == TextBeatAlign.Right)
+            {
+                bChangeAll = false;
+            }
+            else if (TextBeatUtility.GetAlign(mText.alignment) == TextBeatAlign.Center)
+            {
+                bChangeAll = true;
+            }
+
             for (int i = 0; i < mWillFillInput.mListCharacterInfo.Count; i++)
             {
                 if (orOneWoldFinishAni(i))
@@ -625,35 +630,17 @@ namespace TextBeat
         {
             if (obj == mText)
             {
-                //if (mText.text != lastString)
+                if (!mWillFillInput.Equal(mText))
                 {
-                    bLastBuild = false;
                     TextBeatUtility.CopyTo(mWillFillInput, mText.textInfo);
-                    PlayAni();
+                    BuildAni();
                 }
             }
         }
 
         void BuildAni()
         {
-            //if (!orFinishAni())
-            {
-                PlayAni();
-            }
-
-            //if (orFinishAni())
-            {
-                if (bUseNoGCStringBuilder)
-                {
-                    InitNoGCStringBuilder();
-                    lastStringBuilder.GarbageFreeClear();
-                    lastStringBuilder.Append(mText.text);
-                }
-                else
-                {
-                    lastString = mText.text;
-                }
-            }
+           PlayAni();
         }
 
         //void RefreshMeshSize()

@@ -6,6 +6,13 @@ using System;
 
 namespace TextBeat
 {
+    internal enum TextBeatAlign
+    {
+        Left,
+        Right,
+        Center,
+    }
+
     internal class TextMeshProMeshInfo : InterfaceCanRecycleObj
     {   
         public class MeshInfo : InterfaceCanRecycleObj
@@ -87,6 +94,25 @@ namespace TextBeat
 
         public List<MeshInfo> mListMeshInfo = new List<MeshInfo>();
         public List<CharacterInfo> mListCharacterInfo = new List<CharacterInfo>();
+
+
+        public bool Equal(TMP_Text mText)
+        {
+            if (mListCharacterInfo.Count != mText.textInfo.characterCount)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < mListCharacterInfo.Count; i++)
+            {
+                if (mListCharacterInfo[i].character != mText.textInfo.characterInfo[i].character)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
         
         public void Clear()
         {
@@ -107,6 +133,39 @@ namespace TextBeat
 
     internal static class TextBeatUtility
     {
+        public static TextBeatAlign GetAlign(TextAnchor align)
+        {
+            if (align == TextAnchor.LowerLeft || align == TextAnchor.MiddleLeft || align == TextAnchor.UpperLeft)
+            {
+                return TextBeatAlign.Left;
+            }
+            else if (align == TextAnchor.LowerCenter || align == TextAnchor.MiddleCenter || align == TextAnchor.UpperCenter)
+            {
+                return TextBeatAlign.Center;
+            }
+            else
+            {
+                return TextBeatAlign.Right;
+            }
+        }
+
+        public static TextBeatAlign GetAlign(TMPro.TextAlignmentOptions align)
+        {
+            if (align == TMPro.TextAlignmentOptions.Left || align == TMPro.TextAlignmentOptions.BottomLeft || align == TMPro.TextAlignmentOptions.TopLeft)
+            {
+                return TextBeatAlign.Left;
+            }
+            else if (align == TMPro.TextAlignmentOptions.Center || align == TMPro.TextAlignmentOptions.Top || align == TMPro.TextAlignmentOptions.Bottom)
+            {
+                return TextBeatAlign.Center;
+            }
+            else
+            {
+                return TextBeatAlign.Right;
+            }
+        }
+
+
         public static void CopyTo(TextMeshProMeshInfo mOutInfo, TMP_TextInfo mInputInfo)
         {
             mOutInfo.Clear();
