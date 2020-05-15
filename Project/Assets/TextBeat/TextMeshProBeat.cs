@@ -93,24 +93,6 @@ namespace TextBeat
             }
         }
 
-        private bool orEuqalString(string A, string B)
-        {
-            if(A.Length != B.Length)
-            {
-                return false;
-            }
-
-            for(int i = 0; i < A.Length; i++)
-            {
-                if (A[i] != B[i])
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         //private void Update()
         //{
         //    if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)

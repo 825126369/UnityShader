@@ -13,6 +13,33 @@ namespace TextBeat
         Center,
     }
 
+    internal class TextMeshInfo : InterfaceCanRecycleObj
+    {
+        public class MeshInfo : InterfaceCanRecycleObj
+        {
+            public List<Vector3> vertices = new List<Vector3>();
+            public List<Vector3> normals = new List<Vector3>();
+            public List<Vector4> tangents = new List<Vector4>();
+            public List<Vector2> uvs0 = new List<Vector2>();
+            public List<Vector2> uvs2 = new List<Vector2>();
+            public List<Color32> colors32 = new List<Color32>();
+            public List<int> triangles = new List<int>();
+            
+            public void Clear()
+            {
+                
+            }
+        }
+
+        public MeshInfo mListMeshInfo = null;
+        public List<char> mListCharacterInfo = new List<char>();
+
+        public void Clear()
+        {
+
+        }
+    }
+
     internal class TextMeshProMeshInfo : InterfaceCanRecycleObj
     {   
         public class MeshInfo : InterfaceCanRecycleObj
@@ -165,7 +192,29 @@ namespace TextBeat
             }
         }
 
+        public static bool orEuqalString(string A, string B)
+        {
+            if (A.Length != B.Length)
+            {
+                return false;
+            }
 
+            for (int i = 0; i < A.Length; i++)
+            {
+                if (A[i] != B[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public static void CopyTo(TextMeshInfo mOutInfo, Mesh mesh, string text)
+        {
+            
+        }
+        
         public static void CopyTo(TextMeshProMeshInfo mOutInfo, TMP_TextInfo mInputInfo)
         {
             mOutInfo.Clear();

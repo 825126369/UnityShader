@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.Text;
 
 namespace TextBeat
 {
     public class GCTest : MonoBehaviour
     {
-        public TextMeshPro mText;
+        StringBuilder mStringBuilder;
         void Start()
         {
 
@@ -17,7 +18,7 @@ namespace TextBeat
         // Update is called once per frame
         void Update()
         {
-            mText.text = UnityEngine.Random.Range(1, UInt64.MaxValue).ToString();
+            
         }
     }
 }
