@@ -37,6 +37,52 @@ namespace TextBeat
             return string_builder;
         }
 
+        public static StringBuilder AppendUInt64WithCommas(this StringBuilder string_builder, UInt64 UInt64_val)
+        {
+            int offset = string_builder.Length;
+            int length = 0;
+            int numCommas = 0;
+            UInt64 length_calc = UInt64_val;
+
+            do
+            {
+                length_calc /= 10;
+                length++;
+
+                if (length % 3 == 0)
+                {
+                    numCommas++;
+                }
+            }
+            while (length_calc > 0);
+
+            if(length % 3 == 0)
+            {
+                numCommas--;
+            }
+
+            string_builder.Length = offset + length + numCommas;
+
+            int nLastIndex = string_builder.Length - 1;
+            int nCommasIndex = 0;
+
+            while (nLastIndex >= offset)
+            {
+                string_builder[nLastIndex] = ms_digits[UInt64_val % 10];
+                UInt64_val /= 10;
+                nLastIndex--;
+                nCommasIndex++;
+                if (nLastIndex > 0 && nCommasIndex % 3 == 0)
+                {
+                    string_builder[nLastIndex] = ',';
+                    nLastIndex--;
+                    nCommasIndex = 0;
+                }
+            }
+
+            return string_builder;
+        }
+
         public static StringBuilder Align(this StringBuilder string_builder, TextBeatAlign align)
         {
             string_builder.Length = string_builder.Capacity;

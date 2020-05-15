@@ -37,6 +37,8 @@ namespace TextBeat
         private StringBuilder mStringBuilder;
         private String mString;
 
+        private UInt64 lastValue = UInt64.MaxValue;
+
         private const int UInt64Length = 20;
         private const int oneSize = 4;
 
@@ -61,69 +63,104 @@ namespace TextBeat
             {
                 InitNoGCStringBuilder();
             }
-
-            UpdateText(prefix, value);
+            
             mText.ForceMeshUpdate();
             ReSizeWorldAniBeginTimeList(lastInput, lastInput);
-            InitMaxMeshSize();
+            //InitMaxMeshSize();
             ForceChangeLastInputOffsetXMeshInfo();
         }
 
         private int GetCharacterMaxCount()
         {
-            return UInt64Length + prefix.Length;
+            //return UInt64Length + prefix.Length;
+            return mText.textInfo.characterCount;
         }
         
-        private void InitNoGCStringBuilder()
+        private void InitNoGCStringBuilder(int Capacity = UInt64Length)
         {
-            int nMaxStringBuilerCapacity = GetCharacterMaxCount();
-            if (mStringBuilder == null || mStringBuilder.Capacity < nMaxStringBuilerCapacity)
+            if (mStringBuilder == null)
             {
-                mStringBuilder = new StringBuilder(nMaxStringBuilerCapacity);
-                mStringBuilder.GarbageFreeClear();
+                mStringBuilder = new StringBuilder(Capacity);
                 mString = mStringBuilder.GetGarbageFreeString();
             }
         }
 
+        private void ReSizeStringBuilder(int nLastStringBuilderCapacity)
+        {
+            if (nLastStringBuilderCapacity != mStringBuilder.Capacity)
+            {
+                mString = mStringBuilder.GetGarbageFreeString();
+            }
+        }
+
+        private bool orEuqalString(string A, string B)
+        {
+            if(A.Length != B.Length)
+            {
+                return false;
+            }
+
+            for(int i = 0; i < A.Length; i++)
+            {
+                if (A[i] != B[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        //private void Update()
+        //{
+        //    if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+        //    {
+        //        fBeginUpdateTextTime = Time.time;
+        //        //if (bImmediatelyToTargetValue)
+        //        //{
+        //        //    value = targetValue;
+        //        //    bImmediatelyToTargetValue = false;
+        //        //    UpdateText(value);
+        //        //}
+        //        //else if (value < targetValue)
+        //        //{
+        //        //    //value += (UInt64)UnityEngine.Random.Range(1, 9);
+        //        //    value ++;
+
+        //        //    if (value > targetValue)
+        //        //    {
+        //        //        value = targetValue;
+        //        //    }
+
+        //        //    UpdateText(value);
+        //        //}
+        //        //else if (value > targetValue)
+        //        //{
+        //        //    //value -= (UInt64)UnityEngine.Random.Range(1, 9);
+        //        //    value--;
+
+        //        //    if (value < targetValue)
+        //        //    {
+        //        //        value = targetValue;
+        //        //    }
+
+        //        //    UpdateText(value);
+        //        //}
+
+        //        value++;
+        //        //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
+        //        UpdateText(value);
+        //    }
+        //}
+
+
+        float testValue = 1000f;
         private void Update()
         {
-            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
-            {
-                fBeginUpdateTextTime = Time.time;
-                if (bImmediatelyToTargetValue)
-                {
-                    value = targetValue;
-                    bImmediatelyToTargetValue = false;
-                    UpdateText(prefix, value);
-                }
-                else if (value < targetValue)
-                {
-                    //value += (UInt64)UnityEngine.Random.Range(1, 9);
-                    value ++;
+            testValue += Time.deltaTime;
 
-                    if (value > targetValue)
-                    {
-                        value = targetValue;
-                    }
-                    
-                    UpdateText(prefix, value);
-                }
-                else if (value > targetValue)
-                {
-                    //value -= (UInt64)UnityEngine.Random.Range(1, 9);
-                    value--;
-
-                    if (value < targetValue)
-                    {
-                        value = targetValue;
-                    }
-
-                    UpdateText(prefix, value);
-                }
-
-                //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
-                //UpdateText(prefix, value);
-            }
+            UInt64 t = (UInt64)Mathf.FloorToInt(testValue);
+            UpdateText(t);
         }
 
         private void LateUpdate()
@@ -131,66 +168,49 @@ namespace TextBeat
             BuildAni();
         }
 
-        public void UpdateText()
+        public void UpdateText(Int64 value)
         {
-            if (bUseNoGCStringBuilder)
-            {
-                InitNoGCStringBuilder();
-                mStringBuilder.GarbageFreeClear();
-                mStringBuilder.Append(prefix);
-                mStringBuilder.AppendUInt64(value);
-                mStringBuilder.Align(mText.alignment);
-                mText.text = mString;
-
-                mText.havePropertiesChanged = true;
-                mText.SetVerticesDirty();
-                mText.SetLayoutDirty();
-            }
-            else
-            {
-                mText.text = prefix + value.ToString();
-            }
-        }
-
-        public void UpdateText(string prefixStr, UInt64 value)
-        {
-            if (bUseNoGCStringBuilder)
-            {
-                InitNoGCStringBuilder();
-                mStringBuilder.GarbageFreeClear();
-                mStringBuilder.Append(prefixStr);
-                mStringBuilder.AppendUInt64(value);
-                mStringBuilder.Align(mText.alignment);
-                mText.text = mString;
-                
-                mText.havePropertiesChanged = true;
-                mText.SetVerticesDirty();
-                mText.SetLayoutDirty();
-            }
-            else
-            {
-                mText.text = prefix + value.ToString();
-            }
+            UpdateText((UInt64)value);
         }
 
         public void UpdateText(UInt64 value)
         {
             if (bUseNoGCStringBuilder)
             {
-                InitNoGCStringBuilder();
-                mStringBuilder.GarbageFreeClear();
-                mStringBuilder.AppendUInt64(value);
-                mStringBuilder.Align(mText.alignment);
-                mText.text = mString;
-
-                mText.havePropertiesChanged = true;
-                mText.SetVerticesDirty();
-                mText.SetLayoutDirty();
+                // 这里加个判断，因为如果不加的话，会导致 Mesh 被重新刷新，看起来没有做动画
+                if (lastValue != value)
+                {
+                    int nLastStringBuilderCapacity = mStringBuilder.Capacity;
+                    mStringBuilder.GarbageFreeClear();
+                    mStringBuilder.Append(prefix);
+                    mStringBuilder.AppendUInt64WithCommas(value);
+                    ReSizeStringBuilder(nLastStringBuilderCapacity);
+                    mStringBuilder.Align(mText.alignment);
+                    
+                    mText.text = mString;
+                    mText.havePropertiesChanged = true;
+                    mText.SetVerticesDirty();
+                    mText.SetLayoutDirty();
+                    
+                    lastValue = value;
+                }
             }
             else
             {
-                mText.text = value.ToString();
+                if (string.IsNullOrEmpty(prefix))
+                {
+                    mText.text = value.ToString();
+                }
+                else
+                {
+                    mText.text = prefix + value.ToString();
+                }
             }
+        }
+
+        public void UpdateText(string text)
+        {
+           mText.text = text;
         }
 
         private bool orOneWoldFinishAni(int index)
@@ -747,6 +767,7 @@ namespace TextBeat
                 InitTextMeshProMeshInfo(lastInput);
                 InitTextMeshProMeshInfo(Input);
                 InitTextMeshProMeshInfo(mWillFillInput);
+                InitMaxMeshSize();
 
                 if (!mWillFillInput.Equal(mText))
                 {
