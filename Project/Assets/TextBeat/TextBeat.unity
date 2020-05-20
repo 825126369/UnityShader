@@ -1421,7 +1421,7 @@ MonoBehaviour:
   bImmediatelyToTargetValue: 0
   fAlphaTime: 0.5
   fAniHeight: 130
-  fUpdateTextMaxTime: 0
+  fUpdateTextMaxTime: 1
 --- !u!114 &1663775779
 MonoBehaviour:
   m_ObjectHideFlags: 0

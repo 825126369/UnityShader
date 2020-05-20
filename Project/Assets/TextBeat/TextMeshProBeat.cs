@@ -62,6 +62,15 @@ namespace TextBeat
             TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(ON_TEXT_CHANGED);
         }
 
+        private void OnDestroy()
+        {
+            mWillFillInput.Clear();
+            Input.Clear();
+            lastInput.Clear();
+            outputMeshInfoList.Clear();
+            mStringBuilder = null;
+        }
+
         void Start()
         {
             if (bUseNoGCStringBuilder)
@@ -100,57 +109,64 @@ namespace TextBeat
             }
         }
 
-        //private void Update()
-        //{
-        //    if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
-        //    {
-        //        fBeginUpdateTextTime = Time.time;
-        //        //if (bImmediatelyToTargetValue)
-        //        //{
-        //        //    value = targetValue;
-        //        //    bImmediatelyToTargetValue = false;
-        //        //    UpdateText(value);
-        //        //}
-        //        //else if (value < targetValue)
-        //        //{
-        //        //    //value += (UInt64)UnityEngine.Random.Range(1, 9);
-        //        //    value ++;
-
-        //        //    if (value > targetValue)
-        //        //    {
-        //        //        value = targetValue;
-        //        //    }
-
-        //        //    UpdateText(value);
-        //        //}
-        //        //else if (value > targetValue)
-        //        //{
-        //        //    //value -= (UInt64)UnityEngine.Random.Range(1, 9);
-        //        //    value--;
-
-        //        //    if (value < targetValue)
-        //        //    {
-        //        //        value = targetValue;
-        //        //    }
-
-        //        //    UpdateText(value);
-        //        //}
-
-        //        value++;
-        //        //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
-        //        UpdateText(value);
-        //    }
-        //}
-
-
-        float testValue = 1000f;
         private void Update()
         {
-            testValue += Time.deltaTime;
+            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            {
+                fBeginUpdateTextTime = Time.time;
+                //if (bImmediatelyToTargetValue)
+                //{
+                //    value = targetValue;
+                //    bImmediatelyToTargetValue = false;
+                //    UpdateText(value);
+                //}
+                //else if (value < targetValue)
+                //{
+                //    //value += (UInt64)UnityEngine.Random.Range(1, 9);
+                //    value ++;
 
-            UInt64 t = (UInt64)Mathf.FloorToInt(testValue);
-            UpdateText(t);
+                //    if (value > targetValue)
+                //    {
+                //        value = targetValue;
+                //    }
+
+                //    UpdateText(value);
+                //}
+                //else if (value > targetValue)
+                //{
+                //    //value -= (UInt64)UnityEngine.Random.Range(1, 9);
+                //    value--;
+
+                //    if (value < targetValue)
+                //    {
+                //        value = targetValue;
+                //    }
+
+                //    UpdateText(value);
+                //}
+
+                value = (ulong)UnityEngine.Random.Range(1, 10000);
+                if (UnityEngine.Random.Range(1, 3) == 1)
+                {
+                    value *= 10 * (ulong)UnityEngine.Random.Range(1, 5);
+                }else
+                {
+                    value /= 10 * (ulong)UnityEngine.Random.Range(1, 5);
+                }
+                //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
+                UpdateText(value);
+            }
         }
+
+
+        //float testValue = 10005f;
+        //private void Update()
+        //{
+        //    testValue -= Time.deltaTime;
+
+        //    UInt64 t = (UInt64)Mathf.FloorToInt(testValue);
+        //    UpdateText(t);
+        //}
 
         public void UpdateText(Int64 value)
         {
@@ -184,8 +200,7 @@ namespace TextBeat
                 if (string.IsNullOrEmpty(prefix))
                 {
                     mText.text = value.ToString();
-                }
-                else
+                }else
                 {
                     mText.text = prefix + value.ToString();
                 }
@@ -200,11 +215,6 @@ namespace TextBeat
         private bool orOneWoldFinishAni(int index)
         {
             return Time.time - mWorldAniBeginTimeList[index] > fAlphaTime;
-        }
-
-        private bool orFinishAni()
-        {
-            return true;
         }
 
         private void AddVertexInfo(int materialIndex, Vector3 pos, Color32 color, Vector2 uv0, Vector2 uv1, Vector3 normal, Vector4 tangent)
@@ -230,8 +240,9 @@ namespace TextBeat
 
         private void ClearOutputMeshInfoList()
         {
-            if (outputMeshInfoList.Count < mText.textInfo.materialCount)
+            if (outputMeshInfoList.Count != mText.textInfo.materialCount)
             {
+                outputMeshInfoList.Clear();
                 for (int i = 0; i < mText.textInfo.materialCount; i++)
                 {
                     TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
@@ -445,7 +456,7 @@ namespace TextBeat
                         Input.mListMeshInfo[materialIndex].RemoveQuadAt(nBeginIndex);
                     }
 
-                    Input.mListCharacterInfo.RemoveAt(i);
+                    Input.RemoveCharacter(i);
                 }
             }
             
@@ -541,7 +552,7 @@ namespace TextBeat
                         lastInput.mListMeshInfo[materialIndex].RemoveQuadAt(nBeginIndex);
                     }
 
-                    lastInput.mListCharacterInfo.RemoveAt(i);
+                    lastInput.RemoveCharacter(i);
                 }
             }
         }
@@ -552,8 +563,11 @@ namespace TextBeat
 
             FillLastInput();
             FillInput();
+
+            lastInput.Check();
+            Input.Check();
             
-            for (int i = 0; i < mWorldisPlayingAniList.Count; i++)
+            for(int i = 0; i < mWorldisPlayingAniList.Count; i++)
             {
                 if (orOneWoldFinishAni(i) && mWorldisPlayingAniList[i])
                 {
@@ -570,7 +584,7 @@ namespace TextBeat
             for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
             {
                 int materialIndex = Input.mListCharacterInfo[i].materialReferenceIndex;
-                if (orOneWoldFinishAni(i))
+                if (orOneWoldFinishAni(i) && !mWorldisPlayingAniList[i])
                 {
                     bool bChanged = false;
                     if (i < lastInput.mListCharacterInfo.Count)
@@ -587,7 +601,7 @@ namespace TextBeat
                         bChanged = false;
                     }
 
-                    if (bChanged && !mWorldisPlayingAniList[i])
+                    if (bChanged)
                     {
                         mWorldisPlayingAniList[i] = true;
                         mWorldAniBeginTimeList[i] = Time.time;
@@ -689,7 +703,7 @@ namespace TextBeat
             {
                 int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
 
-                if (orOneWoldFinishAni(i))
+                if (orOneWoldFinishAni(i) && !mWorldisPlayingAniList[i])
                 {
                     bool bChanged = true;
                     if (!lastInput.mListCharacterInfo[i].isVisible)
@@ -697,7 +711,7 @@ namespace TextBeat
                         bChanged = false;
                     }
 
-                    if (bChanged && !mWorldisPlayingAniList[i])
+                    if (bChanged)
                     {
                         mWorldAniBeginTimeList[i] = Time.time;
                         mWorldisPlayingAniList[i] = true;
@@ -741,7 +755,8 @@ namespace TextBeat
         {
             //Debug.Assert(mText.textInfo.meshInfo.Length == 1);
             //Debug.Assert(outputVertexs.Count / 4 * 6 == outputIndices.Count, outputVertexs.Count + " | " + outputIndices.Count);
-            
+
+            //解决Bug: Mesh.uv2 is out of bounds. The supplied array needs to be the same size as the Mesh.vertices array.
             for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
                 for (int j = outputMeshInfoList[i].vertices.Count; j < mText.textInfo.meshInfo[i].vertices.Length; j++)
@@ -770,13 +785,13 @@ namespace TextBeat
         {
             if (obj == mText)
             {
-                InitTextMeshProMeshInfo(lastInput);
-                InitTextMeshProMeshInfo(Input);
-                InitTextMeshProMeshInfo(mWillFillInput);
-                InitMaxMeshSize();
-
                 if (!mWillFillInput.Equal(mText))
                 {
+                    InitTextMeshProMeshInfo(lastInput);
+                    InitTextMeshProMeshInfo(Input);
+                    InitTextMeshProMeshInfo(mWillFillInput);
+                    InitMaxMeshSize();
+
                     TextBeatUtility.CopyTo(mWillFillInput, mText.textInfo);
                     InitUV2ScaleY(mWillFillInput);
                     BuildAni();

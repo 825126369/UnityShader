@@ -138,6 +138,33 @@ namespace TextBeat
             mListMeshInfo.Clear();
             mListCharacterInfo.Clear();
         }
+
+        public void RemoveCharacter(int index)
+        {
+            CharacterInfo mRemove = mListCharacterInfo[index];
+            mListCharacterInfo.RemoveAt(index);
+            ObjectPool<CharacterInfo>.recycle(mRemove);
+        }
+
+        public void Check()
+        {
+
+            for (int i = 0; i < mListMeshInfo.Count; i++)
+            {
+                int nVertexCount = 0;
+                for (int j = 0; j < mListCharacterInfo.Count; j++)
+                {
+                    if (mListCharacterInfo[j].materialReferenceIndex == i && mListCharacterInfo[j].isVisible)
+                    {
+                        nVertexCount += 4;
+                    }
+                }
+
+                Debug.Assert(nVertexCount == mListMeshInfo[i].vertices.Count);
+            }
+
+        }
+
     }
 
     internal static class TextBeatUtility
