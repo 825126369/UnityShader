@@ -30,8 +30,7 @@ namespace TextBeat
 
         private List<int> mVisibleCharacterList1 = new List<int>();
         private List<int> mVisibleCharacterList2 = new List<int>();
-
-        private static List<TextMeshProMeshInfo.MeshInfo> outputMeshInfoList = new List<TextMeshProMeshInfo.MeshInfo>();
+        private List<TextMeshProMeshInfo.MeshInfo> outputMeshInfoList = new List<TextMeshProMeshInfo.MeshInfo>();
 
         private TMP_Text mText;
         private StringBuilder mStringBuilder;
@@ -41,6 +40,12 @@ namespace TextBeat
 
         private const int UInt64Length = 20;
         private const int oneSize = 4;
+
+        private static readonly Color32 s_DefaultColor = new Color32(byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue);
+        private static readonly Vector3 s_DefaultNormal = new Vector3(0.0f, 0.0f, -1f);
+        private static readonly Vector4 s_DefaultTangent = new Vector4(-1f, 0.0f, 0.0f, 1f);
+
+        private float m_previousLossyScaleY;
 
         void Awake()
         {
@@ -68,6 +73,8 @@ namespace TextBeat
             ReSizeWorldAniBeginTimeList(lastInput, lastInput);
             //InitMaxMeshSize();
             ForceChangeLastInputOffsetXMeshInfo();
+
+            //mText.isUsingLegacyAnimationComponent = true;
         }
 
         private int GetCharacterMaxCount()
@@ -143,11 +150,6 @@ namespace TextBeat
 
             UInt64 t = (UInt64)Mathf.FloorToInt(testValue);
             UpdateText(t);
-        }
-
-        private void LateUpdate()
-        {
-            BuildAni();
         }
 
         public void UpdateText(Int64 value)
@@ -228,17 +230,20 @@ namespace TextBeat
 
         private void ClearOutputMeshInfoList()
         {
-            for (int i = 0; i < outputMeshInfoList.Count; i++)
+            if (outputMeshInfoList.Count < mText.textInfo.materialCount)
             {
-                ObjectPool<TextMeshProMeshInfo.MeshInfo>.recycle(outputMeshInfoList[i]);
+                for (int i = 0; i < mText.textInfo.materialCount; i++)
+                {
+                    TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
+                    outputMeshInfoList.Add(mMeshInfo);
+                }
             }
-
-            outputMeshInfoList.Clear();
-
-            for (int i = 0; i < mText.textInfo.materialCount; i++)
+            else
             {
-                TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
-                outputMeshInfoList.Add(mMeshInfo);
+                for (int i = 0; i < mText.textInfo.materialCount; i++)
+                {
+                    outputMeshInfoList[i].Clear();
+                }
             }
         }
 
@@ -443,7 +448,7 @@ namespace TextBeat
                     Input.mListCharacterInfo.RemoveAt(i);
                 }
             }
-
+            
             if (bForceChangeOffsetXMeshInfo)
             {
                 ForceChangeLastInputOffsetXMeshInfo();
@@ -539,7 +544,6 @@ namespace TextBeat
                     lastInput.mListCharacterInfo.RemoveAt(i);
                 }
             }
-
         }
 
         private void PlayAni()
@@ -549,7 +553,7 @@ namespace TextBeat
             FillLastInput();
             FillInput();
             
-            for(int i = 0; i < mWorldisPlayingAniList.Count; i++)
+            for (int i = 0; i < mWorldisPlayingAniList.Count; i++)
             {
                 if (orOneWoldFinishAni(i) && mWorldisPlayingAniList[i])
                 {
@@ -610,8 +614,12 @@ namespace TextBeat
                             Vector3 normal = lastInput.mListMeshInfo[LastMaterialIndex].normals[nOirIndex];
                             Vector4 tangent = lastInput.mListMeshInfo[LastMaterialIndex].tangents[nOirIndex];
 
+                            float fScaleY = lastInput.mListMeshInfo[LastMaterialIndex].uvs2ScaleY[nOirIndex];
+
                             Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
                             Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
+
+                            GetUV2(ref uv2, ref fScaleY);
                             AddVertexInfo(LastMaterialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
                         }
                     }
@@ -629,9 +637,12 @@ namespace TextBeat
                             Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
                             Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
                             Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
+                            float fScaleY = Input.mListMeshInfo[materialIndex].uvs2ScaleY[nOirIndex];
 
                             Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
                             Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
+                            
+                            GetUV2(ref uv2, ref fScaleY);
                             AddVertexInfo(materialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
                         };
 
@@ -653,6 +664,9 @@ namespace TextBeat
                             Vector2 uv2 = Input.mListMeshInfo[materialIndex].uvs2[nOirIndex];
                             Vector3 normal = Input.mListMeshInfo[materialIndex].normals[nOirIndex];
                             Vector4 tangent = Input.mListMeshInfo[materialIndex].tangents[nOirIndex];
+                            float fScaleY = Input.mListMeshInfo[materialIndex].uvs2ScaleY[nOirIndex];
+
+                            GetUV2(ref uv2, ref fScaleY);
                             AddVertexInfo(materialIndex, oriPos, oriColor32, uv0, uv2, normal, tangent);
                         };
                     }
@@ -704,9 +718,11 @@ namespace TextBeat
                         Vector2 uv2 = lastInput.mListMeshInfo[LastMaterialIndex].uvs2[nOirIndex];
                         Vector3 normal = lastInput.mListMeshInfo[LastMaterialIndex].normals[nOirIndex];
                         Vector4 tangent = lastInput.mListMeshInfo[LastMaterialIndex].tangents[nOirIndex];
+                        float fScaleY = lastInput.mListMeshInfo[LastMaterialIndex].uvs2ScaleY[nOirIndex];
 
                         Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
                         Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
+                        GetUV2(ref uv2, ref fScaleY);
                         AddVertexInfo(LastMaterialIndex, targetPos, targetColor32, uv0, uv2, normal, tangent);
                     }
                 }
@@ -725,6 +741,14 @@ namespace TextBeat
         {
             //Debug.Assert(mText.textInfo.meshInfo.Length == 1);
             //Debug.Assert(outputVertexs.Count / 4 * 6 == outputIndices.Count, outputVertexs.Count + " | " + outputIndices.Count);
+            
+            for (int i = 0; i < mText.textInfo.materialCount; i++)
+            {
+                for (int j = outputMeshInfoList[i].vertices.Count; j < mText.textInfo.meshInfo[i].vertices.Length; j++)
+                {
+                    AddVertexInfo(i, Vector3.zero, s_DefaultColor, Vector2.zero, Vector2.zero, s_DefaultNormal, s_DefaultTangent);
+                }
+            }
 
             for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
@@ -754,35 +778,21 @@ namespace TextBeat
                 if (!mWillFillInput.Equal(mText))
                 {
                     TextBeatUtility.CopyTo(mWillFillInput, mText.textInfo);
+                    InitUV2ScaleY(mWillFillInput);
                     BuildAni();
                 }
             }
+        }
+
+        private void OnWillRenderObject()
+        {
+            BuildAni();
         }
 
         void BuildAni()
         {
            PlayAni();
         }
-
-        //void RefreshMeshSize()
-        //{
-        //    for (int i = 0; i < mText.textInfo.materialCount; i++)
-        //    {
-        //        if (mText.textInfo.meshInfo[i].vertices.Length < mText.textInfo.meshInfo[i].mesh.vertices.Length)
-        //        {
-        //            int nReSize = mText.textInfo.meshInfo[i].mesh.vertices.Length / 4;
-        //            mText.textInfo.meshInfo[i].ResizeMeshInfo(nReSize);
-
-        //            //mText.textInfo.meshInfo[i].mesh.SetVertices(outputVertexs);
-        //            //mText.textInfo.meshInfo[i].mesh.SetUVs(0, outputuv0s);
-        //            //mText.textInfo.meshInfo[i].mesh.SetUVs(1, outputuv1s);
-        //            //mText.textInfo.meshInfo[i].mesh.SetColors(outputColors);
-        //            //mText.textInfo.meshInfo[i].mesh.SetNormals(outnormals);
-        //            //mText.textInfo.meshInfo[i].mesh.SetTangents(outtangents);
-        //            //mText.textInfo.meshInfo[i].mesh.SetTriangles(outputIndices, 0);
-        //        }
-        //    }
-        //}
 
         void InitMaxMeshSize()
         {
@@ -794,6 +804,42 @@ namespace TextBeat
                 if (mText.textInfo.meshInfo[i].vertices.Length / 4 < nMaxStringBuilerCapacity)
                 {
                     mText.textInfo.meshInfo[i].ResizeMeshInfo(nMaxStringBuilerCapacity);
+
+                    mText.textInfo.meshInfo[i].mesh.uv = mText.textInfo.meshInfo[i].uvs0;
+                    mText.textInfo.meshInfo[i].mesh.uv2 = mText.textInfo.meshInfo[i].uvs2;
+                    mText.textInfo.meshInfo[i].mesh.colors32 = mText.textInfo.meshInfo[i].colors32;
+                }
+            }
+        }
+
+        void GetUV2(ref Vector2 uv2, ref float fScale)
+        {
+            float fNowScaleY = transform.lossyScale.y;
+            float scaleDelta = fNowScaleY / fScale;
+            if (scaleDelta == 0 || scaleDelta == float.PositiveInfinity)
+            {
+                return;
+            }
+
+            Vector2 oriUV2 = uv2;
+            float modifyY = oriUV2.y * Mathf.Abs(scaleDelta);
+            uv2 = new Vector2(oriUV2.x, modifyY);
+            fScale = fNowScaleY;
+        }
+
+        bool orScaleYChanged()
+        {
+            return transform.lossyScale.y != m_previousLossyScaleY;
+        }
+
+        void InitUV2ScaleY(TextMeshProMeshInfo meshInfo)
+        {
+            for (int materialIndex = 0; materialIndex < mText.textInfo.materialCount; materialIndex++)
+            {
+                meshInfo.mListMeshInfo[materialIndex].uvs2ScaleY.Clear();
+                for (int i = 0; i < meshInfo.mListMeshInfo[materialIndex].uvs2.Count; i++)
+                {
+                    meshInfo.mListMeshInfo[materialIndex].uvs2ScaleY.Add(transform.lossyScale.y);
                 }
             }
         }

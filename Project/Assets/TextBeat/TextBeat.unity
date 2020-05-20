@@ -378,13 +378,14 @@ GameObject:
   - component: {fileID: 323463086}
   - component: {fileID: 323463085}
   - component: {fileID: 323463084}
+  - component: {fileID: 323463087}
   m_Layer: 0
   m_Name: TextMeshBeat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!102 &323463084
 TextMesh:
   serializedVersion: 3
@@ -458,6 +459,25 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &323463087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 323463083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa63e47d84fd84983a41b315a254efc7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bUseNoGCStringBuilder: 0
+  prefix: 36
+  value: 10000000000
+  targetValue: 1000000000000000
+  fUpdateTextMaxTime: 0.5
+  fAlphaTime: 0.5
+  fAniHeight: 100
 --- !u!1 &500912138
 GameObject:
   m_ObjectHideFlags: 0
@@ -739,7 +759,6 @@ GameObject:
   - component: {fileID: 826221195}
   - component: {fileID: 826221194}
   - component: {fileID: 826221193}
-  - component: {fileID: 826221192}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -747,26 +766,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &826221192
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 826221191}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 206d027d9f1f148899dde8de64e0e29b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bUseNoGCStringBuilder: 1
-  prefix: $
-  value: 0
-  targetValue: 100000
-  bImmediatelyToTargetValue: 0
-  fAlphaTime: 0.5
-  fAniHeight: 130
-  fUpdateTextMaxTime: 0
 --- !u!114 &826221193
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -942,11 +941,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2115133539}
-  m_RootOrder: 0
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 14, y: 923}
+  m_AnchoredPosition: {x: 1294, y: 367}
   m_SizeDelta: {x: 10000, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1041997722
@@ -969,7 +968,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1041997723
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1165,7 +1164,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2115133539}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1402,7 +1401,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1663775778
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1598,7 +1597,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2115133539}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1716,7 +1715,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1911485312
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1912,7 +1911,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2115133539}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1935,7 +1934,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2115133539
 Transform:
   m_ObjectHideFlags: 0
@@ -1947,10 +1946,10 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 826221197}
   - {fileID: 1663775783}
   - {fileID: 1041997728}
   - {fileID: 1911485317}
+  - {fileID: 826221197}
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1976,7 +1975,7 @@ MonoBehaviour:
   - 0.3
   - 0.4
   mTextMeshProBeatList:
-  - {fileID: 826221192}
+  - {fileID: 0}
   - {fileID: 1663775778}
   - {fileID: 1041997723}
   - {fileID: 1911485312}

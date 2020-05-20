@@ -13,33 +13,6 @@ namespace TextBeat
         Center,
     }
 
-    internal class TextMeshInfo : InterfaceCanRecycleObj
-    {
-        public class MeshInfo : InterfaceCanRecycleObj
-        {
-            public List<Vector3> vertices = new List<Vector3>();
-            public List<Vector3> normals = new List<Vector3>();
-            public List<Vector4> tangents = new List<Vector4>();
-            public List<Vector2> uvs0 = new List<Vector2>();
-            public List<Vector2> uvs2 = new List<Vector2>();
-            public List<Color32> colors32 = new List<Color32>();
-            public List<int> triangles = new List<int>();
-            
-            public void Clear()
-            {
-                
-            }
-        }
-
-        public MeshInfo mListMeshInfo = null;
-        public List<char> mListCharacterInfo = new List<char>();
-
-        public void Clear()
-        {
-
-        }
-    }
-
     internal class TextMeshProMeshInfo : InterfaceCanRecycleObj
     {   
         public class MeshInfo : InterfaceCanRecycleObj
@@ -52,6 +25,8 @@ namespace TextBeat
             public List<Color32> colors32 = new List<Color32>();
             public List<int> triangles = new List<int>();
 
+            public List<float> uvs2ScaleY = new List<float>();
+
             public void ReplaceQuad(int nBeginVertex, MeshInfo OtherMeshInfo, int nOhterBeginVertex)
             {
                 for (int i = 0; i < 4; i++)
@@ -62,6 +37,8 @@ namespace TextBeat
                     uvs0[nBeginVertex + i] = OtherMeshInfo.uvs0[nOhterBeginVertex + i];
                     uvs2[nBeginVertex + i] = OtherMeshInfo.uvs2[nOhterBeginVertex + i];
                     colors32[nBeginVertex + i] = OtherMeshInfo.colors32[nOhterBeginVertex + i];
+
+                    uvs2ScaleY[nBeginVertex + i] = OtherMeshInfo.uvs2ScaleY[nOhterBeginVertex + i];
                 }
             }
 
@@ -75,6 +52,8 @@ namespace TextBeat
                     uvs0.Add(OtherMeshInfo.uvs0[nOhterBeginVertex + i]);
                     uvs2.Add(OtherMeshInfo.uvs2[nOhterBeginVertex + i]);
                     colors32.Add(OtherMeshInfo.colors32[nOhterBeginVertex + i]);
+
+                    uvs2ScaleY.Add(OtherMeshInfo.uvs2ScaleY[nOhterBeginVertex + i]);
                 }
             }
 
@@ -86,6 +65,8 @@ namespace TextBeat
                 uvs0.RemoveRange(nBeginVertex, 4);
                 uvs2.RemoveRange(nBeginVertex, 4);
                 colors32.RemoveRange(nBeginVertex, 4);
+
+                uvs2ScaleY.RemoveRange(nBeginVertex, 4);
             }
 
             public void Clear()
@@ -97,6 +78,8 @@ namespace TextBeat
                 normals.Clear();
                 tangents.Clear();
                 triangles.Clear();
+
+                uvs2ScaleY.Clear();
             }
         }
 
@@ -121,7 +104,6 @@ namespace TextBeat
 
         public List<MeshInfo> mListMeshInfo = new List<MeshInfo>();
         public List<CharacterInfo> mListCharacterInfo = new List<CharacterInfo>();
-
 
         public bool Equal(TMP_Text mText)
         {
@@ -208,11 +190,6 @@ namespace TextBeat
             }
 
             return true;
-        }
-
-        public static void CopyTo(TextMeshInfo mOutInfo, Mesh mesh, string text)
-        {
-            
         }
         
         public static void CopyTo(TextMeshProMeshInfo mOutInfo, TMP_TextInfo mInputInfo)
