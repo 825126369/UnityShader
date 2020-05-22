@@ -211,7 +211,7 @@ Shader "Customer/Sprite-RealTwoPassGaussBlurByShader"
         Pass
         {
             CGPROGRAM
-             #pragma vertex SpriteVert_Horizontal
+            #pragma vertex SpriteVert_Horizontal
             #pragma fragment SpriteFrag
             ENDCG
         }
@@ -223,7 +223,7 @@ Shader "Customer/Sprite-RealTwoPassGaussBlurByShader"
         Pass
         {
             CGPROGRAM
-             #pragma vertex SpriteVert_Vertical
+            #pragma vertex SpriteVert_Vertical
             #pragma fragment SpriteFrag_VerticalGRAB
             ENDCG
         }

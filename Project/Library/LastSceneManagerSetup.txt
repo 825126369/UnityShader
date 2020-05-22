@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/TextBeat/TextBeat.unity
+- path: Assets/GaussBlur/GaussBlur.unity
   isLoaded: 1
   isActive: 1

@@ -10,16 +10,9 @@ namespace TextBeat
     public class TextMeshProBeat : MonoBehaviour
     {
         public bool bUseNoGCStringBuilder = true;
-        public string prefix = string.Empty;
-        public UInt64 value = 0;
-        public UInt64 targetValue = UInt64.MaxValue;
-        public bool bImmediatelyToTargetValue = false;
-
         public float fAlphaTime = 0.5f;
         public float fAniHeight = 100;
-
-        public float fUpdateTextMaxTime = 0f;
-        private float fBeginUpdateTextTime;
+        public string prefix = string.Empty;
 
         private TextMeshProMeshInfo lastInput = new TextMeshProMeshInfo();
         private TextMeshProMeshInfo Input = new TextMeshProMeshInfo();
@@ -80,7 +73,7 @@ namespace TextBeat
             
             mText.ForceMeshUpdate();
             ReSizeWorldAniBeginTimeList(lastInput, lastInput);
-            //InitMaxMeshSize();
+            //UpdateMaxMeshSize();
             ForceChangeLastInputOffsetXMeshInfo();
 
             //mText.isUsingLegacyAnimationComponent = true;
@@ -107,70 +100,6 @@ namespace TextBeat
             {
                 mString = mStringBuilder.GetGarbageFreeString();
             }
-        }
-
-        private void Update()
-        {
-            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
-            {
-                fBeginUpdateTextTime = Time.time;
-                //if (bImmediatelyToTargetValue)
-                //{
-                //    value = targetValue;
-                //    bImmediatelyToTargetValue = false;
-                //    UpdateText(value);
-                //}
-                //else if (value < targetValue)
-                //{
-                //    //value += (UInt64)UnityEngine.Random.Range(1, 9);
-                //    value ++;
-
-                //    if (value > targetValue)
-                //    {
-                //        value = targetValue;
-                //    }
-
-                //    UpdateText(value);
-                //}
-                //else if (value > targetValue)
-                //{
-                //    //value -= (UInt64)UnityEngine.Random.Range(1, 9);
-                //    value--;
-
-                //    if (value < targetValue)
-                //    {
-                //        value = targetValue;
-                //    }
-
-                //    UpdateText(value);
-                //}
-
-                value = (ulong)UnityEngine.Random.Range(1, 10000);
-                if (UnityEngine.Random.Range(1, 3) == 1)
-                {
-                    value *= 10 * (ulong)UnityEngine.Random.Range(1, 5);
-                }else
-                {
-                    value /= 10 * (ulong)UnityEngine.Random.Range(1, 5);
-                }
-                //value = (UInt64)UnityEngine.Random.Range(1, UInt64.MaxValue);
-                UpdateText(value);
-            }
-        }
-
-
-        //float testValue = 10005f;
-        //private void Update()
-        //{
-        //    testValue -= Time.deltaTime;
-
-        //    UInt64 t = (UInt64)Mathf.FloorToInt(testValue);
-        //    UpdateText(t);
-        //}
-
-        public void UpdateText(Int64 value)
-        {
-            UpdateText((UInt64)value);
         }
 
         public void UpdateText(UInt64 value)
@@ -219,16 +148,34 @@ namespace TextBeat
 
         private void AddVertexInfo(int materialIndex, Vector3 pos, Color32 color, Vector2 uv0, Vector2 uv1, Vector3 normal, Vector4 tangent)
         {
-            outputMeshInfoList[materialIndex].vertices.Add(pos);
-            outputMeshInfoList[materialIndex].colors32.Add(color);
-            outputMeshInfoList[materialIndex].uvs0.Add(uv0);
-            outputMeshInfoList[materialIndex].uvs2.Add(uv1);
-            outputMeshInfoList[materialIndex].normals.Add(normal);
-            outputMeshInfoList[materialIndex].tangents.Add(tangent);
+            int nIndex = outputMeshInfoList[materialIndex].vertexCount;
+
+            if (nIndex < outputMeshInfoList[materialIndex].vertices.Count)
+            {
+                outputMeshInfoList[materialIndex].vertices[nIndex] = pos;
+                outputMeshInfoList[materialIndex].colors32[nIndex] = color;
+                outputMeshInfoList[materialIndex].uvs0[nIndex] = uv0;
+                outputMeshInfoList[materialIndex].uvs2[nIndex] = uv1;
+                outputMeshInfoList[materialIndex].normals[nIndex] = normal;
+                outputMeshInfoList[materialIndex].tangents[nIndex] = tangent;
+            }
+            else
+            {
+                outputMeshInfoList[materialIndex].vertices.Add(pos);
+                outputMeshInfoList[materialIndex].colors32.Add(color);
+                outputMeshInfoList[materialIndex].uvs0.Add(uv0);
+                outputMeshInfoList[materialIndex].uvs2.Add(uv1);
+                outputMeshInfoList[materialIndex].normals.Add(normal);
+                outputMeshInfoList[materialIndex].tangents.Add(tangent);
+            }
+
+            outputMeshInfoList[materialIndex].vertexCount = nIndex + 1;
         }
 
-        private void AddIndices(int materialIndex, int nBeginIndex)
+        private void AddIndices(int materialIndex)
         {
+            int nBeginIndex = outputMeshInfoList[materialIndex].vertexCount;
+
             outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex);
             outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex + 1);
             outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex + 2);
@@ -238,23 +185,19 @@ namespace TextBeat
             outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex + 0);
         }
 
+        private void Init()
+        {
+            InitTextMeshProMeshInfo(lastInput);
+            InitTextMeshProMeshInfo(Input);
+            InitTextMeshProMeshInfo(mWillFillInput);
+            InitOutputMeshInfoList();
+        }
+
         private void ClearOutputMeshInfoList()
         {
-            if (outputMeshInfoList.Count != mText.textInfo.materialCount)
+            for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
-                outputMeshInfoList.Clear();
-                for (int i = 0; i < mText.textInfo.materialCount; i++)
-                {
-                    TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
-                    outputMeshInfoList.Add(mMeshInfo);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < mText.textInfo.materialCount; i++)
-                {
-                    outputMeshInfoList[i].Clear();
-                }
+                outputMeshInfoList[i].Clear1();
             }
         }
 
@@ -265,6 +208,19 @@ namespace TextBeat
             {
                 mWorldAniBeginTimeList.Add(-fAlphaTime - 1.0f);
                 mWorldisPlayingAniList.Add(false);
+            }
+        }
+
+        private void InitOutputMeshInfoList()
+        {
+            if (outputMeshInfoList.Count != mText.textInfo.materialCount)
+            {
+                outputMeshInfoList.Clear();
+                for (int i = 0; i < mText.textInfo.materialCount; i++)
+                {
+                    TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
+                    outputMeshInfoList.Add(mMeshInfo);
+                }
             }
         }
 
@@ -286,7 +242,7 @@ namespace TextBeat
         {   
             for (int k = 0; k < mText.textInfo.materialCount; k++)
             {
-                if (lastInput.mListMeshInfo[k].vertices.Count > 0)
+                if (lastInput.mListMeshInfo[k].vertices.Count > 0 && Input.mListMeshInfo[k].vertices.Count > 0)
                 {
                     float fOffsetX = Input.mListMeshInfo[k].vertices[0].x - lastInput.mListMeshInfo[k].vertices[0].x;
 
@@ -615,9 +571,7 @@ namespace TextBeat
                     if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
                     {
                         int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
-
-                        int nBeginVertexIndex = outputMeshInfoList[LastMaterialIndex].vertices.Count;
-                        AddIndices(LastMaterialIndex, nBeginVertexIndex);
+                        AddIndices(LastMaterialIndex);
                         for (int j = 0; j < oneSize; j++)
                         {
                             int nOirIndex = nLastVisibleIndex[LastMaterialIndex] * oneSize + j;
@@ -640,8 +594,7 @@ namespace TextBeat
 
                     if (Input.mListCharacterInfo[i].isVisible)
                     {
-                        int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
-                        AddIndices(materialIndex, nBeginVertexIndex);
+                        AddIndices(materialIndex);
                         for (int j = 0; j < oneSize; j++)
                         {
                             int nOirIndex = nNowVisibleIndex[materialIndex] * oneSize + j;
@@ -667,8 +620,7 @@ namespace TextBeat
                 {
                     if (Input.mListCharacterInfo[i].isVisible)
                     {
-                        int nBeginVertexIndex = outputMeshInfoList[materialIndex].vertices.Count;
-                        AddIndices(materialIndex, nBeginVertexIndex);
+                        AddIndices(materialIndex);
                         for (int j = 0; j < oneSize; j++)
                         {
                             int nOirIndex = nNowVisibleIndex[materialIndex] * oneSize + j;
@@ -721,8 +673,7 @@ namespace TextBeat
                 if (!orOneWoldFinishAni(i))
                 {
                     float fTimePercent = Mathf.Clamp01((Time.time - mWorldAniBeginTimeList[i]) / fAlphaTime);
-                    int nBeginVertexIndex = outputMeshInfoList[LastMaterialIndex].vertices.Count;
-                    AddIndices(LastMaterialIndex, nBeginVertexIndex);
+                    AddIndices(LastMaterialIndex);
                     for (int j = 0; j < oneSize; j++)
                     {
                         int nOirIndex = nLastVisibleIndex[LastMaterialIndex] * oneSize + j;
@@ -751,20 +702,8 @@ namespace TextBeat
             UpdateMesh();
         }
         
-        public void UpdateMesh()
+        void UpdateMesh()
         {
-            //Debug.Assert(mText.textInfo.meshInfo.Length == 1);
-            //Debug.Assert(outputVertexs.Count / 4 * 6 == outputIndices.Count, outputVertexs.Count + " | " + outputIndices.Count);
-
-            //解决Bug: Mesh.uv2 is out of bounds. The supplied array needs to be the same size as the Mesh.vertices array.
-            for (int i = 0; i < mText.textInfo.materialCount; i++)
-            {
-                for (int j = outputMeshInfoList[i].vertices.Count; j < mText.textInfo.meshInfo[i].vertices.Length; j++)
-                {
-                    AddVertexInfo(i, Vector3.zero, s_DefaultColor, Vector2.zero, Vector2.zero, s_DefaultNormal, s_DefaultTangent);
-                }
-            }
-
             for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
                 mText.textInfo.meshInfo[i].mesh.Clear(false);
@@ -787,11 +726,8 @@ namespace TextBeat
             {
                 if (!mWillFillInput.Equal(mText))
                 {
-                    InitTextMeshProMeshInfo(lastInput);
-                    InitTextMeshProMeshInfo(Input);
-                    InitTextMeshProMeshInfo(mWillFillInput);
-                    InitMaxMeshSize();
-
+                    Init();
+                    UpdateMaxMeshSize();
                     TextBeatUtility.CopyTo(mWillFillInput, mText.textInfo);
                     InitUV2ScaleY(mWillFillInput);
                     BuildAni();
@@ -809,7 +745,7 @@ namespace TextBeat
            PlayAni();
         }
 
-        void InitMaxMeshSize()
+        void UpdateMaxMeshSize()
         {
             // 因为一直报错: Mesh.vertices is too small. The supplied vertex array has less vertices than are referenced by the triangles array.
             // 所以 初始化的时候就把尺寸调到最大
@@ -823,6 +759,15 @@ namespace TextBeat
                     mText.textInfo.meshInfo[i].mesh.uv = mText.textInfo.meshInfo[i].uvs0;
                     mText.textInfo.meshInfo[i].mesh.uv2 = mText.textInfo.meshInfo[i].uvs2;
                     mText.textInfo.meshInfo[i].mesh.colors32 = mText.textInfo.meshInfo[i].colors32;
+                }
+            }
+
+            //解决Bug: Mesh.uv2 is out of bounds. The supplied array needs to be the same size as the Mesh.vertices array.
+            for (int i = 0; i < mText.textInfo.materialCount; i++)
+            {
+                for (int j = outputMeshInfoList[i].vertices.Count; j < mText.textInfo.meshInfo[i].vertices.Length; j++)
+                {
+                    AddVertexInfo(i, Vector3.zero, s_DefaultColor, Vector2.zero, Vector2.zero, s_DefaultNormal, s_DefaultTangent);
                 }
             }
         }
