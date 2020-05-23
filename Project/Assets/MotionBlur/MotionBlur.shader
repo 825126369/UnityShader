@@ -16,13 +16,13 @@ Shader "Customer/MotionBlur"
         [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend ("Src Blend mode", Float) = 1
         [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst Blend mode", Float) = 10
 
-		_GuassBlurSizeX("_GuassBlurSizeX", Float) = 1.0
-        _GuassBlurSizeY("_GuassBlurSizeY", Float) = 1.0
-        
-        _MotionBlurSizeX("_MotionBlurSizeX", Float) = 1.0
-        _MotionBlurSizeY("_MotionBlurSizeY", Float) = 1.0
-        
-        _SoftDistance("_SoftDistance", Float) = 1.0
+        _MotionBlurSizeX("_MotionBlurSizeX", Float) = 0.0
+        _MotionBlurSizeY("_MotionBlurSizeY", Float) = 0.0
+		_GuassBlurSizeX("_GuassBlurSizeX", Float) = 0.0
+        _GuassBlurSizeY("_GuassBlurSizeY", Float) = 0.0
+        _SoftNearDistance("_SoftNearDistance", Float) = 0.0
+         _SoftStrength("_SoftStrength", Float) = 0.0
+        _fScaleY("_fScaleY", Float) = 1.5
     }
 
     SubShader
@@ -81,19 +81,36 @@ Shader "Customer/MotionBlur"
             fixed _MotionBlurSizeX;
             fixed _MotionBlurSizeY;
 
-            fixed _SoftDistance;
+            fixed _SoftNearDistance;
+            fixed _SoftStrength;
+
+            fixed _fScaleY;
 
             // 通过 GrabPass 自动赋值的变量
             sampler2D _GrabTexture;
             float4 _GrabTexture_TexelSize;
 
-            static const float weightArray_Motion[3] = {
-		        0.6, 0.6, 0.2,
-		    };
-
-            static const float weightArray_Guass[3] = {
-                    0.2, 0.6, 0.2,
+            static const float weightArray_Motion[9] = {
+                    0.05, 0.09, 0.12,
+                    0.15, 0.18, 0.15,
+                    0.12, 0.09, 0.05
             };
+
+            static const float weightArray_Guass[9] = {
+                    0.05, 0.09, 0.12,
+                    0.15, 0.18, 0.15,
+                    0.12, 0.09, 0.05
+            };
+
+            // static const float weightArray_Motion[3] = {
+		    //     0.2, 0.6, 0.2,
+		    // };
+            
+            // static const float weightArray_Guass[9] = {
+            //         0.05, 0.09, 0.12,
+            //         0.15, 0.18, 0.15,
+            //         0.12, 0.09, 0.05
+            // };
 
             struct appdata_t
             {
@@ -123,7 +140,7 @@ Shader "Customer/MotionBlur"
 
                 UNITY_SETUP_INSTANCE_ID (IN);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
-                IN.vertex.y *= 1.5;
+                IN.vertex.y *= _fScaleY;
                 OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
                 OUT.vertex = UnityObjectToClipPos(OUT.vertex);
                 OUT.texcoord = IN.texcoord;
@@ -136,11 +153,24 @@ Shader "Customer/MotionBlur"
                 return OUT;
             }
 
+            float GetSoftAlpha(float fOriAlpha, float uvY)
+            {   
+                float fAlpha = fOriAlpha;
+                if (uvY > _SoftNearDistance + 0.5)
+                {
+                    fAlpha *= clamp((1.0 - uvY) / (1 - _SoftNearDistance - 0.5) *  _SoftStrength, 0.0, 1.0);
+                }else if (0.5 - _SoftNearDistance > uvY)
+                {
+                    fAlpha *= clamp(uvY / (0.5 - _SoftNearDistance) *  _SoftStrength, 0.0, 1.0);
+                }
+                return fAlpha;
+            }
+
             fixed4 SpriteFrag_Normal(v2f IN) : SV_Target
             {
                fixed4 averageColor = tex2D(_MainTex, IN.texcoord);
 
-                averageColor.a = (1 - abs((IN.texcoord.y - 0.5))) * _SoftDistance;
+                averageColor.a = GetSoftAlpha(averageColor.a, IN.texcoord.y);
                 averageColor.rgb *= averageColor.a;
                 return averageColor;
             }
@@ -166,7 +196,7 @@ Shader "Customer/MotionBlur"
                 UNITY_SETUP_INSTANCE_ID (IN);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
 
-                IN.vertex.y *= 1.5;
+                IN.vertex.y *= _fScaleY;
 
                 OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
                 OUT.vertex = UnityObjectToClipPos(OUT.vertex);
@@ -185,12 +215,12 @@ Shader "Customer/MotionBlur"
             {
                fixed4 averageColor = (0, 0, 0, 0);
 
-                for(int j = 0; j < 3; j++)
+                for(int j = 0; j < 9; j++)
                 {
-                    averageColor += GRABPIXEL_Motion(IN.grabPassPosition, 0, j) * weightArray_Motion[j];  
+                    averageColor += GRABPIXEL_Motion(IN.grabPassPosition, 0, j- 4) * weightArray_Motion[j];  
                 }
 
-                averageColor.a = (1 - abs((IN.texcoord.y - 0.5))) * _SoftDistance;
+                //averageColor.a = GetSoftAlpha(averageColor.a, IN.texcoord.y);
                 averageColor.rgb *= averageColor.a;
                 return averageColor;
             }
@@ -201,7 +231,7 @@ Shader "Customer/MotionBlur"
 
                 UNITY_SETUP_INSTANCE_ID (IN);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
-                IN.vertex.y *= 1.5;
+                IN.vertex.y *= _fScaleY;
                 OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
                 OUT.vertex = UnityObjectToClipPos(OUT.vertex);
                 OUT.texcoord = IN.texcoord;
@@ -219,13 +249,13 @@ Shader "Customer/MotionBlur"
             {
                 fixed4 averageColor = (0, 0, 0, 0);
 
-                for(int j = 0; j < 3; j++)
+                for(int j = 0; j < 9; j++)
                 {
-                    averageColor += GRABPIXEL_Gauss(IN.grabPassPosition, j - 1, 0) * weightArray_Guass[j]; 
+                    averageColor += GRABPIXEL_Gauss(IN.grabPassPosition, j - 4, 0) * weightArray_Guass[j]; 
                 }
 
-                averageColor.a = (1 - abs((IN.texcoord.y - 0.5))) * _SoftDistance;
-                averageColor.rgb *= averageColor.a;
+                //averageColor.a = GetSoftAlpha(averageColor.a, IN.texcoord.y);
+                //averageColor.rgb *= averageColor.a;
                 return averageColor;
             }
             
@@ -233,12 +263,12 @@ Shader "Customer/MotionBlur"
             {
                 fixed4 averageColor = (0, 0, 0, 0);
 
-                for(int j = 0; j < 3; j++)
+                for(int j = 0; j < 9; j++)
                 {
-                    averageColor += GRABPIXEL_Gauss(IN.grabPassPosition, 0, j-1) * weightArray_Guass[j]; 
+                    averageColor += GRABPIXEL_Gauss(IN.grabPassPosition, 0, j - 4) * weightArray_Guass[j]; 
                 }
 
-                averageColor.a = (1 - abs((IN.texcoord.y - 0.5))) * _SoftDistance;
+                //averageColor.a = GetSoftAlpha(averageColor.a, IN.texcoord.y);
                 averageColor.rgb *= averageColor.a;
                 return averageColor;
             }
