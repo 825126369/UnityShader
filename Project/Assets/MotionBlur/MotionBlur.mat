@@ -62,8 +62,8 @@ Material:
     m_Floats:
     - PixelSnap: 0
     - _BlendOption: 0
-    - _BlurSize: 12.2
-    - _BlurSize1: 4.39
+    - _BlurSize: 1
+    - _BlurSize1: 18.06
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
@@ -72,11 +72,16 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _GuassBlurSizeX: 19.49
+    - _GuassBlurSizeY: 0
     - _Metallic: 0
     - _Mode: 0
+    - _MotionBlurSizeX: 0
+    - _MotionBlurSizeY: 4.1
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
+    - _SoftDistance: 1
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0

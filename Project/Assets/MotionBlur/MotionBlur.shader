@@ -16,8 +16,13 @@ Shader "Customer/MotionBlur"
         [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend ("Src Blend mode", Float) = 1
         [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst Blend mode", Float) = 10
 
-		_BlurSize("Blure Size", Float) = 1.0
-        _BlurSize1("_BlurSize1", Float) = 1.0
+		_GuassBlurSizeX("_GuassBlurSizeX", Float) = 1.0
+        _GuassBlurSizeY("_GuassBlurSizeY", Float) = 1.0
+        
+        _MotionBlurSizeX("_MotionBlurSizeX", Float) = 1.0
+        _MotionBlurSizeY("_MotionBlurSizeY", Float) = 1.0
+        
+        _SoftDistance("_SoftDistance", Float) = 1.0
     }
 
     SubShader
@@ -36,11 +41,7 @@ Shader "Customer/MotionBlur"
         ZWrite Off
         Blend [_SrcBlend] [_DstBlend]
 
-        Pass
-        {
-        CGPROGRAM
-            #pragma vertex SpriteVert
-            #pragma fragment SpriteFrag
+        CGINCLUDE
             #pragma target 2.0
             #pragma multi_compile_instancing
             #pragma multi_compile_local _ PIXELSNAP_ON
@@ -74,129 +75,24 @@ Shader "Customer/MotionBlur"
             sampler2D _MainTex;
 			sampler2D _AlphaTex;
             fixed4 _Color;
-			float _BlurSize;
 
-			fixed4 _MainTex_TexelSize;
+            fixed _GuassBlurSizeX;
+            fixed _GuassBlurSizeY;
+            fixed _MotionBlurSizeX;
+            fixed _MotionBlurSizeY;
 
-            static const float weightArray[3] = {
-		        0.3, 0.3, 0.3,
-		    };
-
-            struct appdata_t
-            {
-                float4 vertex   : POSITION;
-                float4 color    : COLOR;
-                float2 texcoord : TEXCOORD0;
-                UNITY_VERTEX_INPUT_INSTANCE_ID
-            };
-
-            struct v2f
-            {
-                float4 vertex   : SV_POSITION;
-                fixed4 color    : COLOR;
-                float2 texcoord : TEXCOORD0;
-               	float2 uv[3]: TEXCOORD1;
-                UNITY_VERTEX_OUTPUT_STEREO
-            };
-			
-            inline float4 UnityFlipSprite(in float3 pos, in fixed2 flip)
-            {
-                return float4(pos.xy * flip, pos.z, 1.0);
-            }
-
-            v2f SpriteVert(appdata_t IN)
-            {
-                v2f OUT;
-
-                UNITY_SETUP_INSTANCE_ID (IN);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
-
-                OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
-                OUT.vertex = UnityObjectToClipPos(OUT.vertex);
-                OUT.texcoord = IN.texcoord;
-                OUT.color = IN.color * _Color * _RendererColor;
-
-                #ifdef PIXELSNAP_ON
-                OUT.vertex = UnityPixelSnap (OUT.vertex);
-                #endif
-
-                float2 uv = IN.texcoord;
-                for(int i = 0; i < 3; i++)
-                {
-                    OUT.uv[i] = uv - float2(0, _MainTex_TexelSize.x * i) * _BlurSize;
-                }
-                
-                return OUT;
-            }
-
-            fixed4 SpriteFrag(v2f IN) : SV_Target
-            {
-               fixed4 averageColor = (0, 0, 0, 0);
-
-                for(int i = 0; i < 3; i++)
-                {
-                    fixed4 color = tex2D(_MainTex, IN.uv[i]);
-                    averageColor += color * weightArray[i];   
-                }
-
-                averageColor.rgb *= averageColor.a;
-                return averageColor;
-            }
-        ENDCG
-        }
-
-        GrabPass {                        
-            //Tags { "LightMode" = "Always" }
-        }
-
-        Pass
-        {
-        CGPROGRAM
-            #pragma vertex SpriteVert
-            #pragma fragment SpriteFrag
-            #pragma target 2.0
-            #pragma multi_compile_instancing
-            #pragma multi_compile_local _ PIXELSNAP_ON
-            #pragma multi_compile _ ETC1_EXTERNAL_ALPHA
-
-            #pragma fragmentoption ARB_precision_hint_fastest
-                
-            #include "UnityCG.cginc"
-            #ifdef UNITY_INSTANCING_ENABLED
-
-                UNITY_INSTANCING_BUFFER_START(PerDrawSprite)
-                    // SpriteRenderer.Color while Non-Batched/Instanced.
-                    UNITY_DEFINE_INSTANCED_PROP(fixed4, unity_SpriteRendererColorArray)
-                    // this could be smaller but that's how bit each entry is regardless of type
-                    UNITY_DEFINE_INSTANCED_PROP(fixed2, unity_SpriteFlipArray)
-                UNITY_INSTANCING_BUFFER_END(PerDrawSprite)
-
-                #define _RendererColor  UNITY_ACCESS_INSTANCED_PROP(PerDrawSprite, unity_SpriteRendererColorArray)
-                #define _Flip           UNITY_ACCESS_INSTANCED_PROP(PerDrawSprite, unity_SpriteFlipArray)
-
-            #endif // instancing
-
-            CBUFFER_START(UnityPerDrawSprite)
-            #ifndef UNITY_INSTANCING_ENABLED
-                fixed4 _RendererColor;
-                fixed2 _Flip;
-            #endif
-                float _EnableExternalAlpha;
-            CBUFFER_END
-
-            sampler2D _MainTex;
-			sampler2D _AlphaTex;
-            fixed4 _Color;
-			float _BlurSize1;
+            fixed _SoftDistance;
 
             // 通过 GrabPass 自动赋值的变量
             sampler2D _GrabTexture;
             float4 _GrabTexture_TexelSize;
 
-            static const float weightArray[9] = {
-                    0.05, 0.09, 0.12,
-                    0.15, 0.18, 0.15,
-                    0.12, 0.09, 0.05
+            static const float weightArray_Motion[3] = {
+		        0.6, 0.6, 0.2,
+		    };
+
+            static const float weightArray_Guass[3] = {
+                    0.2, 0.6, 0.2,
             };
 
             struct appdata_t
@@ -213,7 +109,6 @@ Shader "Customer/MotionBlur"
                 fixed4 color    : COLOR;
                 float2 texcoord : TEXCOORD0;
                 float4 grabPassPosition : TEXCOORD1;
-                float2 uv[9]: TEXCOORD2;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 			
@@ -222,13 +117,57 @@ Shader "Customer/MotionBlur"
                 return float4(pos.xy * flip, pos.z, 1.0);
             }
 
-            v2f SpriteVert(appdata_t IN)
+            v2f SpriteVert_Normal(appdata_t IN)
             {
                 v2f OUT;
 
                 UNITY_SETUP_INSTANCE_ID (IN);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
-                IN.vertex.y *= 1;
+                IN.vertex.y *= 1.5;
+                OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
+                OUT.vertex = UnityObjectToClipPos(OUT.vertex);
+                OUT.texcoord = IN.texcoord;
+                OUT.color = IN.color * _Color * _RendererColor;
+
+                #ifdef PIXELSNAP_ON
+                OUT.vertex = UnityPixelSnap (OUT.vertex);
+                #endif
+                
+                return OUT;
+            }
+
+            fixed4 SpriteFrag_Normal(v2f IN) : SV_Target
+            {
+               fixed4 averageColor = tex2D(_MainTex, IN.texcoord);
+
+                averageColor.a = (1 - abs((IN.texcoord.y - 0.5))) * _SoftDistance;
+                averageColor.rgb *= averageColor.a;
+                return averageColor;
+            }
+
+            half4 GRABPIXEL_Motion(float4 grabPassPosition, int i, int j)
+            {
+                float4 grabPosUV = UNITY_PROJ_COORD(grabPassPosition); 
+                grabPosUV.xy /= grabPosUV.w;
+                return tex2D(_GrabTexture, half2(grabPosUV.x + _GrabTexture_TexelSize.x * i * _MotionBlurSizeX, grabPosUV.y + _GrabTexture_TexelSize.y * j * _MotionBlurSizeY));
+            }
+
+            half4 GRABPIXEL_Gauss(float4 grabPassPosition, int i, int j)
+            {
+                float4 grabPosUV = UNITY_PROJ_COORD(grabPassPosition); 
+                grabPosUV.xy /= grabPosUV.w;
+                return tex2D(_GrabTexture, half2(grabPosUV.x + _GrabTexture_TexelSize.x * i * _GuassBlurSizeX, grabPosUV.y + _GrabTexture_TexelSize.y * j * _GuassBlurSizeY));
+            }
+
+            v2f SpriteVert_MotionBlur(appdata_t IN)
+            {
+                v2f OUT;
+
+                UNITY_SETUP_INSTANCE_ID (IN);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+
+                IN.vertex.y *= 1.5;
+
                 OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
                 OUT.vertex = UnityObjectToClipPos(OUT.vertex);
                 OUT.texcoord = IN.texcoord;
@@ -242,36 +181,113 @@ Shader "Customer/MotionBlur"
                 return OUT;
             }
 
-            half4 GRABPIXEL(float4 grabPassPosition, int i, int j)
+            fixed4 SpriteFrag_MotionBlur(v2f IN) : SV_Target
             {
-                float4 grabPosUV = UNITY_PROJ_COORD(grabPassPosition); 
-                grabPosUV.xy /= grabPosUV.w;
-                return tex2D(_GrabTexture, half2(grabPosUV.x + _GrabTexture_TexelSize.x * i * _BlurSize1, grabPosUV.y + _GrabTexture_TexelSize.y * j * _BlurSize1));
-            }
+               fixed4 averageColor = (0, 0, 0, 0);
 
-            fixed4 SpriteFrag(v2f IN) : SV_Target
-            {
-                const float weightArray1[3][3] = {
-                    0.0947416, 0.118318, 0.0947416,
-                    0.118318, 0.147761, 0.118318,
-                    0.0947416, 0.118318, 0.0947416
-                };
-
-                half4 averageColor = fixed4(0, 0, 0, 0);
-
-                for(int i = 0; i <= 2; i++)
+                for(int j = 0; j < 3; j++)
                 {
-                    for(int j = 0; j <= 2; j++)
-                    {
-                        half4 color = GRABPIXEL(IN.grabPassPosition, i - 1, j - 1);
-                        averageColor += color * weightArray1[i][j];
-                    }
+                    averageColor += GRABPIXEL_Motion(IN.grabPassPosition, 0, j) * weightArray_Motion[j];  
                 }
 
+                averageColor.a = (1 - abs((IN.texcoord.y - 0.5))) * _SoftDistance;
+                averageColor.rgb *= averageColor.a;
+                return averageColor;
+            }
+
+            v2f SpriteVert_GaussBlur(appdata_t IN)
+            {
+                v2f OUT;
+
+                UNITY_SETUP_INSTANCE_ID (IN);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+                IN.vertex.y *= 1.5;
+                OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
+                OUT.vertex = UnityObjectToClipPos(OUT.vertex);
+                OUT.texcoord = IN.texcoord;
+                OUT.color = IN.color * _Color * _RendererColor;
+
+                #ifdef PIXELSNAP_ON
+                OUT.vertex = UnityPixelSnap (OUT.vertex);
+                #endif
+
+                OUT.grabPassPosition = ComputeGrabScreenPos(OUT.vertex);
+                return OUT;
+            }
+
+            fixed4 SpriteFrag_GaussBlur_Hor(v2f IN) : SV_Target
+            {
+                fixed4 averageColor = (0, 0, 0, 0);
+
+                for(int j = 0; j < 3; j++)
+                {
+                    averageColor += GRABPIXEL_Gauss(IN.grabPassPosition, j - 1, 0) * weightArray_Guass[j]; 
+                }
+
+                averageColor.a = (1 - abs((IN.texcoord.y - 0.5))) * _SoftDistance;
+                averageColor.rgb *= averageColor.a;
+                return averageColor;
+            }
+            
+            fixed4 SpriteFrag_GaussBlur_Ver(v2f IN) : SV_Target
+            {
+                fixed4 averageColor = (0, 0, 0, 0);
+
+                for(int j = 0; j < 3; j++)
+                {
+                    averageColor += GRABPIXEL_Gauss(IN.grabPassPosition, 0, j-1) * weightArray_Guass[j]; 
+                }
+
+                averageColor.a = (1 - abs((IN.texcoord.y - 0.5))) * _SoftDistance;
                 averageColor.rgb *= averageColor.a;
                 return averageColor;
             }
         ENDCG
+
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex SpriteVert_Normal
+            #pragma fragment SpriteFrag_Normal
+            ENDCG
         }
+
+        GrabPass {                        
+            
+        }
+
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex SpriteVert_MotionBlur
+            #pragma fragment SpriteFrag_MotionBlur
+            ENDCG
+        }
+
+        GrabPass {                        
+            
+        }
+
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex SpriteVert_GaussBlur
+            #pragma fragment SpriteFrag_GaussBlur_Hor
+            ENDCG
+        }
+
+        GrabPass {                        
+            
+        }
+
+        Pass
+        {
+            CGPROGRAM
+            #pragma vertex SpriteVert_GaussBlur
+            #pragma fragment SpriteFrag_GaussBlur_Ver
+            ENDCG
+        }
+
+       
     }
 }
