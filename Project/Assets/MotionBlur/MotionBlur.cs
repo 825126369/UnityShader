@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MotionBlur : MonoBehaviour
+namespace MotionBlur
+{
+public class MotionBlurTest : MonoBehaviour
 {
     public float fSpeed = 10f;
     void Start()
@@ -15,4 +17,5 @@ public class MotionBlur : MonoBehaviour
         transform.position -= new Vector3(0, Time.deltaTime * fSpeed, 0);
     }
 
+}
 }
