@@ -56,7 +56,7 @@ namespace MotionBlur
                 Material.SetMatrix("_CurrentViewProjectionInverseMartix", currentViewProjectionInverseMartix);
                 //将 当前帧视角 * 投影矩阵 保存为 前一帧视角 * 投影矩阵
                 _previousViewProjectionMatrix = currentViewProjectionMartix;
-
+                
                 Graphics.Blit(src, dest, Material);
             }
             else
