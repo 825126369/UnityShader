@@ -66,9 +66,8 @@ namespace TextBeat
             mText.ForceMeshUpdate();
         }
 
-        private int GetCharacterMaxCount()
+        private int GetCharacterCount()
         {
-            //return UInt64Length + prefix.Length;
             return mText.textInfo.characterCount;
         }
         
@@ -136,6 +135,7 @@ namespace TextBeat
         private void AddVertexInfo(int materialIndex, Vector3 pos, Color32 color, Vector2 uv0, Vector2 uv1, Vector3 normal, Vector4 tangent)
         {
             int nIndex = mText.textInfo.meshInfo[materialIndex].vertexCount;
+
             mText.textInfo.meshInfo[materialIndex].vertices[nIndex] = pos;
             mText.textInfo.meshInfo[materialIndex].colors32[nIndex] = color;
             mText.textInfo.meshInfo[materialIndex].uvs0[nIndex] = uv0;
@@ -686,7 +686,7 @@ namespace TextBeat
         {
             // 因为一直报错: Mesh.vertices is too small. The supplied vertex array has less vertices than are referenced by the triangles array.
             // 所以 初始化的时候就把尺寸调到最大
-            int nMaxStringBuilerCapacity = GetCharacterMaxCount() * 2;
+            int nMaxStringBuilerCapacity = GetCharacterCount() * 2;
             for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
                 if (mText.textInfo.meshInfo[i].vertices.Length / 4 < nMaxStringBuilerCapacity)

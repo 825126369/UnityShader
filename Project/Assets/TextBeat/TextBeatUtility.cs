@@ -115,24 +115,6 @@ namespace TextBeat
 
         public List<MeshInfo> mListMeshInfo = new List<MeshInfo>();
         public List<CharacterInfo> mListCharacterInfo = new List<CharacterInfo>();
-
-        public bool Equal(TMP_Text mText)
-        {
-            if (mListCharacterInfo.Count != mText.textInfo.characterCount)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < mListCharacterInfo.Count; i++)
-            {
-                if (mListCharacterInfo[i].character != mText.textInfo.characterInfo[i].character)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
         
         public void Clear()
         {
