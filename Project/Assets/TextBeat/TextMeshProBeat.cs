@@ -23,7 +23,6 @@ namespace TextBeat
 
         private List<int> mVisibleCharacterList1 = new List<int>();
         private List<int> mVisibleCharacterList2 = new List<int>();
-        private List<TextMeshProMeshInfo.MeshInfo> outputMeshInfoList = new List<TextMeshProMeshInfo.MeshInfo>();
 
         private TMP_Text mText;
         private StringBuilder mStringBuilder;
@@ -33,12 +32,6 @@ namespace TextBeat
 
         private const int UInt64Length = 20;
         private const int oneSize = 4;
-
-        private static readonly Color32 s_DefaultColor = new Color32(byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue);
-        private static readonly Vector3 s_DefaultNormal = new Vector3(0.0f, 0.0f, -1f);
-        private static readonly Vector4 s_DefaultTangent = new Vector4(-1f, 0.0f, 0.0f, 1f);
-
-        private float m_previousLossyScaleY;
 
         void Awake()
         {
@@ -60,7 +53,6 @@ namespace TextBeat
             mWillFillInput.Clear();
             Input.Clear();
             lastInput.Clear();
-            outputMeshInfoList.Clear();
             mStringBuilder = null;
         }
 
@@ -72,11 +64,6 @@ namespace TextBeat
             }
             
             mText.ForceMeshUpdate();
-            ReSizeWorldAniBeginTimeList(lastInput, lastInput);
-            //UpdateMaxMeshSize();
-            ForceChangeLastInputOffsetXMeshInfo();
-
-            //mText.isUsingLegacyAnimationComponent = true;
         }
 
         private int GetCharacterMaxCount()
@@ -148,41 +135,15 @@ namespace TextBeat
 
         private void AddVertexInfo(int materialIndex, Vector3 pos, Color32 color, Vector2 uv0, Vector2 uv1, Vector3 normal, Vector4 tangent)
         {
-            int nIndex = outputMeshInfoList[materialIndex].vertexCount;
+            int nIndex = mText.textInfo.meshInfo[materialIndex].vertexCount;
+            mText.textInfo.meshInfo[materialIndex].vertices[nIndex] = pos;
+            mText.textInfo.meshInfo[materialIndex].colors32[nIndex] = color;
+            mText.textInfo.meshInfo[materialIndex].uvs0[nIndex] = uv0;
+            mText.textInfo.meshInfo[materialIndex].uvs2[nIndex] = uv1;
+            mText.textInfo.meshInfo[materialIndex].normals[nIndex] = normal;
+            mText.textInfo.meshInfo[materialIndex].tangents[nIndex] = tangent;
 
-            if (nIndex < outputMeshInfoList[materialIndex].vertices.Count)
-            {
-                outputMeshInfoList[materialIndex].vertices[nIndex] = pos;
-                outputMeshInfoList[materialIndex].colors32[nIndex] = color;
-                outputMeshInfoList[materialIndex].uvs0[nIndex] = uv0;
-                outputMeshInfoList[materialIndex].uvs2[nIndex] = uv1;
-                outputMeshInfoList[materialIndex].normals[nIndex] = normal;
-                outputMeshInfoList[materialIndex].tangents[nIndex] = tangent;
-            }
-            else
-            {
-                outputMeshInfoList[materialIndex].vertices.Add(pos);
-                outputMeshInfoList[materialIndex].colors32.Add(color);
-                outputMeshInfoList[materialIndex].uvs0.Add(uv0);
-                outputMeshInfoList[materialIndex].uvs2.Add(uv1);
-                outputMeshInfoList[materialIndex].normals.Add(normal);
-                outputMeshInfoList[materialIndex].tangents.Add(tangent);
-            }
-
-            outputMeshInfoList[materialIndex].vertexCount = nIndex + 1;
-        }
-
-        private void AddIndices(int materialIndex)
-        {
-            int nBeginIndex = outputMeshInfoList[materialIndex].vertexCount;
-
-            outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex);
-            outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex + 1);
-            outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex + 2);
-
-            outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex + 2);
-            outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex + 3);
-            outputMeshInfoList[materialIndex].triangles.Add(nBeginIndex + 0);
+            mText.textInfo.meshInfo[materialIndex].vertexCount = nIndex + 1;
         }
 
         private void Init()
@@ -190,14 +151,13 @@ namespace TextBeat
             InitTextMeshProMeshInfo(lastInput);
             InitTextMeshProMeshInfo(Input);
             InitTextMeshProMeshInfo(mWillFillInput);
-            InitOutputMeshInfoList();
         }
 
         private void ClearOutputMeshInfoList()
         {
             for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
-                outputMeshInfoList[i].Clear1();
+                mText.textInfo.meshInfo[i].vertexCount = 0;
             }
         }
 
@@ -208,19 +168,6 @@ namespace TextBeat
             {
                 mWorldAniBeginTimeList.Add(-fAlphaTime - 1.0f);
                 mWorldisPlayingAniList.Add(false);
-            }
-        }
-
-        private void InitOutputMeshInfoList()
-        {
-            if (outputMeshInfoList.Count != mText.textInfo.materialCount)
-            {
-                outputMeshInfoList.Clear();
-                for (int i = 0; i < mText.textInfo.materialCount; i++)
-                {
-                    TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
-                    outputMeshInfoList.Add(mMeshInfo);
-                }
             }
         }
 
@@ -571,7 +518,6 @@ namespace TextBeat
                     if (i < lastInput.mListCharacterInfo.Count && lastInput.mListCharacterInfo[i].isVisible)
                     {
                         int LastMaterialIndex = lastInput.mListCharacterInfo[i].materialReferenceIndex;
-                        AddIndices(LastMaterialIndex);
                         for (int j = 0; j < oneSize; j++)
                         {
                             int nOirIndex = nLastVisibleIndex[LastMaterialIndex] * oneSize + j;
@@ -594,7 +540,6 @@ namespace TextBeat
 
                     if (Input.mListCharacterInfo[i].isVisible)
                     {
-                        AddIndices(materialIndex);
                         for (int j = 0; j < oneSize; j++)
                         {
                             int nOirIndex = nNowVisibleIndex[materialIndex] * oneSize + j;
@@ -620,7 +565,6 @@ namespace TextBeat
                 {
                     if (Input.mListCharacterInfo[i].isVisible)
                     {
-                        AddIndices(materialIndex);
                         for (int j = 0; j < oneSize; j++)
                         {
                             int nOirIndex = nNowVisibleIndex[materialIndex] * oneSize + j;
@@ -673,7 +617,6 @@ namespace TextBeat
                 if (!orOneWoldFinishAni(i))
                 {
                     float fTimePercent = Mathf.Clamp01((Time.time - mWorldAniBeginTimeList[i]) / fAlphaTime);
-                    AddIndices(LastMaterialIndex);
                     for (int j = 0; j < oneSize; j++)
                     {
                         int nOirIndex = nLastVisibleIndex[LastMaterialIndex] * oneSize + j;
@@ -706,16 +649,13 @@ namespace TextBeat
         {
             for (int i = 0; i < mText.textInfo.materialCount; i++)
             {
-                mText.textInfo.meshInfo[i].mesh.Clear(false);
-
-                mText.textInfo.meshInfo[i].mesh.SetVertices(outputMeshInfoList[i].vertices);
-                mText.textInfo.meshInfo[i].mesh.SetUVs(0, outputMeshInfoList[i].uvs0);
-                mText.textInfo.meshInfo[i].mesh.SetUVs(1, outputMeshInfoList[i].uvs2);
-                mText.textInfo.meshInfo[i].mesh.SetColors(outputMeshInfoList[i].colors32);
-                mText.textInfo.meshInfo[i].mesh.SetNormals(outputMeshInfoList[i].normals);
-                mText.textInfo.meshInfo[i].mesh.SetTangents(outputMeshInfoList[i].tangents);
-                mText.textInfo.meshInfo[i].mesh.SetTriangles(outputMeshInfoList[i].triangles, 0);
-
+                mText.textInfo.meshInfo[i].ClearUnusedVertices();
+                mText.textInfo.meshInfo[i].mesh.vertices = mText.textInfo.meshInfo[i].vertices;
+                mText.textInfo.meshInfo[i].mesh.uv = mText.textInfo.meshInfo[i].uvs0;
+                mText.textInfo.meshInfo[i].mesh.uv2 = mText.textInfo.meshInfo[i].uvs2;
+                mText.textInfo.meshInfo[i].mesh.colors32 = mText.textInfo.meshInfo[i].colors32;
+                mText.textInfo.meshInfo[i].mesh.normals = mText.textInfo.meshInfo[i].normals;
+                mText.textInfo.meshInfo[i].mesh.tangents = mText.textInfo.meshInfo[i].tangents;
                 mText.textInfo.meshInfo[i].mesh.RecalculateBounds();
             }
         }
@@ -724,14 +664,11 @@ namespace TextBeat
         {
             if (obj == mText)
             {
-                if (!mWillFillInput.Equal(mText))
-                {
-                    Init();
-                    UpdateMaxMeshSize();
-                    TextBeatUtility.CopyTo(mWillFillInput, mText.textInfo);
-                    InitUV2ScaleY(mWillFillInput);
-                    BuildAni();
-                }
+                Init();
+                UpdateMaxMeshSize();
+                TextBeatUtility.CopyTo(mWillFillInput, mText.textInfo);
+                InitUV2ScaleY(mWillFillInput);
+                BuildAni();
             }
         }
 
@@ -761,15 +698,6 @@ namespace TextBeat
                     mText.textInfo.meshInfo[i].mesh.colors32 = mText.textInfo.meshInfo[i].colors32;
                 }
             }
-
-            //解决Bug: Mesh.uv2 is out of bounds. The supplied array needs to be the same size as the Mesh.vertices array.
-            for (int i = 0; i < mText.textInfo.materialCount; i++)
-            {
-                for (int j = outputMeshInfoList[i].vertices.Count; j < mText.textInfo.meshInfo[i].vertices.Length; j++)
-                {
-                    AddVertexInfo(i, Vector3.zero, s_DefaultColor, Vector2.zero, Vector2.zero, s_DefaultNormal, s_DefaultTangent);
-                }
-            }
         }
 
         void GetUV2(ref Vector2 uv2, ref float fScale)
@@ -785,11 +713,6 @@ namespace TextBeat
             float modifyY = oriUV2.y * Mathf.Abs(scaleDelta);
             uv2 = new Vector2(oriUV2.x, modifyY);
             fScale = fNowScaleY;
-        }
-
-        bool orScaleYChanged()
-        {
-            return transform.lossyScale.y != m_previousLossyScaleY;
         }
 
         void InitUV2ScaleY(TextMeshProMeshInfo meshInfo)

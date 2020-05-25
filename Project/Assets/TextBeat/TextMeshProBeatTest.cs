@@ -38,6 +38,21 @@ namespace TextBeat
             {
                 Test5();
             }
+            else if (nTestType == 6)
+            {
+                Test6();
+            }
+        }
+
+        UInt64 testValue2 = 1000000000;
+        private void Test6()
+        {
+            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            {
+                fBeginUpdateTextTime = Time.time;
+                testValue2 += 1;
+                mTextBeat.UpdateText(testValue2);
+            }
         }
 
         UInt64 testValue1 = 1000000000;
