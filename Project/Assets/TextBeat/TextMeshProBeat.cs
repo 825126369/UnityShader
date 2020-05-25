@@ -95,6 +95,7 @@ namespace TextBeat
                 // 这里加个判断，因为如果不加的话，会导致 Mesh 被重新刷新，看起来没有做动画
                 if (lastValue != value)
                 {
+                    InitNoGCStringBuilder();
                     int nLastStringBuilderCapacity = mStringBuilder.Capacity;
                     mStringBuilder.GarbageFreeClear();
                     mStringBuilder.Append(prefix);
