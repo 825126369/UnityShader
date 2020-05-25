@@ -26,7 +26,6 @@ namespace TextBeat
             public List<int> triangles = new List<int>();
 
             public List<float> uvs2ScaleY = new List<float>();
-            public int vertexCount = 0;
 
             public void ReplaceQuad(int nBeginVertex, MeshInfo OtherMeshInfo, int nOhterBeginVertex)
             {
@@ -56,8 +55,6 @@ namespace TextBeat
 
                     uvs2ScaleY.Add(OtherMeshInfo.uvs2ScaleY[nOhterBeginVertex + i]);
                 }
-
-                vertexCount += 4;
             }
 
             public void RemoveQuadAt(int nBeginVertex)
@@ -70,7 +67,6 @@ namespace TextBeat
                 colors32.RemoveRange(nBeginVertex, 4);
 
                 uvs2ScaleY.RemoveRange(nBeginVertex, 4);
-                vertexCount -= 4;
             }
 
             public void Clear()
@@ -84,13 +80,6 @@ namespace TextBeat
                 triangles.Clear();
 
                 uvs2ScaleY.Clear();
-                vertexCount = 0;
-            }
-
-            public void Clear1()
-            {
-                triangles.Clear();
-                vertexCount = 0;
             }
         }
 
@@ -141,20 +130,19 @@ namespace TextBeat
 
         public void Check()
         {
-
-            for (int i = 0; i < mListMeshInfo.Count; i++)
+            
+            for(int i = 0; i < mListMeshInfo.Count; i++)
             {
                 int nVertexCount = 0;
-                for (int j = 0; j < mListCharacterInfo.Count; j++)
+                for(int j = 0; j < mListCharacterInfo.Count; j++)
                 {
                     if (mListCharacterInfo[j].materialReferenceIndex == i && mListCharacterInfo[j].isVisible)
                     {
-                        nVertexCount += 4;
+                        nVertexCount+= 4;
                     }
                 }
 
                 Debug.Assert(nVertexCount == mListMeshInfo[i].vertices.Count);
-                Debug.Assert(mListMeshInfo[i].vertexCount == mListMeshInfo[i].vertices.Count);
             }
 
         }
@@ -221,8 +209,6 @@ namespace TextBeat
             {
                 TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
                 mOutInfo.mListMeshInfo.Add(mMeshInfo);
-
-                mMeshInfo.vertexCount = mInputInfo.meshInfo[i].vertexCount;
 
                 for (int j = 0; j < mInputInfo.meshInfo[i].vertices.Length; j++)
                 {
