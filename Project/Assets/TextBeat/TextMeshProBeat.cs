@@ -152,20 +152,20 @@ namespace TextBeat
             InitTextMeshProMeshInfo(lastInput);
             InitTextMeshProMeshInfo(Input);
             InitTextMeshProMeshInfo(mWillFillInput);
+            ReSizeWorldAniBeginTimeList();
         }
 
         private void ClearOutputMeshInfoList()
         {
-            for (int i = 0; i < mText.textInfo.materialCount; i++)
+            for (int i = 0; i < mText.textInfo.meshInfo.Length; i++)
             {
                 mText.textInfo.meshInfo[i].vertexCount = 0;
             }
         }
 
-        private void ReSizeWorldAniBeginTimeList(TextMeshProMeshInfo Input, TextMeshProMeshInfo lastInput)
+        private void ReSizeWorldAniBeginTimeList()
         {
-            int nMaxLength = Mathf.Max(Input.mListCharacterInfo.Count, lastInput.mListCharacterInfo.Count);
-            for (int i = mWorldAniBeginTimeList.Count; i < nMaxLength; i++)
+            for (int i = mWorldAniBeginTimeList.Count; i < mText.textInfo.characterCount; i++)
             {
                 mWorldAniBeginTimeList.Add(-fAlphaTime - 1.0f);
                 mWorldisPlayingAniList.Add(false);
@@ -174,11 +174,9 @@ namespace TextBeat
 
         private void InitTextMeshProMeshInfo(TextMeshProMeshInfo mOutInfo)
         {
-            if (mOutInfo.mListMeshInfo.Count == 0)
+            if (mOutInfo.mListMeshInfo.Count < mText.textInfo.materialCount)
             {
-                mOutInfo.Clear();
-
-                for (int i = 0; i < mText.textInfo.materialCount; i++)
+                for (int i = mOutInfo.mListMeshInfo.Count; i < mText.textInfo.materialCount; i++)
                 {
                     TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
                     mOutInfo.mListMeshInfo.Add(mMeshInfo);
@@ -204,36 +202,48 @@ namespace TextBeat
             }
         }
 
+        private int GetMaterialCount()
+        {
+            int nMaterialCount = mWillFillInput.mListMeshInfo.Count;
+            if (nMaterialCount < Input.mListMeshInfo.Count)
+            {
+                nMaterialCount = Input.mListMeshInfo.Count;
+            }
+            else if (nMaterialCount < lastInput.mListMeshInfo.Count)
+            {
+                nMaterialCount = lastInput.mListMeshInfo.Count;
+            }
+
+            return nMaterialCount;
+        }
+
         private void ResetVisibleCharacterList()
         {
-            if (mVisibleCharacterList1.Count < mText.textInfo.materialCount || mVisibleCharacterList2.Count < mText.textInfo.materialCount)
+            if (mVisibleCharacterList1.Count < mText.textInfo.materialCount)
             {
-                mVisibleCharacterList1.Clear();
-                mVisibleCharacterList2.Clear();
-
-                for (int i = 0; i < mText.textInfo.materialCount; i++)
+                for (int i = mVisibleCharacterList1.Count; i < mText.textInfo.materialCount; i++)
                 {
                     mVisibleCharacterList1.Add(0);
                     mVisibleCharacterList2.Add(0);
                 }
             }
-            else
+            
+            for (int i = 0; i < mVisibleCharacterList1.Count; i++)
             {
-                for (int i = 0; i < mText.textInfo.materialCount; i++)
-                {
-                    mVisibleCharacterList1[i] = 0;
-                    mVisibleCharacterList2[i] = 0;
-                }
+                mVisibleCharacterList1[i] = 0;
+                mVisibleCharacterList2[i] = 0;
             }
+            
         }
 
         private void FillInput()
         {
+
             ResetVisibleCharacterList();
             List<int> nWillInputVisibleIndex = mVisibleCharacterList1;
             List<int> nInputVisibleIndex = mVisibleCharacterList2;
-            
-            ReSizeWorldAniBeginTimeList(mWillFillInput, Input);
+
+            ReSizeWorldAniBeginTimeList();
 
             bool bInputCountEqual = mWillFillInput.mListCharacterInfo.Count == Input.mListCharacterInfo.Count;
             bool bForceChangeOffsetXMeshInfo = false;
@@ -263,8 +273,7 @@ namespace TextBeat
                     }
                 }
             }
-
-            // 填充Input
+            
             for (int i = 0; i < mWillFillInput.mListCharacterInfo.Count; i++)
             {
                 if (orOneWoldFinishAni(i))
@@ -293,9 +302,23 @@ namespace TextBeat
 
                             int nBeginIndex = nInputVisibleIndex[materialIndex] * oneSize;
                             int nOtherBeginIndex = nWillInputVisibleIndex[WillmaterialIndex] * oneSize;
+
                             if (Input.mListCharacterInfo[i].isVisible && mWillFillInput.mListCharacterInfo[i].isVisible)
                             {
-                                Input.mListMeshInfo[materialIndex].ReplaceQuad(nBeginIndex, mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
+                                if (nBeginIndex >= Input.mListMeshInfo[materialIndex].vertices.Count || nOtherBeginIndex >= mWillFillInput.mListMeshInfo[WillmaterialIndex].vertices.Count)
+                                {
+                                    Debug.Assert(false);
+                                }
+
+                                if (materialIndex == WillmaterialIndex)
+                                {
+                                    Input.mListMeshInfo[materialIndex].ReplaceQuad(nBeginIndex, mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
+                                }
+                                else
+                                {
+                                    Input.mListMeshInfo[materialIndex].RemoveQuadAt(nBeginIndex);
+                                    Input.mListMeshInfo[WillmaterialIndex].AddQuad(mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
+                                }
                             }
                             else
                             {
@@ -305,11 +328,20 @@ namespace TextBeat
                                 }
                                 else if (mWillFillInput.mListCharacterInfo[i].isVisible)
                                 {
-                                    Input.mListMeshInfo[materialIndex].AddQuad(mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
+                                    if (materialIndex == WillmaterialIndex)
+                                    {
+                                        Input.mListMeshInfo[materialIndex].InsertQuadAt(nBeginIndex, mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
+                                    }
+                                    else
+                                    {
+                                        nBeginIndex = nInputVisibleIndex[WillmaterialIndex] * oneSize;
+                                        Input.mListMeshInfo[WillmaterialIndex].AddQuad(mWillFillInput.mListMeshInfo[WillmaterialIndex], nOtherBeginIndex);
+                                    }
                                 }
                             }
 
                             Input.mListCharacterInfo[i].ReplaceCharacter(mWillFillInput.mListCharacterInfo[i]);
+                            
                         }
                         else
                         {
@@ -339,6 +371,7 @@ namespace TextBeat
                 }
             }
 
+
             for (int i = mWillFillInput.mListCharacterInfo.Count; i < Input.mListCharacterInfo.Count; i++)
             {
                 if (Input.mListCharacterInfo[i].isVisible)
@@ -363,7 +396,8 @@ namespace TextBeat
                     Input.RemoveCharacter(i);
                 }
             }
-            
+
+
             if (bForceChangeOffsetXMeshInfo)
             {
                 ForceChangeLastInputOffsetXMeshInfo();
@@ -372,7 +406,7 @@ namespace TextBeat
 
         private void FillLastInput()
         {
-            ReSizeWorldAniBeginTimeList(lastInput, Input);
+            ReSizeWorldAniBeginTimeList();
 
             ResetVisibleCharacterList();
             List<int> nLastVisibleIndex = mVisibleCharacterList1;
@@ -392,7 +426,15 @@ namespace TextBeat
                         int nOtherBeginIndex = nNowVisibleIndex[materialIndex] * oneSize;
                         if (lastInput.mListCharacterInfo[i].isVisible && Input.mListCharacterInfo[i].isVisible)
                         {
-                            lastInput.mListMeshInfo[LastMaterialIndex].ReplaceQuad(nBeginIndex, Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
+                            if (materialIndex == LastMaterialIndex)
+                            {
+                                lastInput.mListMeshInfo[LastMaterialIndex].ReplaceQuad(nBeginIndex, Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
+                            }
+                            else
+                            {
+                                lastInput.mListMeshInfo[LastMaterialIndex].RemoveQuadAt(nBeginIndex);
+                                lastInput.mListMeshInfo[materialIndex].AddQuad(Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
+                            }
                         }
                         else
                         {
@@ -402,7 +444,14 @@ namespace TextBeat
                             }
                             else if (Input.mListCharacterInfo[i].isVisible)
                             {
-                                lastInput.mListMeshInfo[LastMaterialIndex].AddQuad(Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
+                                if (materialIndex == LastMaterialIndex)
+                                {
+                                    lastInput.mListMeshInfo[LastMaterialIndex].InsertQuadAt(nBeginIndex, Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
+                                }
+                                else
+                                {
+                                    lastInput.mListMeshInfo[materialIndex].AddQuad(Input.mListMeshInfo[materialIndex], nOtherBeginIndex);
+                                }
                             }
                         }
 
@@ -468,8 +517,15 @@ namespace TextBeat
             FillLastInput();
             FillInput();
 
-            lastInput.Check();
-            Input.Check();
+            if (lastInput.Check())
+            {
+                
+            }
+            
+            if(Input.Check())
+            {
+
+            }
             
             for(int i = 0; i < mWorldisPlayingAniList.Count; i++)
             {
@@ -483,7 +539,7 @@ namespace TextBeat
             List<int> nLastVisibleIndex = mVisibleCharacterList1;
             List<int> nNowVisibleIndex = mVisibleCharacterList2;
 
-            ReSizeWorldAniBeginTimeList(Input, lastInput);
+            ReSizeWorldAniBeginTimeList();
 
             for (int i = 0; i < Input.mListCharacterInfo.Count; i++)
             {

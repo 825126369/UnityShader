@@ -31,14 +31,17 @@ namespace TextBeat
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    vertices[nBeginVertex + i] = OtherMeshInfo.vertices[nOhterBeginVertex + i];
-                    normals[nBeginVertex + i] = OtherMeshInfo.normals[nOhterBeginVertex + i];
-                    tangents[nBeginVertex + i] = OtherMeshInfo.tangents[nOhterBeginVertex + i];
-                    uvs0[nBeginVertex + i] = OtherMeshInfo.uvs0[nOhterBeginVertex + i];
-                    uvs2[nBeginVertex + i] = OtherMeshInfo.uvs2[nOhterBeginVertex + i];
-                    colors32[nBeginVertex + i] = OtherMeshInfo.colors32[nOhterBeginVertex + i];
+                    int index = nBeginVertex + i;
+                    int otherIndex = nOhterBeginVertex + i;
+                    
+                    vertices[index] = OtherMeshInfo.vertices[otherIndex];
+                    normals[index] = OtherMeshInfo.normals[otherIndex];
+                    tangents[index] = OtherMeshInfo.tangents[otherIndex];
+                    uvs0[index] = OtherMeshInfo.uvs0[otherIndex];
+                    uvs2[index] = OtherMeshInfo.uvs2[otherIndex];
+                    colors32[index] = OtherMeshInfo.colors32[otherIndex];
 
-                    uvs2ScaleY[nBeginVertex + i] = OtherMeshInfo.uvs2ScaleY[nOhterBeginVertex + i];
+                    uvs2ScaleY[index] = OtherMeshInfo.uvs2ScaleY[otherIndex];
                 }
             }
 
@@ -46,14 +49,34 @@ namespace TextBeat
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    vertices.Add(OtherMeshInfo.vertices[nOhterBeginVertex + i]);
-                    normals.Add(OtherMeshInfo.normals[nOhterBeginVertex + i]);
-                    tangents.Add(OtherMeshInfo.tangents[nOhterBeginVertex + i]);
-                    uvs0.Add(OtherMeshInfo.uvs0[nOhterBeginVertex + i]);
-                    uvs2.Add(OtherMeshInfo.uvs2[nOhterBeginVertex + i]);
-                    colors32.Add(OtherMeshInfo.colors32[nOhterBeginVertex + i]);
+                    int otherIndex = nOhterBeginVertex + i;
 
-                    uvs2ScaleY.Add(OtherMeshInfo.uvs2ScaleY[nOhterBeginVertex + i]);
+                    vertices.Add(OtherMeshInfo.vertices[otherIndex]);
+                    normals.Add(OtherMeshInfo.normals[otherIndex]);
+                    tangents.Add(OtherMeshInfo.tangents[otherIndex]);
+                    uvs0.Add(OtherMeshInfo.uvs0[otherIndex]);
+                    uvs2.Add(OtherMeshInfo.uvs2[otherIndex]);
+                    colors32.Add(OtherMeshInfo.colors32[otherIndex]);
+
+                    uvs2ScaleY.Add(OtherMeshInfo.uvs2ScaleY[otherIndex]);
+                }
+            }
+
+            public void InsertQuadAt(int nBeginVertex, MeshInfo OtherMeshInfo, int nOhterBeginVertex)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    int index = nBeginVertex + i;
+                    int otherIndex = nOhterBeginVertex + i;
+
+                    vertices.Insert(index, OtherMeshInfo.vertices[otherIndex]);
+                    normals.Insert(index, OtherMeshInfo.normals[otherIndex]);
+                    tangents.Insert(index, OtherMeshInfo.tangents[otherIndex]);
+                    uvs0.Insert(index, OtherMeshInfo.uvs0[otherIndex]);
+                    uvs2.Insert(index, OtherMeshInfo.uvs2[otherIndex]);
+                    colors32.Insert(index, OtherMeshInfo.colors32[otherIndex]);
+
+                    uvs2ScaleY.Insert(index, OtherMeshInfo.uvs2ScaleY[otherIndex]);
                 }
             }
 
@@ -128,7 +151,7 @@ namespace TextBeat
             ObjectPool<CharacterInfo>.recycle(mRemove);
         }
 
-        public void Check()
+        public bool Check()
         {
             
             for(int i = 0; i < mListMeshInfo.Count; i++)
@@ -142,9 +165,14 @@ namespace TextBeat
                     }
                 }
 
-                Debug.Assert(nVertexCount == mListMeshInfo[i].vertices.Count);
+                if (nVertexCount != mListMeshInfo[i].vertices.Count)
+                {
+                    Debug.Assert(false, nVertexCount + " | " + mListMeshInfo[i].vertices.Count);
+                    return true;
+                }
             }
 
+            return false;
         }
 
     }
@@ -210,33 +238,15 @@ namespace TextBeat
                 TextMeshProMeshInfo.MeshInfo mMeshInfo = ObjectPool<TextMeshProMeshInfo.MeshInfo>.Pop();
                 mOutInfo.mListMeshInfo.Add(mMeshInfo);
 
-                for (int j = 0; j < mInputInfo.meshInfo[i].vertices.Length; j++)
+                int nVertexCount = mInputInfo.meshInfo[i].vertexCount;
+
+                for (int j = 0; j < nVertexCount; j++)
                 {
                     mMeshInfo.vertices.Add(mInputInfo.meshInfo[i].vertices[j]);
-                }
-
-                for (int j = 0; j < mInputInfo.meshInfo[i].uvs0.Length; j++)
-                {
                     mMeshInfo.uvs0.Add(mInputInfo.meshInfo[i].uvs0[j]);
-                }
-
-                for (int j = 0; j < mInputInfo.meshInfo[i].uvs2.Length; j++)
-                {
                     mMeshInfo.uvs2.Add(mInputInfo.meshInfo[i].uvs2[j]);
-                }
-
-                for (int j = 0; j < mInputInfo.meshInfo[i].colors32.Length; j++)
-                {
                     mMeshInfo.colors32.Add(mInputInfo.meshInfo[i].colors32[j]);
-                }
-
-                for (int j = 0; j < mInputInfo.meshInfo[i].normals.Length; j++)
-                {
                     mMeshInfo.normals.Add(mInputInfo.meshInfo[i].normals[j]);
-                }
-
-                for (int j = 0; j < mInputInfo.meshInfo[i].tangents.Length; j++)
-                {
                     mMeshInfo.tangents.Add(mInputInfo.meshInfo[i].tangents[j]);
                 }
             }

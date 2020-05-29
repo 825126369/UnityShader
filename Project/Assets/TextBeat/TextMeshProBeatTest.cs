@@ -42,6 +42,66 @@ namespace TextBeat
             {
                 Test6();
             }
+            else if (nTestType == 7)
+            {
+                Test7();
+            }
+            else if (nTestType == 8)
+            {
+                Test8();
+            }
+        }
+
+        UInt64 testValue8 = 0;
+        private void Test8()
+        {
+            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            {
+                fBeginUpdateTextTime = Time.time;
+                string text = string.Empty;
+
+                int strLength = UnityEngine.Random.Range(0, 10);
+                for(int i = 0; i< strLength; i++)
+                {
+                    int nType = UnityEngine.Random.Range(0, 4);
+                    if (nType == 0)
+                    {
+                        //text += " ";
+                    }
+                    if (nType == 1)
+                    {
+                        text += "<sprite=" + UnityEngine.Random.Range(0, 30) + ">";
+                    }
+                    else
+                    {
+                        text += UnityEngine.Random.Range(0, 10);
+                    }
+                    text += i;
+                }
+
+                mTextBeat.UpdateText(text);
+
+                if (testValue7 > 20)
+                {
+                    testValue7 = 0;
+                }
+            }
+        }
+
+        UInt64 testValue7 = 0;
+        private void Test7()
+        {
+            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            {
+                fBeginUpdateTextTime = Time.time;
+                string text = "ABCDEFG<sprite=" + testValue7++ + ">";
+                mTextBeat.UpdateText(text);
+
+                if (testValue7 > 20)
+                {
+                    testValue7 = 0;
+                }
+            }
         }
 
         UInt64 testValue2 = 1000000000;
