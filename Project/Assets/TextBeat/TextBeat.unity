@@ -2224,7 +2224,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fee6d9aaa456140f0ad2ea06e8514f58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fUpdateTextMaxTime: 1
+  fUpdateTextMaxTime: 0
   nTestType: 7
 --- !u!1 &1894896839
 GameObject:
