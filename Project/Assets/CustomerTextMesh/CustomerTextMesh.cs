@@ -1,37 +1,77 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
 [ExecuteInEditMode]
+[XLua.LuaCallCSharp]
 public class CustomerTextMesh : MonoBehaviour
 {
     public string m_Text;
+    public Color32 m_Color = Color.white;
     public Font m_Font;
     public TextAlignment mTextAlignment;
-    public int FontSize;
-    
+    public float m_CharacterSize = 1.0f;
+
     private MeshFilter mMeshFilter;
     private MeshRenderer mMeshRenderer;
-    private Mesh mMesh;
-    
-    private List<Vector3> vertices = new List<Vector3>();
-    private List<Vector2> uvs0 = new List<Vector2>();
-    private List<int> triangles = new List<int>();
+    private Mesh m_Mesh;
 
-    private void Start()
+    [System.NonSerialized]
+    public int vertexCount;
+    [System.NonSerialized]
+    public Vector3[] vertices = new Vector3[0];
+    [System.NonSerialized]
+    public Vector2[] uvs0 = new Vector2[0];
+    [System.NonSerialized]
+    public Color32[] colors32 = new Color32[0];
+    [System.NonSerialized]
+    public int[] triangles = new int[0];
+
+    public Action mProperityChangedEvent;
+
+    private void Awake()
     {
-        mMeshFilter = GetComponent<MeshFilter>();
-        mMeshRenderer = GetComponent<MeshRenderer>();
-        mMesh = new Mesh();
+        Init();
     }
 
-    private void Update()
+    private void OnEnable()
     {
         UpdateMesh();
-        UpdateMaterial();
     }
+
+    private void Init()
+    {
+        if (m_Mesh == null || mMeshFilter == null)
+        {
+            mMeshFilter = GetComponent<MeshFilter>();
+            mMeshRenderer = GetComponent<MeshRenderer>();
+            m_Mesh = new Mesh();
+
+            if (m_Font!= null)
+            {
+                mMeshRenderer.sharedMaterial = m_Font.material;
+            }
+        }
+    }
+
+#if UNITY_EDITOR
+    void EditorInit()
+    {
+        Init();
+        UpdateMesh();
+    }
+
+    private void OnValidate()
+    {
+        if (m_Mesh != null && mMeshFilter == null)
+        {
+            UpdateMesh();
+        }
+    }
+#endif
 
     public string text
     {
@@ -45,7 +85,54 @@ public class CustomerTextMesh : MonoBehaviour
             if (value != m_Text)
             {
                 m_Text = value;
+
+                int nLength = GetValidLength();
+                ResetMeshSize(nLength);
+
                 UpdateMesh();
+
+                if (mProperityChangedEvent != null)
+                {
+                    mProperityChangedEvent();
+                }
+            }
+        }
+    }
+
+    public Font font
+    {
+        get
+        {
+            return m_Font;
+        }
+    }
+
+    public Mesh mesh
+    {
+        get
+        {
+            return m_Mesh;
+        }
+    }
+
+    public float characterSize
+    {
+        get
+        {
+            return m_CharacterSize;
+        }
+
+        set
+        {
+            if (value != m_CharacterSize)
+            {
+                m_CharacterSize = value;
+                UpdateMesh();
+                
+                if (mProperityChangedEvent != null)
+                {
+                    mProperityChangedEvent();
+                }
             }
         }
     }
@@ -53,7 +140,7 @@ public class CustomerTextMesh : MonoBehaviour
     private float GetWidth()
     {
         float textWidth = 0.0f;
-        for(int i = 0; i < m_Text.Length; i++)
+        for (int i = 0; i < m_Text.Length; i++)
         {
             char c = m_Text[i];
             CharacterInfo mCharacterInfo;
@@ -82,35 +169,36 @@ public class CustomerTextMesh : MonoBehaviour
 
     private void UpdateMesh()
     {
+        if (m_Font == null) return;
+
+        int nLength = GetValidLength();
+        ResetMeshSize(nLength);
+
         ResetVertexs();
-        ResetTriangles();
+        ClearUnusedVertices();
+        
+        m_Mesh.vertices = vertices;
+        m_Mesh.uv = uvs0;
+        m_Mesh.colors32 = colors32;
+        m_Mesh.RecalculateBounds();
 
-        mMesh.Clear(false);
-        mMesh.SetVertices(vertices);
-        mMesh.SetUVs(0, uvs0);
-        mMesh.SetTriangles(triangles, 0);
-        mMesh.RecalculateBounds();
-
-        mMeshFilter.sharedMesh = mMesh;
+        mMeshFilter.sharedMesh = m_Mesh;
     }
 
-    private void UpdateMaterial()
+    public void AddVertexs(Vector3 pos, Vector2 uv)
     {
-        mMeshRenderer.sharedMaterial = m_Font.material;
+        pos *= m_CharacterSize;
+        Color32 color32 = Color.white * m_Color;
+
+        vertices[vertexCount] = pos;
+        uvs0[vertexCount] = uv;
+        colors32[vertexCount] = color32;
+
+        vertexCount++;
     }
-
-    private void AddVertexs(Vector3 pos, Vector2 uv)
-    {
-        vertices.Add(pos);
-        uvs0.Add(uv);
-    }
-
-
+        
     private void ResetVertexs()
     {
-        vertices.Clear();
-        uvs0.Clear();
-
         float posX = 0f;
         float fWidth = GetWidth();
 
@@ -127,6 +215,7 @@ public class CustomerTextMesh : MonoBehaviour
             posX = -fWidth;
         }
 
+        vertexCount = 0;
         for (int i = 0, nLength = m_Text.Length; i < nLength; i++)
         {
             char c = m_Text[i];
@@ -159,27 +248,47 @@ public class CustomerTextMesh : MonoBehaviour
         }
     }
 
-    private void ResetTriangles()
+    public void ClearUnusedVertices()
     {
-        int nOriLength = triangles.Count / 6;
-        int nNowLength = GetValidLength();
+        int length = vertices.Length - vertexCount;
+
+        if (length > 0)
+            Array.Clear(vertices, vertexCount, length);
+    }
+
+    public void ResetMeshSize(int fSize)
+    {
+        int nOriLength = vertices.Length / 4;
+        int nNowLength = fSize;
+
+        int nOriTrianglesLength = triangles.Length;
+
         if (nNowLength > nOriLength)
         {
-            for(int i = nOriLength; i < nNowLength; i++)
+            int nLength = nNowLength * 4;
+            Array.Resize<Vector3>(ref vertices, nLength);
+            Array.Resize<Color32>(ref colors32, nLength);
+            Array.Resize<Vector2>(ref uvs0, nLength);
+            Array.Resize<int>(ref triangles, nNowLength * 6);
+            
+            for (int i = nOriLength; i < nNowLength; i++)
             {
-                int nBeginIndex = i * 4;
-                triangles.Add(nBeginIndex + 0);
-                triangles.Add(nBeginIndex + 1);
-                triangles.Add(nBeginIndex + 2);
+                int nVertexBeginIndex = i * 4;
+                int nTriangleBeginIndex = i * 6;
+                
+                triangles[nTriangleBeginIndex + 0] = nVertexBeginIndex + 0;
+                triangles[nTriangleBeginIndex + 1] = nVertexBeginIndex + 1;
+                triangles[nTriangleBeginIndex + 2] = nVertexBeginIndex + 2;
 
-                triangles.Add(nBeginIndex + 2);
-                triangles.Add(nBeginIndex + 3);
-                triangles.Add(nBeginIndex + 0);
+                triangles[nTriangleBeginIndex + 3] = nVertexBeginIndex + 2;
+                triangles[nTriangleBeginIndex + 4] = nVertexBeginIndex + 3;
+                triangles[nTriangleBeginIndex + 5] = nVertexBeginIndex + 0;
             }
-        }
-        else if (nNowLength < nOriLength)
-        {
-            triangles.RemoveRange(nNowLength, nOriLength - nNowLength);
+
+            m_Mesh.vertices = vertices;
+            m_Mesh.uv = uvs0;
+            m_Mesh.colors32 = colors32;
+            m_Mesh.triangles = triangles;
         }
     }
 

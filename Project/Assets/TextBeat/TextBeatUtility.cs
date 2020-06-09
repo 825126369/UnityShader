@@ -13,6 +13,103 @@ namespace TextBeat
         Center,
     }
 
+    internal class CustomerTextMeshMeshInfo
+    {
+        public class CharacterInfo : InterfaceCanRecycleObj
+        {
+            public char character;
+            public bool isVisible;
+
+            public void Clear() { }
+        }
+
+        public List<CharacterInfo> mCharacterList = new List<CharacterInfo>();
+        public List<Vector3> vertices = new List<Vector3>();
+        public List<Vector2> uvs0 = new List<Vector2>();
+        public List<Color32> colors32 = new List<Color32>();
+        public List<int> triangles = new List<int>();
+
+        public void ReplaceQuad(int nBeginVertex, CustomerTextMeshMeshInfo OtherMeshInfo, int nOhterBeginVertex)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                int index = nBeginVertex + i;
+                int otherIndex = nOhterBeginVertex + i;
+
+                vertices[index] = OtherMeshInfo.vertices[otherIndex];
+                uvs0[index] = OtherMeshInfo.uvs0[otherIndex];
+                colors32[index] = OtherMeshInfo.colors32[otherIndex];
+            }
+        }
+
+        public void AddQuad(CustomerTextMeshMeshInfo OtherMeshInfo, int nOhterBeginVertex)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                int otherIndex = nOhterBeginVertex + i;
+
+                vertices.Add(OtherMeshInfo.vertices[otherIndex]);
+                uvs0.Add(OtherMeshInfo.uvs0[otherIndex]);
+                colors32.Add(OtherMeshInfo.colors32[otherIndex]);
+            }
+        }
+
+        public void InsertQuadAt(int nBeginVertex, CustomerTextMeshMeshInfo OtherMeshInfo, int nOhterBeginVertex)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                int index = nBeginVertex + i;
+                int otherIndex = nOhterBeginVertex + i;
+
+                vertices.Insert(index, OtherMeshInfo.vertices[otherIndex]);
+                uvs0.Insert(index, OtherMeshInfo.uvs0[otherIndex]);
+                colors32.Insert(index, OtherMeshInfo.colors32[otherIndex]);
+            }
+        }
+
+        public void RemoveQuadAt(int nBeginVertex)
+        {
+            vertices.RemoveRange(nBeginVertex, 4);
+            uvs0.RemoveRange(nBeginVertex, 4);
+            colors32.RemoveRange(nBeginVertex, 4);
+        }
+
+        public void ReplaceCharacter(int nIndex, CharacterInfo OtherCharacterInfo)
+        {
+            mCharacterList[nIndex].character = OtherCharacterInfo.character;
+            mCharacterList[nIndex].isVisible = OtherCharacterInfo.isVisible;
+        }
+
+        public void AddCharacter(CharacterInfo OtherCharacterInfo)
+        {
+            CharacterInfo mInfo = ObjectPool<CharacterInfo>.Pop();
+            mCharacterList.Add(mInfo);
+            int nIndex = mCharacterList.Count - 1;
+            ReplaceCharacter(nIndex, OtherCharacterInfo);
+        }
+
+        public void RemoveCharacter(int nIndex)
+        {
+            ObjectPool<CharacterInfo>.recycle(mCharacterList[nIndex]);
+            mCharacterList.RemoveAt(nIndex);
+        }
+
+        public void Clear()
+        {
+            vertices.Clear();
+            uvs0.Clear();
+            colors32.Clear();
+            triangles.Clear();
+            
+            while (mCharacterList.Count > 0)
+            {
+                int nLastIndex = mCharacterList.Count - 1;
+                ObjectPool<CharacterInfo>.recycle(mCharacterList[nLastIndex]);
+                mCharacterList.RemoveAt(nLastIndex);
+            }
+        }
+    }
+
     internal class TextMeshProMeshInfo : InterfaceCanRecycleObj
     {   
         public class MeshInfo : InterfaceCanRecycleObj
@@ -179,6 +276,22 @@ namespace TextBeat
 
     internal static class TextBeatUtility
     {
+        public static TextBeatAlign GetAlign(TextAlignment align)
+        {
+            if (align == TextAlignment.Left)
+            {
+                return TextBeatAlign.Left;
+            }
+            else if (align == TextAlignment.Center)
+            {
+                return TextBeatAlign.Center;
+            }
+            else
+            {
+                return TextBeatAlign.Right;
+            }
+        }
+
         public static TextBeatAlign GetAlign(TextAnchor align)
         {
             if (align == TextAnchor.LowerLeft || align == TextAnchor.MiddleLeft || align == TextAnchor.UpperLeft)
@@ -261,6 +374,30 @@ namespace TextBeat
                 mOutInfo.mListCharacterInfo.Add(mCharacterInfo);
             }
         }
+
+        public static void CopyTo(CustomerTextMeshMeshInfo mOutInfo, CustomerTextMesh mInputInfo)
+        {
+            mOutInfo.Clear();
+
+            int nVertexCount = mInputInfo.vertexCount;
+
+            for (int j = 0; j < nVertexCount; j++)
+            {
+                mOutInfo.vertices.Add(mInputInfo.vertices[j]);
+                mOutInfo.uvs0.Add(mInputInfo.uvs0[j]);
+                mOutInfo.colors32.Add(mInputInfo.colors32[j]);
+            }
+            
+            for (int i = 0; i < mInputInfo.text.Length; i++)
+            {
+                CustomerTextMeshMeshInfo.CharacterInfo mCharacterInfo = ObjectPool<CustomerTextMeshMeshInfo.CharacterInfo>.Pop();
+                mCharacterInfo.character = mInputInfo.text[i];
+                mCharacterInfo.isVisible = true;
+                mOutInfo.mCharacterList.Add(mCharacterInfo);
+            }
+
+        }
+
     }
 
 }
