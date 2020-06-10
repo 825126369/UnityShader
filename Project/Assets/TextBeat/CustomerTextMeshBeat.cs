@@ -472,12 +472,11 @@ namespace TextBeat
 
         void GetPos(ref Vector3 pos, float characterSize)
         {
-            float scaleDelta = mText.characterSize / characterSize;
-            if (scaleDelta == 0 || scaleDelta == float.PositiveInfinity)
-            {
-                return;
-            }
-
+            //float scaleDelta = mText.characterSize / characterSize;
+            //if (scaleDelta == 0 || scaleDelta == float.PositiveInfinity)
+            //{
+            //    return;
+            //}
             //pos *= scaleDelta;
         }
     }
