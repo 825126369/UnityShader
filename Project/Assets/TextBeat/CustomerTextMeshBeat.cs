@@ -12,7 +12,7 @@ namespace TextBeat
         public bool bUseNoGCStringBuilder = true;
         public string prefix = string.Empty;
         public float fAlphaTime = 0.5f;
-        public float fAniHeight = 100;
+        public float fAniHeightScale = 1;
 
         private CustomerTextMeshMeshInfo lastInput = new CustomerTextMeshMeshInfo();
         private CustomerTextMeshMeshInfo Input = new CustomerTextMeshMeshInfo();
@@ -29,6 +29,9 @@ namespace TextBeat
 
         private UInt64 lastValue = UInt64.MaxValue;
         private float lastCharacterSize = 0.0f;
+        private bool bRefreshAllCharacter;
+        private bool bWillRefreshAllCharacter;
+        private bool bForceChangeOffsetXMeshInfo;
 
         void Start()
         {
@@ -132,7 +135,7 @@ namespace TextBeat
             }
         }
 
-        private void ForceChangeLastInputScaleMeshInfo()
+        private void ForceChangeLastInputOffsetXMeshInfo()
         {
             if (lastInput.vertices.Count > 0 && Input.vertices.Count > 0)
             {
@@ -147,17 +150,20 @@ namespace TextBeat
             }
         }
 
-        private void CheckForceChangeMeshInfo()
+        private void CheckRefreshAllCharacter()
         {
+            if (lastCharacterSize != mText.characterSize)
+            {
+                bWillRefreshAllCharacter = true;
+                lastCharacterSize = mText.characterSize;
+            }
 
-        }
-
-        private void FillInput()
-        {
-            ReSizeWorldAniBeginTimeList(mWillFillInput, Input);
+            if (Math.Abs(mWillFillInput.mCharacterList.Count - Input.mCharacterList.Count) > 2)
+            {
+                bWillRefreshAllCharacter = true;
+            }
 
             bool bInputCountEqual = mWillFillInput.mCharacterList.Count == Input.mCharacterList.Count;
-            bool bForceChangeOffsetXMeshInfo = false;
             if (!bInputCountEqual)
             {
                 if (TextBeatUtility.GetAlign(mText.mTextAlignment) == TextBeatAlign.Left)
@@ -173,17 +179,33 @@ namespace TextBeat
                     bForceChangeOffsetXMeshInfo = true; // 顶点位置 都改变了
                 }
             }
+        }
 
-            if (bForceChangeOffsetXMeshInfo)
+        private void FillInput()
+        {
+            if (bForceChangeOffsetXMeshInfo || bWillRefreshAllCharacter)
             {
+                if (Input.mCharacterList.Count != lastInput.mCharacterList.Count)
+                {
+                    return;
+                }
+
                 for (int i = 0; i < Input.mCharacterList.Count; i++)
                 {
-                    if (!orOneWoldFinishAni(i))
+                    if (!orOneWoldFinishAni(i) || Input.mCharacterList[i].character != lastInput.mCharacterList[i].character)
                     {
                         return;
                     }
                 }
             }
+
+            if (bWillRefreshAllCharacter)
+            {
+                bRefreshAllCharacter = true;
+                bWillRefreshAllCharacter = false;
+            }
+
+            ReSizeWorldAniBeginTimeList(mWillFillInput, Input);
 
             // 填充Input
             for (int i = 0; i < mWillFillInput.mCharacterList.Count; i++)
@@ -200,7 +222,7 @@ namespace TextBeat
                         bChanged = true;
                     }
 
-                    if (bForceChangeOffsetXMeshInfo)
+                    if (bForceChangeOffsetXMeshInfo || bRefreshAllCharacter)
                     {
                         bChanged = true;
                     }
@@ -233,10 +255,13 @@ namespace TextBeat
                 }
             }
 
-            if (bForceChangeOffsetXMeshInfo)
+            if (bForceChangeOffsetXMeshInfo && !bRefreshAllCharacter)
             {
-                ForceChangeLastInputScaleMeshInfo();
+                ForceChangeLastInputOffsetXMeshInfo();
+
             }
+
+            bForceChangeOffsetXMeshInfo = false;
         }
 
         private void FillLastInput()
@@ -305,6 +330,11 @@ namespace TextBeat
                         bChanged = true;
                     }
 
+                    if (bRefreshAllCharacter)
+                    {
+                        bChanged = true;
+                    }
+
                     if (bChanged)
                     {
                         mWorldisPlayingAniList[i] = true;
@@ -315,6 +345,7 @@ namespace TextBeat
                 if (!orOneWoldFinishAni(i))
                 {
                     float fTimePercent = Mathf.Clamp01((Time.time - mWorldAniBeginTimeList[i]) / fAlphaTime);
+                    float fAddHeight = mText.font.fontSize * mText.characterSize * fAniHeightScale;
 
                     if (i < lastInput.mCharacterList.Count)
                     {
@@ -325,7 +356,7 @@ namespace TextBeat
                             Color32 oriColor32 = lastInput.colors32[nOirIndex];
                             Vector2 uv0 = lastInput.uvs0[nOirIndex];
 
-                            Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
+                            Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAddHeight, oriPos.z);
                             Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
 
                             GetPos(ref targetPos, lastInput.mCharacterList[i].characterSize);
@@ -340,7 +371,7 @@ namespace TextBeat
                         Color32 oriColor32 = Input.colors32[nOirIndex];
                         Vector2 uv0 = Input.uvs0[nOirIndex];
 
-                        Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
+                        Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAddHeight, oriPos.z);
                         Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
 
                         GetPos(ref targetPos, Input.mCharacterList[i].characterSize);
@@ -372,6 +403,11 @@ namespace TextBeat
                         bChanged = false;
                     }
 
+                    if (bRefreshAllCharacter)
+                    {
+                        bChanged = true;
+                    }
+
                     if (bChanged)
                     {
                         mWorldAniBeginTimeList[i] = Time.time;
@@ -382,6 +418,8 @@ namespace TextBeat
                 if (!orOneWoldFinishAni(i))
                 {
                     float fTimePercent = Mathf.Clamp01((Time.time - mWorldAniBeginTimeList[i]) / fAlphaTime);
+                    float fAddHeight = mText.font.fontSize * mText.characterSize * fAniHeightScale;
+
                     for (int j = 0; j < 4; j++)
                     {
                         int nOirIndex = i * 4 + j;
@@ -389,7 +427,7 @@ namespace TextBeat
                         Color32 oriColor32 = lastInput.colors32[nOirIndex];
                         Vector2 uv0 = lastInput.uvs0[nOirIndex];
 
-                        Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
+                        Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAddHeight, oriPos.z);
                         Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
 
                         GetPos(ref targetPos, lastInput.mCharacterList[i].characterSize);
@@ -398,6 +436,7 @@ namespace TextBeat
                 }
             }
 
+            bRefreshAllCharacter = false;
             UpdateMesh();
         }
 
@@ -415,6 +454,8 @@ namespace TextBeat
             int nLength = mText.text.Length * 2;
             mText.ResetMeshSize(nLength);
             TextBeatUtility.CopyTo(mWillFillInput, mText);
+
+            CheckRefreshAllCharacter();
 
             BuildAni();
         }
@@ -437,7 +478,7 @@ namespace TextBeat
                 return;
             }
 
-            pos *= scaleDelta;
+            //pos *= scaleDelta;
         }
     }
 }

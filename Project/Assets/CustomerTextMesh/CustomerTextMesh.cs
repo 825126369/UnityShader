@@ -13,7 +13,10 @@ public class CustomerTextMesh : MonoBehaviour
     public Font m_Font;
     public TextAlignment mTextAlignment;
     public float m_CharacterSize = 1.0f;
-    
+    public bool m_AutoSize;
+    public float m_AutoSizeMaxWidth;
+    public float m_AutoSizeMaxSize;
+
     private MeshFilter mMeshFilter;
     private MeshRenderer mMeshRenderer;
     private Mesh m_Mesh;
@@ -30,8 +33,6 @@ public class CustomerTextMesh : MonoBehaviour
     public int[] triangles = new int[0];
 
     public Action mProperityChangedEvent;
-
-    private CustomerTextMeshAutoSize mCustomerTextMeshAutoSize;
 
     private void Awake()
     {
@@ -50,8 +51,6 @@ public class CustomerTextMesh : MonoBehaviour
             mMeshFilter = GetComponent<MeshFilter>();
             mMeshRenderer = GetComponent<MeshRenderer>();
             m_Mesh = new Mesh();
-
-            mCustomerTextMeshAutoSize = GetComponent<CustomerTextMeshAutoSize>();
 
             if (m_Font!= null)
             {
@@ -76,6 +75,11 @@ public class CustomerTextMesh : MonoBehaviour
     }
 #endif
 
+    public void Update()
+    {
+        UpdateAutoSize();
+    }
+
     public string text
     {
         get
@@ -89,10 +93,7 @@ public class CustomerTextMesh : MonoBehaviour
             {
                 m_Text = value;
 
-                if (mCustomerTextMeshAutoSize)
-                {
-                    mCustomerTextMeshAutoSize.Build();
-                }
+                UpdateAutoSize();
 
                 int nLength = GetValidLength();
                 ResetMeshSize(nLength);
@@ -306,5 +307,54 @@ public class CustomerTextMesh : MonoBehaviour
             m_Mesh.triangles = triangles;
         }
     }
+
+    public void UpdateAutoSize()
+    {
+        if (!m_AutoSize) return;
+
+        float width = 0;
+        foreach (char symbol in m_Text)
+        {
+            CharacterInfo info;
+            if (m_Font.GetCharacterInfo(symbol, out info))
+            {
+                width += info.advance;
+            }
+        }
+
+        if (width > 0)
+        {
+            width *= transform.lossyScale.x;
+
+            // width 如果等于0 会报错： 所以 得把 text 事先赋值
+            float preferCharacterSize = m_AutoSizeMaxWidth / width;
+            characterSize = m_AutoSizeMaxSize < preferCharacterSize ? m_AutoSizeMaxSize : preferCharacterSize;
+        }
+    }
+
+#if UNITY_EDITOR
+    void OnDrawGizmos()
+    {
+        if (!m_AutoSize) return;
+
+        float XLeft = 0f;
+
+        if (mTextAlignment == TextAlignment.Left)
+        {
+            XLeft = transform.position.x;
+        }
+        else if (mTextAlignment == TextAlignment.Center)
+        {
+            XLeft = transform.position.x - m_AutoSizeMaxWidth / 2f;
+        }
+        else
+        {
+            XLeft = transform.position.x - m_AutoSizeMaxWidth;
+        }
+
+        float yPos = transform.position.y;
+        Gizmos.DrawLine(new Vector3(XLeft, yPos, transform.position.z), new Vector3(XLeft + m_AutoSizeMaxWidth, yPos, transform.position.z));
+    }
+#endif
 
 }
