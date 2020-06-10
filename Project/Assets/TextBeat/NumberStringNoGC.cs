@@ -181,6 +181,11 @@ namespace TextBeat
             return Align(string_builder, TextBeatUtility.GetAlign(align));
         }
 
+        public static StringBuilder Align(this StringBuilder string_builder, TextAlignment align)
+        {
+            return Align(string_builder, TextBeatUtility.GetAlign(align));
+        }
+
 
         public static string GetGarbageFreeString(this StringBuilder string_builder)
         {

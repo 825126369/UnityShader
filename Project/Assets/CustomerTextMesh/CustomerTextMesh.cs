@@ -6,7 +6,6 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(MeshRenderer))]
 [ExecuteInEditMode]
-[XLua.LuaCallCSharp]
 public class CustomerTextMesh : MonoBehaviour
 {
     public string m_Text;
@@ -14,7 +13,7 @@ public class CustomerTextMesh : MonoBehaviour
     public Font m_Font;
     public TextAlignment mTextAlignment;
     public float m_CharacterSize = 1.0f;
-
+    
     private MeshFilter mMeshFilter;
     private MeshRenderer mMeshRenderer;
     private Mesh m_Mesh;
@@ -31,6 +30,8 @@ public class CustomerTextMesh : MonoBehaviour
     public int[] triangles = new int[0];
 
     public Action mProperityChangedEvent;
+
+    private CustomerTextMeshAutoSize mCustomerTextMeshAutoSize;
 
     private void Awake()
     {
@@ -49,6 +50,8 @@ public class CustomerTextMesh : MonoBehaviour
             mMeshFilter = GetComponent<MeshFilter>();
             mMeshRenderer = GetComponent<MeshRenderer>();
             m_Mesh = new Mesh();
+
+            mCustomerTextMeshAutoSize = GetComponent<CustomerTextMeshAutoSize>();
 
             if (m_Font!= null)
             {
@@ -86,15 +89,14 @@ public class CustomerTextMesh : MonoBehaviour
             {
                 m_Text = value;
 
+                if (mCustomerTextMeshAutoSize)
+                {
+                    mCustomerTextMeshAutoSize.Build();
+                }
+
                 int nLength = GetValidLength();
                 ResetMeshSize(nLength);
-
                 UpdateMesh();
-
-                if (mProperityChangedEvent != null)
-                {
-                    mProperityChangedEvent();
-                }
             }
         }
     }
@@ -128,12 +130,15 @@ public class CustomerTextMesh : MonoBehaviour
             {
                 m_CharacterSize = value;
                 UpdateMesh();
-                
-                if (mProperityChangedEvent != null)
-                {
-                    mProperityChangedEvent();
-                }
             }
+        }
+    }
+
+    public TextAlignment alignment
+    {
+        get
+        {
+            return mTextAlignment;
         }
     }
 
@@ -167,6 +172,11 @@ public class CustomerTextMesh : MonoBehaviour
         return nLength;
     }
 
+    public void ForceUpdateMesh()
+    {
+        UpdateMesh();
+    }
+
     private void UpdateMesh()
     {
         if (m_Font == null) return;
@@ -183,9 +193,14 @@ public class CustomerTextMesh : MonoBehaviour
         m_Mesh.RecalculateBounds();
 
         mMeshFilter.sharedMesh = m_Mesh;
+
+        if (mProperityChangedEvent != null)
+        {
+            mProperityChangedEvent();
+        }
     }
 
-    public void AddVertexs(Vector3 pos, Vector2 uv)
+    private void AddVertexs(Vector3 pos, Vector2 uv)
     {
         pos *= m_CharacterSize;
         Color32 color32 = Color.white * m_Color;

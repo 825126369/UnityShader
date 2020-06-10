@@ -7,9 +7,9 @@ using System.Collections.Generic;
 namespace TextBeat
 {
     [RequireComponent(typeof(CustomerTextMesh))]
-    [XLua.LuaCallCSharp]
     public class CustomerTextMeshBeat : MonoBehaviour
     {
+        public bool bUseNoGCStringBuilder = true;
         public string prefix = string.Empty;
         public float fAlphaTime = 0.5f;
         public float fAniHeight = 100;
@@ -23,8 +23,20 @@ namespace TextBeat
 
         private CustomerTextMesh mText;
 
+        private StringBuilder mStringBuilder;
+        private String mString;
+        private const int UInt64Length = 20;
+
+        private UInt64 lastValue = UInt64.MaxValue;
+        private float lastCharacterSize = 0.0f;
+
         void Start()
         {
+            if (bUseNoGCStringBuilder)
+            {
+                InitNoGCStringBuilder();
+            }
+
             mText = GetComponent<CustomerTextMesh>();
             mText.mProperityChangedEvent += ON_TEXT_CHANGED;
             ON_TEXT_CHANGED();
@@ -35,15 +47,52 @@ namespace TextBeat
             mText.mProperityChangedEvent -= ON_TEXT_CHANGED;
         }
 
+        private void InitNoGCStringBuilder(int Capacity = UInt64Length)
+        {
+            if (mStringBuilder == null)
+            {
+                mStringBuilder = new StringBuilder(Capacity);
+                mString = mStringBuilder.GetGarbageFreeString();
+            }
+        }
+
+        private void ReSizeStringBuilder(int nLastStringBuilderCapacity)
+        {
+            if (nLastStringBuilderCapacity != mStringBuilder.Capacity)
+            {
+                mString = mStringBuilder.GetGarbageFreeString();
+            }
+        }
+
         public void UpdateText(UInt64 value)
         {
-            if (string.IsNullOrEmpty(prefix))
+            if (bUseNoGCStringBuilder)
             {
-                mText.text = value.ToString();
+                // 这里加个判断，因为如果不加的话，会导致 Mesh 被重新刷新，看起来没有做动画
+                if (lastValue != value)
+                {
+                    InitNoGCStringBuilder();
+                    int nLastStringBuilderCapacity = mStringBuilder.Capacity;
+                    mStringBuilder.GarbageFreeClear();
+                    mStringBuilder.Append(prefix);
+                    mStringBuilder.AppendUInt64WithCommas(value);
+                    ReSizeStringBuilder(nLastStringBuilderCapacity);
+                    mStringBuilder.Align(mText.alignment);
+                    mText.text = mString;;
+                    lastValue = value;
+                    mText.ForceUpdateMesh();
+                }
             }
             else
             {
-                mText.text = prefix + value.ToString();
+                if (string.IsNullOrEmpty(prefix))
+                {
+                    mText.text = value.ToString();
+                }
+                else
+                {
+                    mText.text = prefix + value.ToString();
+                }
             }
         }
 
@@ -83,7 +132,7 @@ namespace TextBeat
             }
         }
 
-        private void ForceChangeLastInputOffsetXMeshInfo()
+        private void ForceChangeLastInputScaleMeshInfo()
         {
             if (lastInput.vertices.Count > 0 && Input.vertices.Count > 0)
             {
@@ -96,6 +145,11 @@ namespace TextBeat
                     vertices[i] = oriPos + new Vector3(fOffsetX, 0, 0);
                 }
             }
+        }
+
+        private void CheckForceChangeMeshInfo()
+        {
+
         }
 
         private void FillInput()
@@ -181,7 +235,7 @@ namespace TextBeat
 
             if (bForceChangeOffsetXMeshInfo)
             {
-                ForceChangeLastInputOffsetXMeshInfo();
+                ForceChangeLastInputScaleMeshInfo();
             }
         }
 
@@ -273,6 +327,8 @@ namespace TextBeat
 
                             Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
                             Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
+
+                            GetPos(ref targetPos, lastInput.mCharacterList[i].characterSize);
                             AddVertexInfo(targetPos, uv0, targetColor32);
                         }
                     }
@@ -286,6 +342,8 @@ namespace TextBeat
 
                         Vector3 targetPos = new Vector3(oriPos.x, oriPos.y - (1 - fTimePercent) * fAniHeight, oriPos.z);
                         Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)(fTimePercent * 255));
+
+                        GetPos(ref targetPos, Input.mCharacterList[i].characterSize);
                         AddVertexInfo(targetPos, uv0, targetColor32);
                     };
                 }
@@ -297,6 +355,8 @@ namespace TextBeat
                         Vector3 oriPos = Input.vertices[nOirIndex];
                         Color32 oriColor32 = Input.colors32[nOirIndex];
                         Vector2 uv0 = Input.uvs0[nOirIndex];
+
+                        GetPos(ref oriPos, Input.mCharacterList[i].characterSize);
                         AddVertexInfo(oriPos, uv0, oriColor32);
                     };
                 }
@@ -331,6 +391,8 @@ namespace TextBeat
 
                         Vector3 targetPos = new Vector3(oriPos.x, oriPos.y + fTimePercent * fAniHeight, oriPos.z);
                         Color32 targetColor32 = new Color32(oriColor32.r, oriColor32.g, oriColor32.b, (byte)((1 - fTimePercent) * 255));
+
+                        GetPos(ref targetPos, lastInput.mCharacterList[i].characterSize);
                         AddVertexInfo(targetPos, uv0, targetColor32);
                     }
                 }
@@ -353,6 +415,7 @@ namespace TextBeat
             int nLength = mText.text.Length * 2;
             mText.ResetMeshSize(nLength);
             TextBeatUtility.CopyTo(mWillFillInput, mText);
+
             BuildAni();
         }
 
@@ -366,5 +429,15 @@ namespace TextBeat
             PlayAni();
         }
 
+        void GetPos(ref Vector3 pos, float characterSize)
+        {
+            float scaleDelta = mText.characterSize / characterSize;
+            if (scaleDelta == 0 || scaleDelta == float.PositiveInfinity)
+            {
+                return;
+            }
+
+            pos *= scaleDelta;
+        }
     }
 }

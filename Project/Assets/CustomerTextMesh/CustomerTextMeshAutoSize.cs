@@ -61,7 +61,7 @@ public class CustomerTextMeshAutoSize : MonoBehaviour
         }
     }
 
-    void LateUpdate()
+    void Update()
     {
         Build();
     }

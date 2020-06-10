@@ -19,6 +19,7 @@ namespace TextBeat
         {
             public char character;
             public bool isVisible;
+            public float characterSize;
 
             public void Clear() { }
         }
@@ -78,6 +79,7 @@ namespace TextBeat
         {
             mCharacterList[nIndex].character = OtherCharacterInfo.character;
             mCharacterList[nIndex].isVisible = OtherCharacterInfo.isVisible;
+            mCharacterList[nIndex].characterSize = OtherCharacterInfo.characterSize;
         }
 
         public void AddCharacter(CharacterInfo OtherCharacterInfo)
@@ -100,13 +102,13 @@ namespace TextBeat
             uvs0.Clear();
             colors32.Clear();
             triangles.Clear();
-            
-            while (mCharacterList.Count > 0)
+
+            for (int i = 0; i < mCharacterList.Count; i++)
             {
-                int nLastIndex = mCharacterList.Count - 1;
-                ObjectPool<CharacterInfo>.recycle(mCharacterList[nLastIndex]);
-                mCharacterList.RemoveAt(nLastIndex);
+                ObjectPool<CharacterInfo>.recycle(mCharacterList[i]);
             }
+
+            mCharacterList.Clear();
         }
     }
 
@@ -390,10 +392,16 @@ namespace TextBeat
             
             for (int i = 0; i < mInputInfo.text.Length; i++)
             {
-                CustomerTextMeshMeshInfo.CharacterInfo mCharacterInfo = ObjectPool<CustomerTextMeshMeshInfo.CharacterInfo>.Pop();
-                mCharacterInfo.character = mInputInfo.text[i];
-                mCharacterInfo.isVisible = true;
-                mOutInfo.mCharacterList.Add(mCharacterInfo);
+                char c = mInputInfo.text[i];
+                UnityEngine.CharacterInfo mTemp;
+                if (mInputInfo.font.GetCharacterInfo(c, out mTemp))
+                {
+                    CustomerTextMeshMeshInfo.CharacterInfo mCharacterInfo = ObjectPool<CustomerTextMeshMeshInfo.CharacterInfo>.Pop();
+                    mCharacterInfo.character = c;
+                    mCharacterInfo.isVisible = true;
+                    mCharacterInfo.characterSize = mInputInfo.characterSize;
+                    mOutInfo.mCharacterList.Add(mCharacterInfo);
+                }
             }
 
         }
