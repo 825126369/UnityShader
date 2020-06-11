@@ -325,7 +325,6 @@ public class CustomerTextMesh : MonoBehaviour
 
         if (width > 0)
         {
-            width *= transform.lossyScale.x;
             float preferCharacterSize = m_AutoSizeMaxWidth / width;
             characterSize = m_AutoSizeMaxSize < preferCharacterSize ? m_AutoSizeMaxSize : preferCharacterSize;
         }
@@ -337,6 +336,7 @@ public class CustomerTextMesh : MonoBehaviour
         if (!m_AutoSize) return;
 
         float XLeft = 0f;
+        float fAutoSizeMaxWidth = m_AutoSizeMaxWidth * transform.lossyScale.x;
 
         if (mTextAlignment == TextAlignment.Left)
         {
@@ -344,15 +344,15 @@ public class CustomerTextMesh : MonoBehaviour
         }
         else if (mTextAlignment == TextAlignment.Center)
         {
-            XLeft = transform.position.x - m_AutoSizeMaxWidth / 2f;
+            XLeft = transform.position.x - fAutoSizeMaxWidth / 2f;
         }
         else
         {
-            XLeft = transform.position.x - m_AutoSizeMaxWidth;
+            XLeft = transform.position.x - fAutoSizeMaxWidth;
         }
 
         float yPos = transform.position.y;
-        Gizmos.DrawLine(new Vector3(XLeft, yPos, transform.position.z), new Vector3(XLeft + m_AutoSizeMaxWidth, yPos, transform.position.z));
+        Gizmos.DrawLine(new Vector3(XLeft, yPos, transform.position.z), new Vector3(XLeft + fAutoSizeMaxWidth, yPos, transform.position.z));
     }
 #endif
 
