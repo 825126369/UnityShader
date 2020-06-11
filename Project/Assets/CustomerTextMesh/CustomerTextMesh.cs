@@ -41,6 +41,7 @@ public class CustomerTextMesh : MonoBehaviour
 
     private void OnEnable()
     {
+        UpdateAutoSize();
         UpdateMesh();
     }
 
@@ -94,9 +95,6 @@ public class CustomerTextMesh : MonoBehaviour
                 m_Text = value;
 
                 UpdateAutoSize();
-
-                int nLength = GetValidLength();
-                ResetMeshSize(nLength);
                 UpdateMesh();
             }
         }
@@ -180,7 +178,7 @@ public class CustomerTextMesh : MonoBehaviour
 
     private void UpdateMesh()
     {
-        if (m_Font == null) return;
+        if (m_Font == null || m_Mesh == null ) return;
 
         int nLength = GetValidLength();
         ResetMeshSize(nLength);
@@ -301,16 +299,19 @@ public class CustomerTextMesh : MonoBehaviour
                 triangles[nTriangleBeginIndex + 5] = nVertexBeginIndex + 0;
             }
 
-            m_Mesh.vertices = vertices;
-            m_Mesh.uv = uvs0;
-            m_Mesh.colors32 = colors32;
-            m_Mesh.triangles = triangles;
+            if (m_Mesh)
+            {
+                m_Mesh.vertices = vertices;
+                m_Mesh.uv = uvs0;
+                m_Mesh.colors32 = colors32;
+                m_Mesh.triangles = triangles;
+            }
         }
     }
 
-    public void UpdateAutoSize()
+    private void UpdateAutoSize()
     {
-        if (!m_AutoSize) return;
+        if (!m_AutoSize || !m_Font) return;
 
         float width = 0;
         foreach (char symbol in m_Text)
@@ -325,8 +326,6 @@ public class CustomerTextMesh : MonoBehaviour
         if (width > 0)
         {
             width *= transform.lossyScale.x;
-
-            // width 如果等于0 会报错： 所以 得把 text 事先赋值
             float preferCharacterSize = m_AutoSizeMaxWidth / width;
             characterSize = m_AutoSizeMaxSize < preferCharacterSize ? m_AutoSizeMaxSize : preferCharacterSize;
         }
