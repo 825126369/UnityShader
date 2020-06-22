@@ -33,14 +33,18 @@ namespace TextBeat
         private bool bWillRefreshAllCharacter;
         private bool bForceChangeOffsetXMeshInfo;
 
+        void Awake()
+        {
+            mText = GetComponent<CustomerTextMesh>();
+        }
+
         void Start()
         {
             if (bUseNoGCStringBuilder)
             {
                 InitNoGCStringBuilder();
             }
-
-            mText = GetComponent<CustomerTextMesh>();
+            
             mText.mProperityChangedEvent += ON_TEXT_CHANGED;
             ON_TEXT_CHANGED();
         }

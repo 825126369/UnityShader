@@ -32,7 +32,7 @@ public class CustomerTextMesh : MonoBehaviour
     public Color32[] colors32 = new Color32[0];
     [System.NonSerialized]
     public int[] triangles = new int[0];
-
+    
     public Action mProperityChangedEvent;
 
     private void Awake()
@@ -42,7 +42,6 @@ public class CustomerTextMesh : MonoBehaviour
 
     private void OnEnable()
     {
-        UpdateAutoSize();
         UpdateMesh();
     }
 
@@ -77,11 +76,6 @@ public class CustomerTextMesh : MonoBehaviour
     }
 #endif
 
-    public void Update()
-    {
-        UpdateAutoSize();
-    }
-
     public string text
     {
         get
@@ -94,8 +88,6 @@ public class CustomerTextMesh : MonoBehaviour
             if (value != m_Text)
             {
                 m_Text = value;
-
-                UpdateAutoSize();
                 UpdateMesh();
             }
         }
@@ -129,7 +121,6 @@ public class CustomerTextMesh : MonoBehaviour
             if (value != m_CharacterSize)
             {
                 m_CharacterSize = value;
-                UpdateMesh();
             }
         }
     }
@@ -180,6 +171,7 @@ public class CustomerTextMesh : MonoBehaviour
     private void UpdateMesh()
     {
         if (m_Font == null || m_Mesh == null ) return;
+        UpdateAutoSize();
 
         int nLength = GetValidLength();
         ResetMeshSize(nLength);
