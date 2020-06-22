@@ -18,6 +18,8 @@ public class CustomerTextMeshEditor : Editor
     SerializedProperty m_Font;
 
     SerializedProperty mTextAlignment;
+    SerializedProperty m_OffsetY;
+
     SerializedProperty m_CharacterSize;
     SerializedProperty m_AutoSize;
 
@@ -32,6 +34,7 @@ public class CustomerTextMeshEditor : Editor
         m_Color = serializedObject.FindProperty("m_Color");
         m_Font = serializedObject.FindProperty("m_Font");
         mTextAlignment = serializedObject.FindProperty("mTextAlignment");
+        m_OffsetY = serializedObject.FindProperty("m_OffsetY");
         m_CharacterSize = serializedObject.FindProperty("m_CharacterSize");
         m_AutoSize = serializedObject.FindProperty("m_AutoSize");
         m_AutoSizeMaxWidth = serializedObject.FindProperty("m_AutoSizeMaxWidth");
@@ -57,6 +60,7 @@ public class CustomerTextMeshEditor : Editor
         m_Color.colorValue = EditorGUILayout.ColorField("Color", m_Color.colorValue);
         EditorGUILayout.PropertyField(m_Font);
         EditorGUILayout.PropertyField(mTextAlignment);
+        EditorGUILayout.PropertyField(m_OffsetY);
         EditorGUILayout.PropertyField(m_CharacterSize);
         m_AutoSize.boolValue = EditorGUILayout.Toggle("Auto Size", m_AutoSize.boolValue);
 

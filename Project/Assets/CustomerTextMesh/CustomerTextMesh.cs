@@ -11,7 +11,8 @@ public class CustomerTextMesh : MonoBehaviour
     public string m_Text;
     public Color32 m_Color = Color.white;
     public Font m_Font;
-    public TextAlignment mTextAlignment;
+    public TextAlignment mTextAlignment = TextAlignment.Center;
+    public float m_OffsetY = 0.0f;
     public float m_CharacterSize = 1.0f;
     public bool m_AutoSize;
     public float m_AutoSizeMaxWidth;
@@ -239,22 +240,26 @@ public class CustomerTextMesh : MonoBehaviour
                 Vector2 uvBottomLeft = mCharacterInfo.uvBottomLeft;
                 Vector2 posBottomLeft = new Vector2(mCharacterInfo.minX, mCharacterInfo.minY);
                 posBottomLeft.x += posX;
+                posBottomLeft.y += m_OffsetY;
                 AddVertexs(posBottomLeft, uvBottomLeft);
 
                 Vector2 uvTopLeft = mCharacterInfo.uvTopLeft;
                 Vector2 posuvTopLeft = new Vector2(mCharacterInfo.minX, mCharacterInfo.maxY);
                 posuvTopLeft.x += posX;
+                posuvTopLeft.y += m_OffsetY;
                 AddVertexs(posuvTopLeft, uvTopLeft);
 
 
                 Vector2 uvTopRight = mCharacterInfo.uvTopRight;
                 Vector2 posuvTopRight = new Vector2(mCharacterInfo.maxX, mCharacterInfo.maxY);
                 posuvTopRight.x += posX;
+                posuvTopRight.y += m_OffsetY;
                 AddVertexs(posuvTopRight, uvTopRight);
 
                 Vector2 uvBottomRight = mCharacterInfo.uvBottomRight;
                 Vector2 posBottomRight = new Vector2(mCharacterInfo.maxX, mCharacterInfo.minY);
                 posBottomRight.x += posX;
+                posBottomRight.y += m_OffsetY;
                 AddVertexs(posBottomRight, uvBottomRight);
 
                 posX += mCharacterInfo.advance;
