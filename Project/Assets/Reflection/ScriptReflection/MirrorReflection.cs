@@ -10,6 +10,8 @@ public class MirrorReflection : MonoBehaviour
 	public bool m_DisablePixelLights = true;
 	public int m_TextureSize = 256;
 	public float m_ClipPlaneOffset = 0.07f;
+	public Vector3 normal = Vector3.up;
+	public GameObject targetObj;
 
 	public LayerMask m_ReflectLayers = -1;
 
@@ -44,7 +46,8 @@ public class MirrorReflection : MonoBehaviour
 
 		// find out the reflection plane: position and normal in world space
 		Vector3 pos = transform.position;
-		Vector3 normal = transform.up;
+		//Vector3 normal = transform.up;
+		Vector3 normal = Vector3.Normalize(targetObj.transform.position - transform.position);
 
 		// Optionally disable pixel lights for reflection
 		int oldPixelLightCount = QualitySettings.pixelLightCount;
@@ -70,16 +73,19 @@ public class MirrorReflection : MonoBehaviour
 		//Matrix4x4 projection = cam.projectionMatrix;
 		Matrix4x4 projection = cam.CalculateObliqueMatrix(clipPlane);
 		reflectionCamera.projectionMatrix = projection;
-
+		
 		reflectionCamera.cullingMask = ~(1 << 4) & m_ReflectLayers.value; // never render water layer
 		reflectionCamera.targetTexture = m_ReflectionTexture;
-		GL.SetRevertBackfacing(true);
+		GL.invertCulling = true;
+
 		reflectionCamera.transform.position = newpos;
 		Vector3 euler = cam.transform.eulerAngles;
 		reflectionCamera.transform.eulerAngles = new Vector3(0, euler.y, euler.z);
+
 		reflectionCamera.Render();
 		reflectionCamera.transform.position = oldpos;
-		GL.SetRevertBackfacing(false);
+
+		GL.invertCulling = false;
 		Material[] materials = rend.sharedMaterials;
 		foreach (Material mat in materials)
 		{
@@ -168,7 +174,7 @@ public class MirrorReflection : MonoBehaviour
 			reflectionCamera.transform.position = transform.position;
 			reflectionCamera.transform.rotation = transform.rotation;
 			reflectionCamera.gameObject.AddComponent<FlareLayer>();
-			go.hideFlags = HideFlags.HideAndDontSave;
+			go.hideFlags = HideFlags.DontSave;
 			m_ReflectionCameras[currentCamera] = reflectionCamera;
 		}
 	}
