@@ -158,7 +158,7 @@ namespace TextBeat
         {
             if (lastCharacterSize != mText.characterSize)
             {
-                bWillRefreshAllCharacter = true;
+                bWillRefreshAllCharacter = true; // 顶点位置 都改变了
                 lastCharacterSize = mText.characterSize;
             }
 
@@ -262,7 +262,6 @@ namespace TextBeat
             if (bForceChangeOffsetXMeshInfo && !bRefreshAllCharacter)
             {
                 ForceChangeLastInputOffsetXMeshInfo();
-
             }
 
             bForceChangeOffsetXMeshInfo = false;
@@ -320,6 +319,8 @@ namespace TextBeat
 
             ReSizeWorldAniBeginTimeList(Input, lastInput);
 
+            float fAddHeight = mText.font.fontSize * mText.characterSize * fAniHeightScale;
+
             for (int i = 0; i < Input.mCharacterList.Count; i++)
             {
                 if (orOneWoldFinishAni(i) && !mWorldisPlayingAniList[i])
@@ -349,7 +350,6 @@ namespace TextBeat
                 if (!orOneWoldFinishAni(i))
                 {
                     float fTimePercent = Mathf.Clamp01((Time.time - mWorldAniBeginTimeList[i]) / fAlphaTime);
-                    float fAddHeight = mText.font.fontSize * mText.characterSize * fAniHeightScale;
 
                     if (i < lastInput.mCharacterList.Count)
                     {
@@ -422,7 +422,6 @@ namespace TextBeat
                 if (!orOneWoldFinishAni(i))
                 {
                     float fTimePercent = Mathf.Clamp01((Time.time - mWorldAniBeginTimeList[i]) / fAlphaTime);
-                    float fAddHeight = mText.font.fontSize * mText.characterSize * fAniHeightScale;
 
                     for (int j = 0; j < 4; j++)
                     {

@@ -34,10 +34,11 @@ public class CustomerTextMesh : MonoBehaviour
     public int[] triangles = new int[0];
     
     public Action mProperityChangedEvent;
-
+    
     private void Awake()
     {
         Init();
+        CheckEqualWidthFont();
     }
 
     private void OnEnable()
@@ -133,6 +134,20 @@ public class CustomerTextMesh : MonoBehaviour
         }
     }
 
+    public Color color
+    {
+        get
+        {
+            return m_Color;
+        }
+
+        set
+        {
+            m_Color = value;
+            UpdateMesh();
+        }
+    }
+
     private float GetWidth()
     {
         float textWidth = 0.0f;
@@ -195,7 +210,7 @@ public class CustomerTextMesh : MonoBehaviour
     private void AddVertexs(Vector3 pos, Vector2 uv)
     {
         pos *= m_CharacterSize;
-        Color32 color32 = Color.white * m_Color;
+        Color32 color32 = m_Color;
 
         vertices[vertexCount] = pos;
         uvs0[vertexCount] = uv;
@@ -352,5 +367,31 @@ public class CustomerTextMesh : MonoBehaviour
         Gizmos.DrawLine(new Vector3(XLeft, yPos, transform.position.z), new Vector3(XLeft + fAutoSizeMaxWidth, yPos, transform.position.z));
     }
 #endif
+
+    private void CheckEqualWidthFont()
+    {
+        if (m_Font != null)
+        {
+            string strTest = "1234567890";
+            float fWidth = -1.0f;
+            for (int i = 0; i < m_Text.Length; i++)
+            {
+                char c = strTest[i];
+                CharacterInfo mCharacterInfo;
+                if (m_Font.GetCharacterInfo(c, out mCharacterInfo))
+                {
+                    if (fWidth <= 0.0f)
+                    {
+                        fWidth = mCharacterInfo.advance;
+                    }
+                    else
+                    {
+                        Debug.Assert(fWidth == mCharacterInfo.advance, "非等宽字体");
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
 }

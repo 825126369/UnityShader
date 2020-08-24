@@ -55,7 +55,7 @@ namespace TextBeat
         UInt64 testValue8 = 0;
         private void Test8()
         {
-            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            if (Time.time - fBeginUpdateTextTime >= fUpdateTextMaxTime)
             {
                 fBeginUpdateTextTime = Time.time;
                 string text = string.Empty;
@@ -91,7 +91,7 @@ namespace TextBeat
         UInt64 testValue7 = 0;
         private void Test7()
         {
-            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            if (Time.time - fBeginUpdateTextTime >= fUpdateTextMaxTime)
             {
                 fBeginUpdateTextTime = Time.time;
                 string text = "ABCDEFG<sprite=" + testValue7++ + ">";
@@ -107,7 +107,7 @@ namespace TextBeat
         UInt64 testValue2 = 1000000000;
         private void Test6()
         {
-            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            if (Time.time - fBeginUpdateTextTime >= fUpdateTextMaxTime)
             {
                 fBeginUpdateTextTime = Time.time;
                 testValue2 += 1;
@@ -128,7 +128,7 @@ namespace TextBeat
 
         private void Test4()
         {
-            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            if (Time.time - fBeginUpdateTextTime >= fUpdateTextMaxTime)
             {
                 fBeginUpdateTextTime = Time.time;
                 string AAA = "";
@@ -144,7 +144,7 @@ namespace TextBeat
 
         private void Test3()
         {
-            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            if (Time.time - fBeginUpdateTextTime >= fUpdateTextMaxTime)
             {
                 fBeginUpdateTextTime = Time.time;
                 value = (ulong)UnityEngine.Random.Range(1, UInt64.MaxValue);
@@ -154,7 +154,7 @@ namespace TextBeat
 
         private void Test2()
         {
-            if (Time.time - fBeginUpdateTextTime > fUpdateTextMaxTime)
+            if (Time.time - fBeginUpdateTextTime >= fUpdateTextMaxTime)
             {
                 fBeginUpdateTextTime = Time.time;
                 value = (ulong)UnityEngine.Random.Range(1, 10000);
