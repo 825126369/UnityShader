@@ -21,15 +21,10 @@ public class WebTest : MonoBehaviour
         WeChat = 4,
     }
 
-    private string url = "https://localhost:5001/LoginVerificationHandler/StartLogin";
+    private string url = "https://localhost:5001/LoginVerificationHandler/RequestVerificationCode";
 
     private void Start()
     {
-        String aaa = "123456";
-        String bbb = aaa;
-        bbb = "abcdefg";
-        Debug.Log(aaa);
-
         StartCoroutine(Request());
     }
 
@@ -37,12 +32,12 @@ public class WebTest : MonoBehaviour
     {
         WWWForm wWWForm = new WWWForm();
         wWWForm.AddField("nLoginType", (int)LoginType.MailAccount);
+        //wWWForm.AddField("UniqueIdentifier", "xuke825126369@gmail.com");
         wWWForm.AddField("UniqueIdentifier", "1426186059@qq.com");
         UnityWebRequest www = UnityWebRequest.Post(url, wWWForm);
         www.SendWebRequest();
         while (!www.isDone)
         {
-            Debug.Log("正在登陆中...");
             yield return null;
         }
 
@@ -52,8 +47,7 @@ public class WebTest : MonoBehaviour
         }
         else
         {
-            Debug.Log("Success !");
-            Debug.Log("Success !:" + www.downloadHandler.text);
+            Debug.Log("Success : " + www.downloadHandler.text);
         }
     }
 }

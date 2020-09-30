@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/Font/Font.unity
+- path: Assets/Web/Web.unity
   isLoaded: 1
   isActive: 1
