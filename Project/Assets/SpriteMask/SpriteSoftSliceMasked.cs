@@ -188,7 +188,7 @@ public class SpriteSoftSliceMasked : MonoBehaviour {
         Vector2 maskAreaMin = new Vector3(maskPos.x - maskSize.x / 2, maskPos.y - maskSize.y / 2);
         maskAreaMin += new Vector2(m_mask.bounds.size.x * tightOffset.x, m_mask.bounds.size.y * tightOffset.y);
         Vector2 maskAreaMax = maskAreaMin + new Vector2(m_mask.bounds.size.x * tightScale.x, m_mask.bounds.size.y * tightScale.y);
-
+        
         Vector4 uvScaleOffset = new Vector4(uvScale.x, uvScale.y, uvOffset.x, uvOffset.y);
         Vector4 _ClipRect = new Vector4(maskAreaMin.x, maskAreaMin.y, maskAreaMax.x, maskAreaMax.y);
         uvScaleOffsetList[0] = uvScaleOffset;
