@@ -112,6 +112,8 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
 
         Vector2 maskSize = new Vector2(m_mask.bounds.size.x, m_mask.bounds.size.y);
         Vector2 maskPos = new Vector2(m_mask.transform.position.x, m_mask.transform.position.y);
+        maskPos = maskPos + maskSize * (Vector2.one * 0.5f - m_mask.sprite.pivot / m_mask.sprite.rect.size);
+
         Vector2 maskAreaMin = new Vector3(maskPos.x - maskSize.x / 2, maskPos.y - maskSize.y / 2);
         maskAreaMin += new Vector2(m_mask.bounds.size.x * tightOffset.x, m_mask.bounds.size.y * tightOffset.y);
         Vector2 maskAreaMax = maskAreaMin + new Vector2(m_mask.bounds.size.x * tightScale.x, m_mask.bounds.size.y * tightScale.y);
@@ -290,7 +292,6 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
                     
         Vector2 maskPos = new Vector2(m_mask.transform.position.x, m_mask.transform.position.y);
         maskPos = maskPos + new Vector2(fBoundSizeX, fBoundSizeY) * (Vector2.one * 0.5f - m_mask.sprite.pivot / m_mask.sprite.rect.size);
-        Debug.Log("m_mask.sprite.pivot: " + m_mask.sprite.pivot);
                   
         Vector2 maskAreaMin = new Vector3(maskPos.x - fBoundSizeX / 2, maskPos.y - fBoundSizeY / 2);
         Vector2 maskAreaMax = new Vector3(maskPos.x + fBoundSizeX / 2, maskPos.y + fBoundSizeY / 2);
@@ -398,6 +399,8 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
 
         Vector2 maskSize = new Vector2(m_mask.bounds.size.x, m_mask.bounds.size.y);
         Vector2 maskPos = new Vector2(m_mask.transform.position.x, m_mask.transform.position.y);
+        maskPos = maskPos + maskSize * (Vector2.one * 0.5f - m_mask.sprite.pivot / m_mask.sprite.rect.size);
+
         Vector2 maskAreaMin = new Vector3(maskPos.x - maskSize.x / 2, maskPos.y - maskSize.y / 2);
         Vector2 maskAreaMax = new Vector3(maskPos.x + maskSize.x / 2, maskPos.y + maskSize.y / 2);
 
