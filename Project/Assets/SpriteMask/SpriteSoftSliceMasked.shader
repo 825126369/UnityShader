@@ -11,8 +11,7 @@ Shader "Customer/SpriteSoftSliceMasked" {
 		[PerRendererData] _AlphaTex ("External Alpha", 2D) = "white" {}
 		[PerRendererData] _EnableExternalAlpha ("Enable External Alpha", Float) = 0
         
-
-
+		
         [Enum(UnityEngine.Rendering.BlendOp)] _BlendOption("Blend Option", Float) = 0
         [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend ("Src Blend mode", Float) = 1
         [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst Blend mode", Float) = 1
