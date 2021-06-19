@@ -6,17 +6,18 @@ using System;
 
 [ExecuteInEditMode]
 [DisallowMultipleComponent]
-public abstract class BaseSoftSliceMasked : MonoBehaviour {
-	public SpriteRenderer m_mask; 
-	protected MaterialPropertyBlock m_materialProperty;
-    
+public abstract class BaseSoftSliceMasked : MonoBehaviour
+{
+    public SpriteRenderer m_mask;
+    protected MaterialPropertyBlock m_materialProperty;
+
     private const int nArrayLength = 9;
     private static Vector4[] uvScaleOffsetList = new Vector4[nArrayLength];
     private static Vector4[] _ClipRectList = new Vector4[nArrayLength];
     private static Vector4[] _TiledCountList = new Vector4[nArrayLength];
     int nSliceCount = 0;
     int nTiledSliceCount = 0;
-    
+
     private enum SlicePosition : uint
     {
         Center = 0,
@@ -36,13 +37,13 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
     }
 
     // Use this for initialization
-    protected virtual void Start () 
+    protected virtual void Start()
     {
-		
+
     }
-    
-	protected void UpdateMask()
-	{
+
+    protected void UpdateMask()
+    {
         if (m_materialProperty == null)
             m_materialProperty = new MaterialPropertyBlock();
 
@@ -73,7 +74,8 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
             if (m_mask && m_mask.sprite)
             {
                 m_materialProperty.SetTexture("_AlphaMask", m_mask.sprite.texture);
-            }else
+            }
+            else
             {
                 m_materialProperty.SetTexture("_AlphaMask", Texture2D.whiteTexture);
             }
@@ -100,7 +102,7 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
             m_materialProperty.SetVectorArray("_TiledCount", _TiledCountList);
             m_materialProperty.SetTexture("_AlphaMask", m_mask.sprite.texture);
         }
-	}
+    }
 
     void UpdateSimpleSprite()
     {
@@ -112,7 +114,8 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
 
         Vector2 maskSize = new Vector2(m_mask.bounds.size.x, m_mask.bounds.size.y);
         Vector2 maskPos = new Vector2(m_mask.transform.position.x, m_mask.transform.position.y);
-        maskPos = maskPos + maskSize * (Vector2.one * 0.5f - m_mask.sprite.pivot / m_mask.sprite.rect.size);
+        Vector2 offsetPosCoef = Vector2.one * 0.5f - new Vector2(m_mask.sprite.pivot.x / m_mask.sprite.rect.size.x, m_mask.sprite.pivot.y / m_mask.sprite.rect.size.y);
+        maskPos = maskPos + new Vector2(maskSize.x * offsetPosCoef.x, maskSize.y * offsetPosCoef.y);
 
         Vector2 maskAreaMin = new Vector3(maskPos.x - maskSize.x / 2, maskPos.y - maskSize.y / 2);
         maskAreaMin += new Vector2(m_mask.bounds.size.x * tightOffset.x, m_mask.bounds.size.y * tightOffset.y);
@@ -172,11 +175,11 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
     }
 
     void UpdateSliceQuard(SlicePosition align)
-	{
+    {
         float leftSlice = m_mask.sprite.border.x;
-		float bottomSlice = m_mask.sprite.border.y;
-		float rightSlice = m_mask.sprite.border.z;
-		float topSlice = m_mask.sprite.border.w;
+        float bottomSlice = m_mask.sprite.border.y;
+        float rightSlice = m_mask.sprite.border.z;
+        float topSlice = m_mask.sprite.border.w;
 
         Vector2 uvScale1 = Vector2.zero;
         Vector2 uvOffset1 = Vector2.zero;
@@ -185,7 +188,7 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
         float fMaskSpriteHeigh = m_mask.sprite.textureRect.height;
         float fMaskSpriteXMin = m_mask.sprite.textureRect.xMin;
         float fMaskSpriteYMin = m_mask.sprite.textureRect.yMin;
-            
+
         if (align == SlicePosition.TopLeft)
         {
             if (leftSlice <= 0 || topSlice <= 0.0f)
@@ -203,7 +206,7 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
                 return;
             }
 
-            uvScale1 = new Vector2((fMaskSpriteWidth- leftSlice - rightSlice) / fMaskSpriteWidth, topSlice / fMaskSpriteHeigh);
+            uvScale1 = new Vector2((fMaskSpriteWidth - leftSlice - rightSlice) / fMaskSpriteWidth, topSlice / fMaskSpriteHeigh);
             uvOffset1 = new Vector2(leftSlice / fMaskSpriteWidth, (fMaskSpriteHeigh - topSlice) / fMaskSpriteHeigh);
         }
         else if (align == SlicePosition.TopRight)
@@ -214,7 +217,7 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
             }
 
             uvScale1 = new Vector2(rightSlice / fMaskSpriteWidth, topSlice / fMaskSpriteHeigh);
-            uvOffset1 = new Vector2((fMaskSpriteWidth- rightSlice) / fMaskSpriteWidth, (fMaskSpriteHeigh - topSlice) / fMaskSpriteHeigh);
+            uvOffset1 = new Vector2((fMaskSpriteWidth - rightSlice) / fMaskSpriteWidth, (fMaskSpriteHeigh - topSlice) / fMaskSpriteHeigh);
         }
         else if (align == SlicePosition.LeftCenter)
         {
@@ -228,7 +231,7 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
         }
         else if (align == SlicePosition.Center)
         {
-            uvScale1 = new Vector2((fMaskSpriteWidth- leftSlice - rightSlice) / fMaskSpriteWidth, (fMaskSpriteHeigh - topSlice - bottomSlice) / fMaskSpriteHeigh);
+            uvScale1 = new Vector2((fMaskSpriteWidth - leftSlice - rightSlice) / fMaskSpriteWidth, (fMaskSpriteHeigh - topSlice - bottomSlice) / fMaskSpriteHeigh);
             uvOffset1 = new Vector2(leftSlice / fMaskSpriteWidth, bottomSlice / fMaskSpriteHeigh);
         }
         else if (align == SlicePosition.RightCenter)
@@ -239,7 +242,7 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
             }
 
             uvScale1 = new Vector2(rightSlice / fMaskSpriteWidth, (fMaskSpriteHeigh - topSlice - bottomSlice) / fMaskSpriteHeigh);
-            uvOffset1 = new Vector2((fMaskSpriteWidth- rightSlice) / fMaskSpriteWidth, bottomSlice / fMaskSpriteHeigh);
+            uvOffset1 = new Vector2((fMaskSpriteWidth - rightSlice) / fMaskSpriteWidth, bottomSlice / fMaskSpriteHeigh);
         }
         else if (align == SlicePosition.BottomLeft)
         {
@@ -258,7 +261,7 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
                 return;
             }
 
-            uvScale1 = new Vector2((fMaskSpriteWidth- leftSlice - rightSlice) / fMaskSpriteWidth, bottomSlice / fMaskSpriteHeigh);
+            uvScale1 = new Vector2((fMaskSpriteWidth - leftSlice - rightSlice) / fMaskSpriteWidth, bottomSlice / fMaskSpriteHeigh);
             uvOffset1 = new Vector2(leftSlice / fMaskSpriteWidth, 0);
         }
         else if (align == SlicePosition.BottomRight)
@@ -269,7 +272,7 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
             }
 
             uvScale1 = new Vector2(rightSlice / fMaskSpriteWidth, bottomSlice / fMaskSpriteHeigh);
-            uvOffset1 = new Vector2((fMaskSpriteWidth- rightSlice) / fMaskSpriteWidth, 0);
+            uvOffset1 = new Vector2((fMaskSpriteWidth - rightSlice) / fMaskSpriteWidth, 0);
         }
         else
         {
@@ -277,10 +280,10 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
         }
 
         Vector2 uvScale0 = new Vector2(fMaskSpriteWidth / m_mask.sprite.texture.width, fMaskSpriteHeigh / m_mask.sprite.texture.height);
-		Vector2 uvOffset0 = new Vector2(fMaskSpriteXMin / m_mask.sprite.texture.width, fMaskSpriteYMin / m_mask.sprite.texture.height);
+        Vector2 uvOffset0 = new Vector2(fMaskSpriteXMin / m_mask.sprite.texture.width, fMaskSpriteYMin / m_mask.sprite.texture.height);
 
-		Vector2 uvOffset =  uvOffset0 + new Vector2(uvOffset1.x * uvScale0.x, uvOffset1.y * uvScale0.y);
-		Vector2 uvScale =  new Vector2 (uvScale0.x * uvScale1.x, uvScale0.y * uvScale1.y);
+        Vector2 uvOffset = uvOffset0 + new Vector2(uvOffset1.x * uvScale0.x, uvOffset1.y * uvScale0.y);
+        Vector2 uvScale = new Vector2(uvScale0.x * uvScale1.x, uvScale0.y * uvScale1.y);
 
         float fBoundSizeX = m_mask.size.x * m_mask.transform.lossyScale.x;
         float fBoundSizeY = m_mask.size.y * m_mask.transform.lossyScale.y;
@@ -289,10 +292,11 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
         float bottomSliceSizeX = bottomSlice * m_mask.transform.lossyScale.y;
         float rightSliceSizeX = rightSlice * m_mask.transform.lossyScale.x;
         float leftSliceSizeX = leftSlice * m_mask.transform.lossyScale.x;
-                    
+
         Vector2 maskPos = new Vector2(m_mask.transform.position.x, m_mask.transform.position.y);
-        maskPos = maskPos + new Vector2(fBoundSizeX, fBoundSizeY) * (Vector2.one * 0.5f - m_mask.sprite.pivot / m_mask.sprite.rect.size);
-                  
+        Vector2 offsetPosCoef = Vector2.one * 0.5f - new Vector2(m_mask.sprite.pivot.x / m_mask.sprite.rect.size.x, m_mask.sprite.pivot.y / m_mask.sprite.rect.size.y);
+        maskPos = maskPos + new Vector2(fBoundSizeX * offsetPosCoef.x, fBoundSizeY * offsetPosCoef.y);
+
         Vector2 maskAreaMin = new Vector3(maskPos.x - fBoundSizeX / 2, maskPos.y - fBoundSizeY / 2);
         Vector2 maskAreaMax = new Vector3(maskPos.x + fBoundSizeX / 2, maskPos.y + fBoundSizeY / 2);
 
@@ -346,7 +350,7 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
         {
             Vector4 uvScaleOffset = new Vector4(uvScale.x, uvScale.y, uvOffset.x, uvOffset.y);
             Vector4 _ClipRect = new Vector4(maskAreaMin.x, maskAreaMin.y, maskAreaMax.x, maskAreaMax.y);
-            
+
             uvScaleOffsetList[nSliceCount] = uvScaleOffset;
             _ClipRectList[nSliceCount] = _ClipRect;
             nSliceCount = nSliceCount + 1;
@@ -399,7 +403,8 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
 
         Vector2 maskSize = new Vector2(m_mask.bounds.size.x, m_mask.bounds.size.y);
         Vector2 maskPos = new Vector2(m_mask.transform.position.x, m_mask.transform.position.y);
-        maskPos = maskPos + maskSize * (Vector2.one * 0.5f - m_mask.sprite.pivot / m_mask.sprite.rect.size);
+        Vector2 offsetPosCoef = Vector2.one * 0.5f - new Vector2(m_mask.sprite.pivot.x / m_mask.sprite.rect.size.x, m_mask.sprite.pivot.y / m_mask.sprite.rect.size.y);
+        maskPos = maskPos + new Vector2(maskSize.x * offsetPosCoef.x, maskSize.y * offsetPosCoef.y);
 
         Vector2 maskAreaMin = new Vector3(maskPos.x - maskSize.x / 2, maskPos.y - maskSize.y / 2);
         Vector2 maskAreaMax = new Vector3(maskPos.x + maskSize.x / 2, maskPos.y + maskSize.y / 2);
@@ -425,7 +430,5 @@ public abstract class BaseSoftSliceMasked : MonoBehaviour {
         _TiledCountList[nIndex] = _TiledCount;
         nTiledSliceCount = nTiledSliceCount + 1;
     }
-
-    
 
 }
