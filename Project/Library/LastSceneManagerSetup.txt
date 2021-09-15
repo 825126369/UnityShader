@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/MetaBall/MainScene.unity
+- path: Assets/TextBeat/TextBeat.unity
   isLoaded: 1
   isActive: 1
