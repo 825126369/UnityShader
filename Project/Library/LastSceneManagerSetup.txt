@@ -1,4 +1,5 @@
 sceneSetups:
-- path: Assets/TextBeat/TextBeat.unity
+- path: Assets/MiaoBian/MiaoBian.unity
   isLoaded: 1
   isActive: 1
+  isSubScene: 0

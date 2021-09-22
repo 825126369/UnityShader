@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 
@@ -189,7 +190,7 @@ namespace TextBeat
 
         public static string GetGarbageFreeString(this StringBuilder string_builder)
         {
-            return (string)string_builder.GetType().GetField("_str", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(string_builder);
+            return (string)string_builder.GetType().GetField("_str", BindingFlags.NonPublic | BindingFlags.GetField | System.Reflection.BindingFlags.Instance).GetValue(string_builder);
         }
 
         public static void GarbageFreeClear(this StringBuilder string_builder)
