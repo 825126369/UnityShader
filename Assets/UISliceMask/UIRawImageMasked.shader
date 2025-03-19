@@ -1,4 +1,4 @@
-Shader "Customer/CustomerRawImageMasked"
+Shader "Customer/UI/UIRawImageMasked"
 {
     Properties
     {
@@ -70,7 +70,9 @@ Shader "Customer/CustomerRawImageMasked"
                 fixed4 color    : COLOR;
                 float2 texcoord  : TEXCOORD0;
                 float4 worldPosition : TEXCOORD1;
-                float3 worldPos : TEXCOORD2;
+
+                float2 mask_min_uv : TEXCOORD2;
+                float2 mask_max_uv : TEXCOORD3;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
             
@@ -89,12 +91,13 @@ Shader "Customer/CustomerRawImageMasked"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
                 float4 vPosition = UnityObjectToClipPos(v.vertex);
                 OUT.worldPosition = v.vertex;
-                OUT.vertex = vPosition;
-                
+                OUT.vertex = vPosition;            
                 OUT.texcoord = TRANSFORM_TEX(v.texcoord.xy, _MainTex);
                 
 			    float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
                 OUT.worldPos = worldPos.xyz;
+
+                
                 
                 OUT.color = v.color * _Color;
                 return OUT;

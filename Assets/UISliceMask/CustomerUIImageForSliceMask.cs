@@ -37,11 +37,11 @@ public class CustomerUIImageForSliceMask : MonoBehaviour
     {
         if (m_image_mask != null)
         {
-            return Shader.Find("Customer/CustomerUIImageSliceMasked");
+            return Shader.Find("Customer/UI/UIImageSliceMasked");
         }
         else
         {
-            return Shader.Find("Customer/CustomerRawImageMasked");
+            return Shader.Find("Customer/UI/UIRawImageMasked");
         }
     }
 

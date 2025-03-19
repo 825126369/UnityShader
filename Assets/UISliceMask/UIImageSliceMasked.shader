@@ -1,4 +1,4 @@
-﻿Shader "Customer/CustomerUIImageSliceMasked"
+﻿Shader "Customer/UI/UIImageSliceMasked"
 {
     Properties
     {
