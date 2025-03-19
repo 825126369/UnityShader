@@ -1,47 +1,60 @@
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
 [ExecuteAlways]
 [RequireComponent(typeof(Image))]
 [DisallowMultipleComponent]
-public class CustomerUIImageForSliceMask : BaseUISoftSliceMasked
+public class CustomerUIImageForSliceMask : MonoBehaviour
 {
+    [SerializeField] private Image m_image_mask;
+    [SerializeField] private RawImage m_rawImage_mask;
     [SerializeField] private Material m_CommonMat;
-    private Image mImage;
 
     private Material mMat = null;
-    protected override void Start()
+    void Start()
     {
-        base.Start();
-        mImage = GetComponent<Image>();
+        var mImage = GetComponent<MaskableGraphic>();
         if (m_CommonMat != null)
         {
             mMat = m_CommonMat;
         }
         else
         {
-            mMat = new Material(Shader.Find("Customer/CustomerUIImageSliceMasked"));
+            mMat = new Material(GetShader());
         }
 
         UpdateMask();
-        UpdateSelf();
         mImage.material = mMat;
     }
 
     void LateUpdate()
     {
         UpdateMask();
-        UpdateSelf();
     }
 
-    void UpdateSelf()
+    Shader GetShader()
     {
-        mMat.SetFloat("nSliceCount", nSliceCount);
-        mMat.SetFloat("nTiledSliceCount", nTiledSliceCount);
-        mMat.SetVectorArray("_SliceClipRect", _ClipRectList);
-        mMat.SetVectorArray("_SliceAlphaMask_ST", uvScaleOffsetList);
-        mMat.SetVectorArray("_TiledCount", _TiledCountList);
-        mMat.SetTexture("_MyAlphaMask", m_mask.mainTexture);
+        if (m_image_mask != null)
+        {
+            return Shader.Find("Customer/CustomerUIImageSliceMasked");
+        }
+        else
+        {
+            return Shader.Find("Customer/CustomerRawImageMasked");
+        }
+    }
+
+    void UpdateMask()
+    {
+        if (m_image_mask != null)
+        {
+            StaticImageSliceMaskFunc.UpdateMask(m_image_mask, mMat);
+        }
+        else
+        {
+            StaticRawImageMaskFunc.UpdateMask(m_rawImage_mask, mMat);
+        }
     }
 
 }

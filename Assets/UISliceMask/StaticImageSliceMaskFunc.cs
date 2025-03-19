@@ -1,21 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-[ExecuteAlways]
-[DisallowMultipleComponent]
-public abstract class BaseUISoftSliceMasked : MonoBehaviour
+public static class StaticImageSliceMaskFunc
 {
-    public Image m_mask;
-    protected MaterialPropertyBlock m_materialProperty;
+    static Image m_mask;
+    static readonly Vector3[] m_worldCornors = new Vector3[4];
+    static readonly MaterialPropertyBlock m_materialProperty = new MaterialPropertyBlock();
+    const int nArrayLength = 12;
+    static Vector4[] uvScaleOffsetList = new Vector4[nArrayLength];
+    static Vector4[] _ClipRectList = new Vector4[nArrayLength];
+    static Vector4[] _TiledCountList = new Vector4[nArrayLength];
+    static int nSliceCount = 0;
+    static int nTiledSliceCount = 0;
 
-    private const int nArrayLength = 12;
-    protected static Vector4[] uvScaleOffsetList = new Vector4[nArrayLength];
-    protected static Vector4[] _ClipRectList = new Vector4[nArrayLength];
-    protected static Vector4[] _TiledCountList = new Vector4[nArrayLength];
-    protected int nSliceCount = 0;
-    protected int nTiledSliceCount = 0;
-
-    Vector3[] m_worldCornors = new Vector3[4];
     private enum SlicePosition : uint
     {
         Center = 0,
@@ -38,23 +35,9 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
         Size,
     }
 
-    // Use this for initialization
-    protected virtual void Start()
+    public static void UpdateMask(Image mImage,Material mMat)
     {
-
-    }
-
-    protected void UpdateMask()
-    {
-        if (m_materialProperty == null)
-            m_materialProperty = new MaterialPropertyBlock();
-
-        if (_ClipRectList == null || _ClipRectList.Length < nArrayLength)
-        {
-            _ClipRectList = new Vector4[nArrayLength];
-            uvScaleOffsetList = new Vector4[nArrayLength];
-            _TiledCountList = new Vector4[nArrayLength];
-        }
+        m_mask = mImage;
 
         nSliceCount = 0;
         nTiledSliceCount = 0;
@@ -67,20 +50,7 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
 
         if (m_mask == null || m_mask.sprite == null)
         {
-            m_materialProperty.SetFloat("nSliceCount", nSliceCount);
-            m_materialProperty.SetFloat("nTiledSliceCount", nTiledSliceCount);
-            m_materialProperty.SetVectorArray("_ClipRect", _ClipRectList);
-            m_materialProperty.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
-            m_materialProperty.SetVectorArray("_TiledCount", _TiledCountList);
-
-            if (m_mask && m_mask.sprite)
-            {
-                m_materialProperty.SetTexture("_AlphaMask", m_mask.sprite.texture);
-            }
-            else
-            {
-                m_materialProperty.SetTexture("_AlphaMask", Texture2D.whiteTexture);
-            }
+            
         }
         else
         {
@@ -96,17 +66,48 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
             {
                 UpdateSimpleSprite();
             }
-
-            m_materialProperty.SetFloat("nSliceCount", nSliceCount);
-            m_materialProperty.SetFloat("nTiledSliceCount", nTiledSliceCount);
-            m_materialProperty.SetVectorArray("_ClipRect", _ClipRectList);
-            m_materialProperty.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
-            m_materialProperty.SetVectorArray("_TiledCount", _TiledCountList);
-            m_materialProperty.SetTexture("_AlphaMask", m_mask.sprite.texture);
         }
+
+        UpdateMat(mMat);
     }
 
-    private Bounds maskBounds
+    public static void UpdateMask(Image mImage, MaterialPropertyBlock mMat)
+    {
+        m_mask = mImage;
+
+        nSliceCount = 0;
+        nTiledSliceCount = 0;
+        for (int i = 0; i < _ClipRectList.Length; i++)
+        {
+            _ClipRectList[i] = Vector4.zero;
+            uvScaleOffsetList[i] = Vector4.zero;
+            _TiledCountList[i] = Vector4.zero;
+        }
+
+        if (m_mask == null || m_mask.sprite == null)
+        {
+
+        }
+        else
+        {
+            if (m_mask.type == Image.Type.Sliced)
+            {
+                UpdateSliceSprite();
+            }
+            else if (m_mask.type == Image.Type.Tiled)
+            {
+                UpdateTiledSprite();
+            }
+            else
+            {
+                UpdateSimpleSprite();
+            }
+        }
+
+        UpdateMat(mMat);
+    }
+
+    private static Bounds maskBounds
     {
         get
         {
@@ -118,7 +119,7 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
         }
     }
 
-    private Vector2 maskPivot
+    private static Vector2 maskPivot
     {
         get
         {
@@ -126,7 +127,7 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
         }
     }
 
-    void UpdateSimpleSprite()
+    static void UpdateSimpleSprite()
     {
         Vector2 tightOffset = new Vector2(m_mask.sprite.textureRectOffset.x / m_mask.sprite.rect.size.x, m_mask.sprite.textureRectOffset.y / m_mask.sprite.rect.size.y);
         Vector2 tightScale = new Vector2(m_mask.sprite.textureRect.size.x / m_mask.sprite.rect.size.x, m_mask.sprite.textureRect.size.y / m_mask.sprite.rect.size.y);
@@ -153,12 +154,12 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
         nSliceCount = 1;
     }
 
-    bool HasSliceBorder()
+    static bool HasSliceBorder()
     {
         return m_mask.sprite.border != Vector4.zero;
     }
 
-    void UpdateSliceSprite()
+    static void UpdateSliceSprite()
     {
         if (HasSliceBorder())
         {
@@ -179,7 +180,7 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
 
     }
 
-    void UpdateTiledSprite()
+    static void UpdateTiledSprite()
     {
         if (m_mask.sprite.textureRectOffset != Vector2.zero)
         {
@@ -199,7 +200,7 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
         }
     }
 
-    void UpdateSliceQuard(SlicePosition align)
+    static void UpdateSliceQuard(SlicePosition align)
     {
         float leftSlice = m_mask.sprite.border.x;
         float bottomSlice = m_mask.sprite.border.y;
@@ -357,7 +358,7 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
 
         float fBoundSizeX = maskBounds.size.x;
         float fBoundSizeY = maskBounds.size.y;
-
+        
         float topSliceSizeX = topSlice * m_mask.transform.lossyScale.y;
         float bottomSliceSizeX = bottomSlice * m_mask.transform.lossyScale.y;
         float rightSliceSizeX = rightSlice * m_mask.transform.lossyScale.x;
@@ -481,7 +482,7 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
 
     }
 
-    private void UpdateSimpleTiled()
+    private static void UpdateSimpleTiled()
     {
         Vector2 uvScale = new Vector2(m_mask.sprite.textureRect.size.x / m_mask.sprite.texture.width, m_mask.sprite.textureRect.size.y / m_mask.sprite.texture.height);
         Vector2 uvOffset = new Vector2(m_mask.sprite.textureRect.xMin / m_mask.sprite.texture.width, m_mask.sprite.textureRect.yMin / m_mask.sprite.texture.height);
@@ -500,7 +501,7 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
         UpdateTiledQuard(maskAreaMin, maskAreaMax, uvScale, uvOffset, fTiledWith, fTiledHeight);
     }
 
-    private void UpdateTiledQuard(Vector2 maskAreaMin, Vector2 maskAreaMax, Vector2 uvScale, Vector2 uvOffset, float fTiledWith, float fTiledHeight)
+    private static void UpdateTiledQuard(Vector2 maskAreaMin, Vector2 maskAreaMax, Vector2 uvScale, Vector2 uvOffset, float fTiledWith, float fTiledHeight)
     {
         float fTiledWidthCount = (maskAreaMax.x - maskAreaMin.x) / fTiledWith;
         float fTiledHeightCount = (maskAreaMax.y - maskAreaMin.y) / fTiledHeight;
@@ -516,6 +517,38 @@ public abstract class BaseUISoftSliceMasked : MonoBehaviour
         nTiledSliceCount = nTiledSliceCount + 1;
     }
 
+    static void UpdateMat(Material mMat)
+    {
+        m_materialProperty.SetFloat("nSliceCount", nSliceCount);
+        m_materialProperty.SetFloat("nTiledSliceCount", nTiledSliceCount);
+        m_materialProperty.SetVectorArray("_ClipRect", _ClipRectList);
+        m_materialProperty.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
+        m_materialProperty.SetVectorArray("_TiledCount", _TiledCountList);
+        if (m_mask != null && m_mask.sprite != null && m_mask.sprite.texture)
+        {
+            mMat.SetTexture("_AlphaMask", m_mask.sprite.texture);
+        }
+        else
+        {
+            mMat.SetTexture("_AlphaMask", Texture2D.whiteTexture);
+        }
+    }
 
+    static void UpdateMat(MaterialPropertyBlock mMat)
+    {
+        m_materialProperty.SetFloat("nSliceCount", nSliceCount);
+        m_materialProperty.SetFloat("nTiledSliceCount", nTiledSliceCount);
+        m_materialProperty.SetVectorArray("_ClipRect", _ClipRectList);
+        m_materialProperty.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
+        m_materialProperty.SetVectorArray("_TiledCount", _TiledCountList);
+        if (m_mask != null && m_mask.sprite != null && m_mask.sprite.texture)
+        {
+            mMat.SetTexture("_AlphaMask", m_mask.sprite.texture);
+        }
+        else
+        {
+            mMat.SetTexture("_AlphaMask", Texture2D.whiteTexture);
+        }
+    }
 
 }

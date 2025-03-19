@@ -1,15 +1,18 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(ParticleSystem))]
 [ExecuteAlways]
 [DisallowMultipleComponent]
-public class CustomerUIParticleForSliceMask : BaseUISoftSliceMasked
+public class CustomerUIParticleForSliceMask:MonoBehaviour
 {
+    [SerializeField] private Image m_image_mask;
+    [SerializeField] private RawImage m_rawImage_mask;
     private ParticleSystemRenderer m_ParticleRenderer;
     public Material m_OriginalMmaterial;
+    private MaterialPropertyBlock m_materialProperty;
 
-    // Use this for initialization
-    protected override void Start()
+    void Start()
     {
         m_ParticleRenderer = GetComponent<ParticleSystemRenderer>();
         m_ParticleRenderer.sharedMaterial = m_OriginalMmaterial;
@@ -19,6 +22,7 @@ public class CustomerUIParticleForSliceMask : BaseUISoftSliceMasked
         m_ParticleRenderer.SetPropertyBlock(m_materialProperty);
 
         CheckMaterialParma();
+        UpdateMask();
     }
 
     private void CheckMaterialParma()
@@ -30,11 +34,19 @@ public class CustomerUIParticleForSliceMask : BaseUISoftSliceMasked
     void LateUpdate()
     {
         UpdateMask();
-        UpdateSelf();
     }
 
-    void UpdateSelf()
+    void UpdateMask()
     {
+        if (m_image_mask != null)
+        {
+            StaticImageSliceMaskFunc.UpdateMask(m_image_mask, m_materialProperty);
+        }
+        else
+        {
+            StaticRawImageMaskFunc.UpdateMask(m_rawImage_mask, m_materialProperty);
+        }
+
         m_ParticleRenderer.SetPropertyBlock(m_materialProperty);
     }
 
