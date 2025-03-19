@@ -1,14 +1,15 @@
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
 [ExecuteAlways]
 [RequireComponent(typeof(RawImage))]
 [DisallowMultipleComponent]
-public class CustomerUIRawImageForSliceMask : BaseUISoftSliceMasked
+public class CustomerUIRawImageMask : BaseUIRawImageMasked
 {
     [SerializeField] private Material m_CommonMat;
     private RawImage mImage;
-
+    private Image;
     private Material mMat = null;
     protected override void Start()
     {
@@ -36,12 +37,16 @@ public class CustomerUIRawImageForSliceMask : BaseUISoftSliceMasked
 
     void UpdateSelf()
     {
-        mMat.SetFloat("nSliceCount", nSliceCount);
-        mMat.SetFloat("nTiledSliceCount", nTiledSliceCount);
-        mMat.SetVectorArray("_SliceClipRect", _ClipRectList);
-        mMat.SetVectorArray("_SliceAlphaMask_ST", uvScaleOffsetList);
-        mMat.SetVectorArray("_TiledCount", _TiledCountList);
-        mMat.SetTexture("_MyAlphaMask", m_mask.mainTexture);
+        mMat.SetVector("_ClipRect", _ClipRect);
+        mMat.SetVector("_AlphaMask_ST", uvScaleOffset);
+        if (m_mask && m_mask.texture)
+        {
+            mMat.SetTexture("_AlphaMask", m_mask.texture);
+        }
+        else
+        {
+            mMat.SetTexture("_AlphaMask", Texture2D.whiteTexture);
+        }
     }
 
 }
