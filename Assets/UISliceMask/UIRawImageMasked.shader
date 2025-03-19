@@ -71,8 +71,7 @@ Shader "Customer/UI/UIRawImageMasked"
                 float2 texcoord  : TEXCOORD0;
                 float4 worldPosition : TEXCOORD1;
 
-                float2 mask_min_uv : TEXCOORD2;
-                float2 mask_max_uv : TEXCOORD3;
+                float2 mask_uv : TEXCOORD2;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
             
@@ -97,7 +96,10 @@ Shader "Customer/UI/UIRawImageMasked"
 			    float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
                 OUT.worldPos = worldPos.xyz;
 
-                
+                float mask_u = (worldPos.x -_ClipRect[0]) /(_ClipRect[2] - _ClipRect[0]);
+                Float mask_v = (worldPos.y -_ClipRect[1]) /(_ClipRect[3] - _ClipRect[1]);
+
+                OUT.mask_uv = float2(mask_u, mask_v)
                 
                 OUT.color = v.color * _Color;
                 return OUT;
@@ -110,7 +112,8 @@ Shader "Customer/UI/UIRawImageMasked"
                 IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
                 
                 fixed4 color = IN.color * (tex2D(_MainTex, IN.texcoord));
-                
+                float  mask_alpha = tex2D(_AlphaMask, IN.texcoord)
+
                 float fMaskAlpha = GetMakAlpha(IN.worldPos);
                 color.a *= fMaskAlpha;
                 color.rgb *= color.a;
