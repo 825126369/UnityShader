@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [ExecuteAlways]
-[RequireComponent(typeof(Image))]
+[RequireComponent(typeof(MaskableGraphic))]
 [DisallowMultipleComponent]
 public class CustomerUIImageForSliceMask : MonoBehaviour
 {
@@ -12,9 +12,16 @@ public class CustomerUIImageForSliceMask : MonoBehaviour
     [SerializeField] private Material m_CommonMat;
 
     private Material mMat = null;
+    private Image mImage;
+    private RawImage mRawImage;
     void Start()
     {
-        var mImage = GetComponent<MaskableGraphic>();
+        mImage = GetComponent<Image>();
+        if(mImage == null)
+        {
+            mRawImage = GetComponent<RawImage>();
+        }
+        
         if (m_CommonMat != null)
         {
             mMat = m_CommonMat;
@@ -54,6 +61,15 @@ public class CustomerUIImageForSliceMask : MonoBehaviour
         else
         {
             StaticRawImageMaskFunc.UpdateMask(m_rawImage_mask, mMat);
+        }
+
+        if (mImage != null)
+        {
+            mMat.SetTexture("_MainTex", mImage.sprite.texture);
+        }
+        else
+        {
+            mMat.SetTexture("_MainTex", mRawImage.texture);
         }
     }
 

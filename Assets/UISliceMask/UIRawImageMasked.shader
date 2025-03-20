@@ -79,7 +79,7 @@ Shader "Customer/UI/UIRawImageMasked"
             fixed4 _Color;
             float4 _MainTex_ST;
             
-			sampler2D _MyAlphaMask;
+			sampler2D _AlphaMask;
 			float4 _AlphaMask_ST;
 			float4 _ClipRect;
             
@@ -94,13 +94,10 @@ Shader "Customer/UI/UIRawImageMasked"
                 OUT.texcoord = TRANSFORM_TEX(v.texcoord.xy, _MainTex);
                 
 			    float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
-                OUT.worldPos = worldPos.xyz;
-
                 float mask_u = (worldPos.x -_ClipRect[0]) /(_ClipRect[2] - _ClipRect[0]);
                 Float mask_v = (worldPos.y -_ClipRect[1]) /(_ClipRect[3] - _ClipRect[1]);
 
-                OUT.mask_uv = float2(mask_u, mask_v)
-                
+                OUT.mask_uv = float2(mask_u, mask_v);
                 OUT.color = v.color * _Color;
                 return OUT;
             }
@@ -112,10 +109,13 @@ Shader "Customer/UI/UIRawImageMasked"
                 IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
                 
                 fixed4 color = IN.color * (tex2D(_MainTex, IN.texcoord));
-                float  mask_alpha = tex2D(_AlphaMask, IN.texcoord)
-
-                float fMaskAlpha = GetMakAlpha(IN.worldPos);
-                color.a *= fMaskAlpha;
+                float mask_alpha = tex2D(_AlphaMask, IN.mask_uv).a;
+                if ((IN.mask_uv.x < 0 || IN.mask_uv.x > 1 || IN.mask_uv.y < 0 || IN.mask_uv.y > 1))
+                {
+                    mask_alpha = 0;
+                }
+                
+                color.a *= mask_alpha;
                 color.rgb *= color.a;
                 
                 #ifdef UNITY_UI_ALPHACLIP
