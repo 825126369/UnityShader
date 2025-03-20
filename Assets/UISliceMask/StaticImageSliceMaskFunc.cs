@@ -135,9 +135,6 @@ public static class StaticImageSliceMaskFunc
         Vector2 uvScale = new Vector2(m_mask.sprite.textureRect.size.x / m_mask.sprite.texture.width, m_mask.sprite.textureRect.size.y / m_mask.sprite.texture.height);
         Vector2 uvOffset = new Vector2(m_mask.sprite.textureRect.xMin / m_mask.sprite.texture.width, m_mask.sprite.textureRect.yMin / m_mask.sprite.texture.height);
 
-        m_mask.rectTransform.GetWorldCorners(m_worldCornors);
-        Vector4 bounds = new Vector4(m_worldCornors[0].x, m_worldCornors[0].y, m_worldCornors[2].x, m_worldCornors[2].y);
-
         Vector2 maskSize = new Vector2(maskBounds.size.x, maskBounds.size.y);
         Vector2 maskPos = new Vector2(m_mask.transform.position.x, m_mask.transform.position.y);
         Vector2 offsetPosCoef = Vector2.one * 0.5f - maskPivot;

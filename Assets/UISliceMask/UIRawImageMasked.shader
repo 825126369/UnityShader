@@ -13,6 +13,8 @@ Shader "Customer/UI/UIRawImageMasked"
         
         _ColorMask ("Color Mask", Float) = 15
         [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
+
+        _ClipRect("_ClipRect", Vector) = (0,0,0,0)
     }
 
     SubShader
@@ -94,11 +96,13 @@ Shader "Customer/UI/UIRawImageMasked"
                 OUT.texcoord = TRANSFORM_TEX(v.texcoord.xy, _MainTex);
                 
 			    float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
-                float mask_u = (worldPos.x -_ClipRect[0]) /(_ClipRect[2] - _ClipRect[0]);
-                Float mask_v = (worldPos.y -_ClipRect[1]) /(_ClipRect[3] - _ClipRect[1]);
+                float mask_u = (worldPos.x -_ClipRect.x) / _ClipRect[2];
+                float mask_v = (worldPos.y -_ClipRect.y) / _ClipRect[3];
 
                 OUT.mask_uv = float2(mask_u, mask_v);
+                OUT.mask_uv = TRANSFORM_TEX(OUT.mask_uv, _AlphaMask);
                 OUT.color = v.color * _Color;
+
                 return OUT;
             }
             
@@ -114,7 +118,7 @@ Shader "Customer/UI/UIRawImageMasked"
                 {
                     mask_alpha = 0;
                 }
-                
+
                 color.a *= mask_alpha;
                 color.rgb *= color.a;
                 

@@ -32,7 +32,15 @@ public class CustomerUIImageForSliceMask : MonoBehaviour
         }
 
         UpdateMask();
-        mImage.material = mMat;
+
+        if (mImage != null)
+        {
+            mImage.material = mMat;
+        }
+        else
+        {
+            mRawImage.material = mMat;
+        }
     }
 
     void LateUpdate()
