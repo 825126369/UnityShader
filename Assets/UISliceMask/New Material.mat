@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: New Material
-  m_Shader: {fileID: 4800000, guid: b49ed519b2b6d6541b318e4c66d6c314, type: 3}
+  m_Shader: {fileID: 4800000, guid: 16c375a1d5a304142a54e86c36dbcccb, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -91,6 +91,7 @@ Material:
     - nSliceCount: 1
     - nTiledSliceCount: 0
     m_Colors:
+    - _ClipRect: {r: -25.660015, g: -24.660015, b: 51.32003, a: 51.32003}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
