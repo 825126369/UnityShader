@@ -14,7 +14,7 @@
         _ColorMask ("Color Mask", Float) = 15
         [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
         
-	    _MyAlphaMask ("AlphaMask Texture", 2D) = "white" {}
+	    _AlphaMask ("AlphaMask Texture", 2D) = "white" {}
         nSliceCount ("nSliceCount", Float) = 0
         nTiledSliceCount ("nTiledSliceCount", Float) = 0
     }
@@ -82,7 +82,7 @@
             fixed4 _Color;
             float4 _MainTex_ST;
             
-			sampler2D _MyAlphaMask;
+			sampler2D _AlphaMask;
 			float4 _SliceAlphaMask_ST[12];
 			float4 _SliceClipRect[12];
             int nSliceCount;
@@ -123,7 +123,7 @@
 					{
 						fixed2 maskUV0 = (worldPos.xy - _SliceClipRect[i].xy) / (_SliceClipRect[i].zw - _SliceClipRect[i].xy);
 						fixed2 maskUV1 = maskUV0 * _SliceAlphaMask_ST[i].xy + _SliceAlphaMask_ST[i].zw;
-						fAlpha = tex2D(_MyAlphaMask, maskUV1).a;
+						fAlpha = tex2D(_AlphaMask, maskUV1).a;
 					}
 				}
 				
@@ -140,7 +140,7 @@
 						
 						maskUV0 = fixed2(frac(maskUV0.x), frac(maskUV0.y));
 						fixed2 maskUV1 = maskUV0 * _SliceAlphaMask_ST[i].xy + _SliceAlphaMask_ST[i].zw;
-						fAlpha = tex2D(_MyAlphaMask, maskUV1).a;
+						fAlpha = tex2D(_AlphaMask, maskUV1).a;
 					}
 				}
                 

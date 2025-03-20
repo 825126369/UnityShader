@@ -5,11 +5,10 @@ public static class StaticImageSliceMaskFunc
 {
     static Image m_mask;
     static readonly Vector3[] m_worldCornors = new Vector3[4];
-    static readonly MaterialPropertyBlock m_materialProperty = new MaterialPropertyBlock();
     const int nArrayLength = 12;
-    static Vector4[] uvScaleOffsetList = new Vector4[nArrayLength];
-    static Vector4[] _ClipRectList = new Vector4[nArrayLength];
-    static Vector4[] _TiledCountList = new Vector4[nArrayLength];
+    static readonly Vector4[] uvScaleOffsetList = new Vector4[nArrayLength];
+    static readonly Vector4[] _ClipRectList = new Vector4[nArrayLength];
+    static readonly Vector4[] _TiledCountList = new Vector4[nArrayLength];
     static int nSliceCount = 0;
     static int nTiledSliceCount = 0;
 
@@ -516,11 +515,11 @@ public static class StaticImageSliceMaskFunc
 
     static void UpdateMat(Material mMat)
     {
-        m_materialProperty.SetFloat("nSliceCount", nSliceCount);
-        m_materialProperty.SetFloat("nTiledSliceCount", nTiledSliceCount);
-        m_materialProperty.SetVectorArray("_ClipRect", _ClipRectList);
-        m_materialProperty.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
-        m_materialProperty.SetVectorArray("_TiledCount", _TiledCountList);
+        mMat.SetFloat("nSliceCount", nSliceCount);
+        mMat.SetFloat("nTiledSliceCount", nTiledSliceCount);
+        mMat.SetVectorArray("_SliceClipRect", _ClipRectList);
+        mMat.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
+        mMat.SetVectorArray("_TiledCount", _TiledCountList);
         if (m_mask != null && m_mask.sprite != null && m_mask.sprite.texture)
         {
             mMat.SetTexture("_AlphaMask", m_mask.sprite.texture);
@@ -533,11 +532,12 @@ public static class StaticImageSliceMaskFunc
 
     static void UpdateMat(MaterialPropertyBlock mMat)
     {
-        m_materialProperty.SetFloat("nSliceCount", nSliceCount);
-        m_materialProperty.SetFloat("nTiledSliceCount", nTiledSliceCount);
-        m_materialProperty.SetVectorArray("_ClipRect", _ClipRectList);
-        m_materialProperty.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
-        m_materialProperty.SetVectorArray("_TiledCount", _TiledCountList);
+        mMat.SetFloat("nSliceCount", nSliceCount);
+        mMat.SetFloat("nTiledSliceCount", nTiledSliceCount);
+        mMat.SetVectorArray("_TiledCount", _TiledCountList);
+
+        mMat.SetVectorArray("_SliceClipRect", _ClipRectList);
+        mMat.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
         if (m_mask != null && m_mask.sprite != null && m_mask.sprite.texture)
         {
             mMat.SetTexture("_AlphaMask", m_mask.sprite.texture);
