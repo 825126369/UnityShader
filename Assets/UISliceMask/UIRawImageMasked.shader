@@ -70,8 +70,7 @@ Shader "Customer/UI/UIRawImageMasked"
                 fixed4 color    : COLOR;
                 float2 texcoord  : TEXCOORD0;
                 float4 worldPosition : TEXCOORD1;
-
-                float2 mask_uv : TEXCOORD2;
+                half2 maskTexcoord : TEXCOORD2;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
             
@@ -79,9 +78,8 @@ Shader "Customer/UI/UIRawImageMasked"
             fixed4 _Color;
             float4 _MainTex_ST;
             
-			sampler2D _AlphaMask;
-			float4 _AlphaMask_ST;
-			float4 _ClipRect;
+			sampler2D _Z_AlphaMask;
+			float4 _Z_ClipRect;
             
             v2f vert(appdata_t v)
             {
@@ -89,14 +87,13 @@ Shader "Customer/UI/UIRawImageMasked"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
                 float4 vPosition = UnityObjectToClipPos(v.vertex);
-                OUT.worldPosition = v.vertex;
+                //OUT.worldPosition = v.vertex;
                 OUT.vertex = vPosition;            
                 OUT.texcoord = TRANSFORM_TEX(v.texcoord.xy, _MainTex);
-                
-			    float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
-                float2 mask_uv = (worldPos.xy - _ClipRect.xy) / _ClipRect.zw;
-                OUT.mask_uv = mask_uv;
                 OUT.color = v.color * _Color;
+
+			    float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
+                OUT.maskTexcoord = (worldPos.xy - _Z_ClipRect.xy) / _Z_ClipRect.zw;
 
                 return OUT;
             }
@@ -108,12 +105,12 @@ Shader "Customer/UI/UIRawImageMasked"
                 IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
                 
                 fixed4 color = IN.color * (tex2D(_MainTex, IN.texcoord));
-                float mask_alpha = tex2D(_AlphaMask, IN.mask_uv).a;
                 // if ((IN.mask_uv.x < 0 || IN.mask_uv.x > 1 || IN.mask_uv.y < 0 || IN.mask_uv.y > 1))
                 // {
-                //     mask_alpha = 0;
+                //     color.a = 0;
                 // }
-
+                
+                float mask_alpha = tex2D(_Z_AlphaMask, IN.maskTexcoord).a;
                 color.a *= mask_alpha;
                 color.rgb *= color.a;
                 

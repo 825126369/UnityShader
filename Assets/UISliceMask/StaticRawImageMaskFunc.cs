@@ -44,29 +44,27 @@ public static class StaticRawImageMaskFunc
 
     static void UpdateMat(Material mMat)
     {
-        mMat.SetVector("_ClipRect", _ClipRect);
-        mMat.SetVector("_AlphaMask_ST", uvScaleOffset);
+        mMat.SetVector("_Z_ClipRect", _ClipRect);
         if (m_mask && m_mask.texture)
         {
-            mMat.SetTexture("_AlphaMask", m_mask.texture);
+            mMat.SetTexture("_Z_AlphaMask", m_mask.texture);
         }
         else
         {
-            mMat.SetTexture("_AlphaMask", Texture2D.whiteTexture);
+            mMat.SetTexture("_Z_AlphaMask", Texture2D.whiteTexture);
         }
     }
 
     static void UpdateMat(MaterialPropertyBlock mMat)
     {
-        mMat.SetVector("_ClipRect", _ClipRect);
-        mMat.SetVector("_AlphaMask_ST", uvScaleOffset);
+        mMat.SetVector("_Z_ClipRect", _ClipRect);
         if (m_mask && m_mask.texture)
         {
-            mMat.SetTexture("_AlphaMask", m_mask.texture);
+            mMat.SetTexture("_Z_AlphaMask", m_mask.texture);
         }
         else
         {
-            mMat.SetTexture("_AlphaMask", Texture2D.whiteTexture);
+            mMat.SetTexture("_Z_AlphaMask", Texture2D.whiteTexture);
         }
     }
 
