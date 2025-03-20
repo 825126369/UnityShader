@@ -48,7 +48,7 @@
         
         Pass
         {
-            Name "CustomerUIImageSliceMasked"
+            Name "UIImageSliceMasked"
         CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -157,7 +157,6 @@
                 float fMaskAlpha = GetMakAlpha(IN.worldPos);
                 color.a *= fMaskAlpha;
                 color.rgb *= color.a;
-
                 
                 #ifdef UNITY_UI_ALPHACLIP
                 clip (color.a - 0.001);

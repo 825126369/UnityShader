@@ -519,7 +519,7 @@ public static class StaticImageSliceMaskFunc
         mMat.SetFloat("nTiledSliceCount", nTiledSliceCount);
         mMat.SetVectorArray("_TiledCount", _TiledCountList);
         mMat.SetVectorArray("_SliceClipRect", _ClipRectList);
-        mMat.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
+        mMat.SetVectorArray("_SliceAlphaMask_ST", uvScaleOffsetList);
 
         if (m_mask != null && m_mask.sprite != null && m_mask.sprite.texture)
         {
@@ -537,7 +537,7 @@ public static class StaticImageSliceMaskFunc
         mMat.SetFloat("nTiledSliceCount", nTiledSliceCount);
         mMat.SetVectorArray("_TiledCount", _TiledCountList);
         mMat.SetVectorArray("_SliceClipRect", _ClipRectList);
-        mMat.SetVectorArray("_AlphaMask_ST", uvScaleOffsetList);
+        mMat.SetVectorArray("_SliceAlphaMask_ST", uvScaleOffsetList);
 
         if (m_mask != null && m_mask.sprite != null && m_mask.sprite.texture)
         {

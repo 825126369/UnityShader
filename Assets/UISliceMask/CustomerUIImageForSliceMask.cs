@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,7 +21,15 @@ public class CustomerUIImageForSliceMask : MonoBehaviour
             mRawImage = GetComponent<RawImage>();
         }
         
-        if (m_CommonMat != null)
+        if(mImage != null && mImage.material != null && mImage.material != mImage.defaultMaterial)
+        {
+            mMat = mImage.material;
+        }
+        else if(mRawImage != null && mRawImage.material != null && mRawImage.material != mRawImage.defaultMaterial)
+        {
+            mMat = mRawImage.material;
+        }
+        else if (m_CommonMat != null)
         {
             mMat = m_CommonMat;
         }
@@ -70,15 +77,6 @@ public class CustomerUIImageForSliceMask : MonoBehaviour
         {
             StaticRawImageMaskFunc.UpdateMask(m_rawImage_mask, mMat);
         }
-
-        //if (mImage != null)
-        //{
-        //    mMat.SetTexture("_MainTex", mImage.sprite.texture);
-        //}
-        //else
-        //{
-        //    mMat.SetTexture("_MainTex", mRawImage.texture);
-        //}
     }
 
 }
