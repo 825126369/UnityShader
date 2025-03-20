@@ -85,10 +85,9 @@
 			sampler2D _AlphaMask;
 			float4 _SliceAlphaMask_ST[12];
 			float4 _SliceClipRect[12];
-            int nSliceCount;
-            
-            int nTiledSliceCount;
             float2 _TiledCount[12];
+            int nSliceCount;
+            int nTiledSliceCount;
             
             v2f vert(appdata_t v)
             {

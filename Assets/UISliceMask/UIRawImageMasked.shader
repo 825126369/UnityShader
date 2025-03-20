@@ -96,8 +96,8 @@ Shader "Customer/UI/UIRawImageMasked"
                 OUT.texcoord = TRANSFORM_TEX(v.texcoord.xy, _MainTex);
                 
 			    float3 worldPos = mul(unity_ObjectToWorld, v.vertex);
-                float mask_u = (worldPos.x -_ClipRect.x) / _ClipRect[2];
-                float mask_v = (worldPos.y -_ClipRect.y) / _ClipRect[3];
+                float mask_u = (worldPos.x -_ClipRect.x) / _ClipRect.z;
+                float mask_v = (worldPos.y -_ClipRect.y) / _ClipRect.w;
 
                 OUT.mask_uv = float2(mask_u, mask_v);
                 OUT.mask_uv = TRANSFORM_TEX(OUT.mask_uv, _AlphaMask);

@@ -71,14 +71,14 @@ public class CustomerUIImageForSliceMask : MonoBehaviour
             StaticRawImageMaskFunc.UpdateMask(m_rawImage_mask, mMat);
         }
 
-        if (mImage != null)
-        {
-            mMat.SetTexture("_MainTex", mImage.sprite.texture);
-        }
-        else
-        {
-            mMat.SetTexture("_MainTex", mRawImage.texture);
-        }
+        //if (mImage != null)
+        //{
+        //    mMat.SetTexture("_MainTex", mImage.sprite.texture);
+        //}
+        //else
+        //{
+        //    mMat.SetTexture("_MainTex", mRawImage.texture);
+        //}
     }
 
 }
