@@ -112,8 +112,7 @@ public static class StaticImageSliceMaskFunc
         {
             m_mask.rectTransform.GetWorldCorners(m_worldCornors);
             Bounds bounds = new Bounds();
-            bounds.min = m_worldCornors[0];
-            bounds.max = m_worldCornors[2];
+            bounds.SetMinMax(m_worldCornors[0], m_worldCornors[2]);
             return bounds;
         }
     }

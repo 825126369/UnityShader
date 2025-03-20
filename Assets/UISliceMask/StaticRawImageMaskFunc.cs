@@ -30,29 +30,15 @@ public static class StaticRawImageMaskFunc
         {
             m_mask.rectTransform.GetWorldCorners(m_worldCornors);
             Bounds bounds = new Bounds();
-            bounds.min = m_worldCornors[0];
-            bounds.max = m_worldCornors[2];
+            bounds.SetMinMax(m_worldCornors[0], m_worldCornors[2]);
             return bounds;
-        }
-    }
-
-    private static Vector2 maskPivot
-    {
-        get
-        {
-            return m_mask.rectTransform.pivot;
         }
     }
 
     private static void UpdateSimpleSprite()
     {
-        Vector2 maskSize = new Vector2(maskBounds.size.x, maskBounds.size.y);
-        Vector2 maskPos = new Vector2(m_mask.transform.position.x, m_mask.transform.position.y);
-        Vector2 offsetPosCoef = Vector2.one * 0.5f - maskPivot;
-        maskPos = maskPos + new Vector2(maskSize.x * offsetPosCoef.x, maskSize.y * offsetPosCoef.y);
-
-        Vector2 maskAreaMin = new Vector3(maskPos.x - maskSize.x / 2, maskPos.y - maskSize.y / 2);
-        _ClipRect = new Vector4(maskAreaMin.x, maskAreaMin.y, maskSize.x, maskSize.y);
+        Bounds mBounds = maskBounds;
+        _ClipRect = new Vector4(mBounds.min.x, mBounds.min.y, mBounds.size.x, mBounds.size.y);
         uvScaleOffset = new Vector4(1, 1, 0, 0);
     }
 
