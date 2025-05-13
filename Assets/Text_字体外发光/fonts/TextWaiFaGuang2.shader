@@ -80,8 +80,8 @@ Shader "Customer/UI/TextWaiFaGuang2"
                 float4 worldPosition : TEXCOORD1;
                 float4  mask : TEXCOORD2;
                 float2 uv[9]: TEXCOORD3;
-                float3 worldvertpos : TEXCOORD12;
-                float3 normal : TEXCOORD13;
+                // float3 worldvertpos : TEXCOORD12;
+                // float3 normal : TEXCOORD13;
                 
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -127,8 +127,8 @@ Shader "Customer/UI/TextWaiFaGuang2"
                     }
                 }
 
-                OUT.worldvertpos = mul(unity_ObjectToWorld, v.vertex).xyz;
-                OUT.normal = v.normal;
+                // OUT.worldvertpos = mul(unity_ObjectToWorld, v.vertex).xyz;
+                // OUT.normal = v.normal;
                 OUT.color = v.color * _Color;
                 
                 float2 uv = OUT.texcoord;
@@ -248,15 +248,15 @@ Shader "Customer/UI/TextWaiFaGuang2"
                     0.118318, 0.147761, 0.118318,
                     0.0947416, 0.118318, 0.0947416
                 };
-
+                    
                 float4 averageColor = (0, 0, 0, 0);
-
+                    
                 int k = 0;
                 for(int i = 0; i <= 2; i++)
                 {
                     for(int j = 0; j <= 2; j++)
                     {
-                        float4 color = tex2D(_MainTex, IN.texcoord[k]);
+                        float4 color = tex2D(_MainTex, IN.uv[k]);
                         averageColor += color * weightArray[i][j];
                         k++;
                     }
@@ -290,6 +290,27 @@ Shader "Customer/UI/TextWaiFaGuang2"
                 color.rgb *= color.a;
                 color.rgb *=_AtmoColor * _AtmoColor_Strength;
                 return color;
+
+                 const float weightArray[3][3] = {
+                    0.0947416, 0.118318, 0.0947416,
+                    0.118318, 0.147761, 0.118318,
+                    0.0947416, 0.118318, 0.0947416
+                };
+                    
+                float4 averageColor = (0, 0, 0, 0);
+                    
+                int k = 0;
+                for(int i = 0; i <= 2; i++)
+                {
+                    for(int j = 0; j <= 2; j++)
+                    {
+                        float4 color = tex2D(_MainTex, IN.uv[k]);
+                        averageColor += color * weightArray[i][j];
+                        k++;
+                    }
+                }
+
+                return averageColor;
             }
         ENDCG
         }

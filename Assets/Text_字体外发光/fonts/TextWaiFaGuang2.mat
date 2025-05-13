@@ -61,8 +61,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AtmoColor_Strength: 48.3
-    - _BlurSize: 2
+    - _AtmoColor_Strength: 1.27
+    - _BlurSize: 0.85
     - _BumpScale: 1
     - _ColorMask: 15
     - _Cutoff: 0.5
@@ -76,7 +76,7 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OffsetValue: -0.2
+    - _OffsetValue: 0
     - _Parallax: 0.02
     - _Size: 11.5
     - _SmoothnessTextureChannel: 0
@@ -93,7 +93,7 @@ Material:
     - _UseUIAlphaClip: 0
     - _ZWrite: 1
     m_Colors:
-    - _AtmoColor: {r: 0.76029265, g: 1, b: 0.0990566, a: 1}
+    - _AtmoColor: {r: 0.7347826, g: 1, b: 0, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
