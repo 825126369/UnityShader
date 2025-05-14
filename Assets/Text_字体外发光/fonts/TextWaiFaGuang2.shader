@@ -211,7 +211,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
             grabPosUV.xy /= grabPosUV.w;
 
             float _BlurSizeXX =  _BlurSizeX + nIndex * _BlurSpread;
-            float _BlurSizeYY =  _BlurSizeX + nIndex * _BlurSpread;
+            float _BlurSizeYY =  _BlurSizeY + nIndex * _BlurSpread;
             return tex2D(_GrabTexture, float2(grabPosUV.x + _GrabTexture_TexelSize.x * i * _BlurSizeXX, grabPosUV.y + _GrabTexture_TexelSize.y * j * _BlurSizeYY));
         }
 
