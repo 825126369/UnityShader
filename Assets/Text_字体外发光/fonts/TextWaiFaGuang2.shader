@@ -151,7 +151,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
                 #endif
 
                 color = fragExtractBright(color);
-                color.rgb *= color.a;
+               // color.rgb *= color.a;
                 return color;
             }
         ENDCG
