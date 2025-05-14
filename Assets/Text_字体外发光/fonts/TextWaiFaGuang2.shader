@@ -49,6 +49,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
         ZWrite Off
         ZTest [unity_GUIZTestMode]
         Blend One OneMinusSrcAlpha
+       // Blend One One
         ColorMask [_ColorMask]
         
         CGINCLUDE
@@ -83,7 +84,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
 
             sampler2D _MainTex;
             fixed4 _Color;
-            fixed4 _TextureSampleAdd;
+            float4 _TextureSampleAdd;
             float4 _ClipRect;
             float4 _MainTex_ST;
             float _UIMaskSoftnessX;
@@ -93,6 +94,18 @@ Shader "Customer/UI/TextWaiFaGuang2"
             float _LuminanceThreshold;
             float4 _GlowColor;
             float _GlowPower;
+            float _BlurSizeX;
+            float _BlurSizeY;
+            float _BlurSpread;
+            fixed4 _MainTex_TexelSize;
+            sampler2D _GrabTexture;
+            float4 _GrabTexture_TexelSize;
+
+            static const float weightArray[9] = {
+		        0.05, 0.09, 0.12,
+		        0.15, 0.18, 0.15,
+		        0.12, 0.09, 0.05
+            };
 
             v2f vert(appdata_t v)
             {
@@ -120,6 +133,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
                 }
                 
                 OUT.color = v.color * _Color;
+                OUT.grabPassPosition = ComputeGrabScreenPos(OUT.vertex);
                 return OUT;
             }
 
@@ -136,45 +150,27 @@ Shader "Customer/UI/TextWaiFaGuang2"
 			    return c * val;
 		    }
 
+        float4 GRABPIXEL(float4 grabPassPosition, int i, int j, int nIndex)
+        {
+            float4 grabPosUV = UNITY_PROJ_COORD(grabPassPosition); 
+            grabPosUV.xy /= grabPosUV.w;
+
+            float _BlurSizeXX =  _BlurSizeX + nIndex * _BlurSpread;
+            float _BlurSizeYY =  _BlurSizeY + nIndex * _BlurSpread;
+            return tex2D(_GrabTexture, float2(grabPosUV.x + _GrabTexture_TexelSize.x * i * _BlurSizeXX, grabPosUV.y + _GrabTexture_TexelSize.y * j * _BlurSizeYY));
+        }
+
             float4 frag(v2f IN) : SV_Target
             {
-                const half alphaPrecision = half(0xff);
-                const half invAlphaPrecision = half(1.0/alphaPrecision);
-                IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
-
-                half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
-
-                #ifdef UNITY_UI_CLIP_RECT
-                    half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-                    color.a *= m.x * m.y;
-                #endif
-
-                #ifdef UNITY_UI_ALPHACLIP
-                    clip (color.a - 0.001);
-                #endif
-
-                color = fragExtractBright(color);
-                color *=_GlowColor * _GlowPower;
+                float4 color = GRABPIXEL(IN.grabPassPosition, 0, 0, 0);
+                //color *= _GlowColor * _GlowPower;
+                //color = fragExtractBright(color);
                 color.rgb *= color.a;
                 return color;
             }
         ENDCG
 
         CGINCLUDE
-        float _BlurSizeX;
-        float _BlurSizeY;
-        float _BlurSpread;
-        fixed4 _MainTex_TexelSize;
-        sampler2D _GrabTexture;
-        float4 _GrabTexture_TexelSize;
-
-        static const float weightArray[9] = {
-		        0.05, 0.09, 0.12,
-		        0.15, 0.18, 0.15,
-		        0.12, 0.09, 0.05
-		};
-
-
         v2f Vert_MoHu(appdata_t v)
         {
             v2f OUT;
@@ -204,16 +200,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
             OUT.grabPassPosition = ComputeGrabScreenPos(OUT.vertex);
             return OUT;
         }
-        
-        float4 GRABPIXEL(float4 grabPassPosition, int i, int j, int nIndex)
-        {
-            float4 grabPosUV = UNITY_PROJ_COORD(grabPassPosition); 
-            grabPosUV.xy /= grabPosUV.w;
-
-            float _BlurSizeXX =  _BlurSizeX + nIndex * _BlurSpread;
-            float _BlurSizeYY =  _BlurSizeY + nIndex * _BlurSpread;
-            return tex2D(_GrabTexture, float2(grabPosUV.x + _GrabTexture_TexelSize.x * i * _BlurSizeXX, grabPosUV.y + _GrabTexture_TexelSize.y * j * _BlurSizeYY));
-        }
+       
 
         float4 MoHu_Hor_All(v2f IN, int nIndex)
         {
@@ -303,22 +290,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
             
             float4 Frag_Bloom(v2f IN) : SV_Target
             {
-                const half alphaPrecision = half(0xff);
-                const half invAlphaPrecision = half(1.0/alphaPrecision);
-                IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
-
-                half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
-
-                #ifdef UNITY_UI_CLIP_RECT
-                    half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-                    color.a *= m.x * m.y;
-                #endif
-
-                #ifdef UNITY_UI_ALPHACLIP
-                    clip (color.a - 0.001);
-                #endif
-
-                color = GRABPIXEL(IN.grabPassPosition, 0, 0, 0);
+                float4 color = GRABPIXEL(IN.grabPassPosition, 0, 0, 0);
                 color.rgb *= color.a;
                 return color;
             }
@@ -395,14 +367,14 @@ Shader "Customer/UI/TextWaiFaGuang2"
             ENDCG
         }
 
-        GrabPass {}
-        Pass
-        {
-            Name "Pass Bloom"
-            CGPROGRAM
-            #pragma vertex Vert_Bloom
-            #pragma fragment Frag_Bloom
-            ENDCG
-        }
+        // GrabPass {}
+        // Pass
+        // {
+        //     Name "Pass Bloom"
+        //     CGPROGRAM
+        //     #pragma vertex Vert_Bloom
+        //     #pragma fragment Frag_Bloom
+        //     ENDCG
+        // }
     }
 }

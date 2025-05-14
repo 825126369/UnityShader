@@ -61,9 +61,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BlurSizeX: 1
-    - _BlurSizeY: 1
-    - _BlurSpread: 0.9
+    - _BlurSizeX: 2
+    - _BlurSizeY: 2
+    - _BlurSpread: 4.13
     - _BumpScale: 1
     - _ColorMask: 15
     - _Cutoff: 0.5
@@ -72,8 +72,8 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _GlowPower: 21.1
-    - _LuminanceThreshold: 2
+    - _GlowPower: 14.37
+    - _LuminanceThreshold: 2.8
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
@@ -92,5 +92,5 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _GlowColor: {r: 1, g: 0.80423534, b: 0, a: 0.30588236}
+    - _GlowColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

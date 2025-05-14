@@ -63,9 +63,9 @@ Material:
     m_Floats:
     - _AtmoColor_Strength: 5.39
     - _BlurSize: 19.35
-    - _BlurSizeX: 2.53
-    - _BlurSizeY: 2.32
-    - _BlurSpread: -0.13
+    - _BlurSizeX: 1
+    - _BlurSizeY: 1
+    - _BlurSpread: 2.91
     - _BumpScale: 1
     - _ColorMask: 15
     - _Cutoff: 0.5
@@ -76,8 +76,8 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _GlowPower: 11.55
-    - _LuminanceThreshold: 0.74
+    - _GlowPower: 3.48
+    - _LuminanceThreshold: 0
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
@@ -101,5 +101,5 @@ Material:
     - _AtmoColor: {r: 0.25652552, g: 1, b: 0, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _GlowColor: {r: 0.9923795, g: 1, b: 0.10849059, a: 1}
+    - _GlowColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
