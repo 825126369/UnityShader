@@ -15,10 +15,13 @@ Shader "Customer/UI/TextWaiFaGuang2"
 
         [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
 
-        _AtmoColor("Atmosphere Color", Color) = (0.5, 0.5, 1.0, 1)
-         _AtmoColor_Strength("_AtmoColor_Strength", Float) = 2
-         _OffsetValue("_OffsetValue", Float) = 2
-         _BlurSize("_BlurSize", Float) = 2
+        _GlowColor ("Glow Color", Color) = (1,1,1,1)
+        _GlowPower ("Glow Power", Float) = 2.0
+
+         _LuminanceThreshold ("_LuminanceThreshold", Float) = 0.5
+         _BlurSizeX("_BlurSizeX", Float) = 2
+         _BlurSizeY("_BlurSizeY", Float) = 2
+         _BlurSpread("_BlurSpread", Float) = 2
     }
 
     SubShader
@@ -47,22 +50,15 @@ Shader "Customer/UI/TextWaiFaGuang2"
         ZTest [unity_GUIZTestMode]
         Blend One OneMinusSrcAlpha
         ColorMask [_ColorMask]
-
-        Pass
-        {
-            Name "Default"
-        CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
+        
+        CGINCLUDE
             #pragma target 2.0
-
             #include "UnityCG.cginc"
             #include "UnityUI.cginc"
 
             #pragma multi_compile_local _ UNITY_UI_CLIP_RECT
             #pragma multi_compile_local _ UNITY_UI_ALPHACLIP
-
-
+            
             struct appdata_t
             {
                 float4 vertex   : POSITION;
@@ -79,10 +75,9 @@ Shader "Customer/UI/TextWaiFaGuang2"
                 float2 texcoord  : TEXCOORD0;
                 float4 worldPosition : TEXCOORD1;
                 float4  mask : TEXCOORD2;
-                float2 uv[9]: TEXCOORD3;
-                // float3 worldvertpos : TEXCOORD12;
-                // float3 normal : TEXCOORD13;
-                
+
+                float4 grabPassPosition : TEXCOORD3;
+                float2 uv[9]: TEXCOORD4;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -95,12 +90,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
             float _UIMaskSoftnessY;
             int _UIVertexColorAlwaysGammaSpace;
 
-            fixed4 _MainTex_TexelSize;
-            float4 _AtmoColor;
-            float _AtmoColor_Strength;
-            float _OffsetValue;
-            float _BlurSize;
-
+            float _LuminanceThreshold;
             v2f vert(appdata_t v)
             {
                 v2f OUT;
@@ -117,8 +107,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
                 float2 maskUV = (v.vertex.xy - clampedRect.xy) / (clampedRect.zw - clampedRect.xy);
                 OUT.texcoord = TRANSFORM_TEX(v.texcoord.xy, _MainTex);
                 OUT.mask = float4(v.vertex.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_UIMaskSoftnessX, _UIMaskSoftnessY) + abs(pixelSize.xy)));
-
-
+                
                 if (_UIVertexColorAlwaysGammaSpace)
                 {
                     if(!IsGammaSpace())
@@ -126,294 +115,276 @@ Shader "Customer/UI/TextWaiFaGuang2"
                         v.color.rgb = UIGammaToLinear(v.color.rgb);
                     }
                 }
-
-                // OUT.worldvertpos = mul(unity_ObjectToWorld, v.vertex).xyz;
-                // OUT.normal = v.normal;
-                OUT.color = v.color * _Color;
                 
-                float2 uv = OUT.texcoord;
-				int k = 0;
-				for(int i = -1; i <= 1; i++)
-				{
-					for(int j = -1; j <= 1; j++)
-					{
-						OUT.uv[k] = uv + float2(_MainTex_TexelSize.x * i ,  _MainTex_TexelSize.y * j) * _BlurSize;
-						k++;
-					}
-				}
-
+                OUT.color = v.color * _Color;
                 return OUT;
             }
 
-            float getTransparent(sampler2D MainTex, float2  uv)
+             float luminance(float4 color) 
+             { // 计算亮度
+			    return  0.2125 * color.r + 0.7154 * color.g + 0.0721 * color.b; 
+		     }
+		
+		    // 采样纹理的亮度减去亮度阈值, 小于0的值将取0
+		    float4 fragExtractBright(float4 c) 
             {
-                fixed4 result = tex2D(_MainTex, uv);
-                return result.a;
-            }
-
-            fixed4 GetFaGuangZi(v2f i)
-			{
-				fixed4 lightCol = _AtmoColor;
-				fixed4 result = tex2D(_MainTex,i.texcoord);
-				float accAlpha = 0;
-				float offsetValue = _OffsetValue;
-				int lev = 7; 
-				
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, -7));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, -6));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, -5));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, -4));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, -3));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, -2));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, -1));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, 0));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, 1));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, 2));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, 3));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, 4));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, 5));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, 6));
-					++lie;
-				}
-				for(int lie = 0 - lev; lie <= lev;)
-				{
-					accAlpha = accAlpha + getTransparent(_MainTex, i.texcoord + offsetValue*float2(lie, 7));
-					++lie;
-				}
-				        
-				fixed4 col = 1*result.a + lightCol.rgba*(1.0f - result.a);
-				col.a = result.a + accAlpha/(float)((2*lev+1)*(2*lev+1));
-				col.a = col.a*(col.a + 1);
-				return col;
-			}
-
-            float4 GetMoHuColor(v2f IN)
-            {
-                 const float weightArray[3][3] = {
-                    0.0947416, 0.118318, 0.0947416,
-                    0.118318, 0.147761, 0.118318,
-                    0.0947416, 0.118318, 0.0947416
-                };
-                    
-                float4 averageColor = (0, 0, 0, 0);
-                    
-                int k = 0;
-                for(int i = 0; i <= 2; i++)
-                {
-                    for(int j = 0; j <= 2; j++)
-                    {
-                        float4 color = tex2D(_MainTex, IN.uv[k]);
-                        averageColor += color * weightArray[i][j];
-                        k++;
-                    }
-                }
-
-                return averageColor;
-            }
+               float tt = luminance(c) - _LuminanceThreshold;
+			    float val = saturate(tt);
+			    return c * val;
+		    }
 
             float4 frag(v2f IN) : SV_Target
             {
-                // Round up the alpha color coming from the interpolator (to 1.0/256.0 steps)
-                // The incoming alpha could have numerical instability, which makes it very sensible to
-                // HDR color transparency blend, when it blends with the world's texture.
-                // const half alphaPrecision = half(0xff);
-                // const half invAlphaPrecision = half(1.0/alphaPrecision);
-                // IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
+                const half alphaPrecision = half(0xff);
+                const half invAlphaPrecision = half(1.0/alphaPrecision);
+                IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
 
-                // half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
+                half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
 
-                // #ifdef UNITY_UI_CLIP_RECT
-                // half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-                // color.a *= m.x * m.y;
-                // #endif
+                #ifdef UNITY_UI_CLIP_RECT
+                    half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
+                    color.a *= m.x * m.y;
+                #endif
 
-                // #ifdef UNITY_UI_ALPHACLIP
-                // clip (color.a - 0.001);
-                // #endif
+                #ifdef UNITY_UI_ALPHACLIP
+                    clip (color.a - 0.001);
+                #endif
 
-                // color.rgb *= color.a;
-                float4 color = GetMoHuColor(IN);
+                color = fragExtractBright(color);
                 color.rgb *= color.a;
-                color.rgb *=_AtmoColor * _AtmoColor_Strength;
                 return color;
-
-                 const float weightArray[3][3] = {
-                    0.0947416, 0.118318, 0.0947416,
-                    0.118318, 0.147761, 0.118318,
-                    0.0947416, 0.118318, 0.0947416
-                };
-                    
-                float4 averageColor = (0, 0, 0, 0);
-                    
-                int k = 0;
-                for(int i = 0; i <= 2; i++)
-                {
-                    for(int j = 0; j <= 2; j++)
-                    {
-                        float4 color = tex2D(_MainTex, IN.uv[k]);
-                        averageColor += color * weightArray[i][j];
-                        k++;
-                    }
-                }
-
-                return averageColor;
             }
         ENDCG
+
+        CGINCLUDE
+        float _BlurSizeX;
+        float _BlurSizeY;
+        float _BlurSpread;
+        fixed4 _MainTex_TexelSize;
+        sampler2D _GrabTexture;
+        float4 _GrabTexture_TexelSize;
+
+        static const float weightArray[9] = {
+		        0.05, 0.09, 0.12,
+		        0.15, 0.18, 0.15,
+		        0.12, 0.09, 0.05
+		};
+
+
+        v2f Vert_MoHu(appdata_t v)
+        {
+            v2f OUT;
+            UNITY_SETUP_INSTANCE_ID(v);
+            UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+            float4 vPosition = UnityObjectToClipPos(v.vertex);
+            OUT.worldPosition = v.vertex;
+            OUT.vertex = vPosition;
+                    
+            float2 pixelSize = vPosition.w;
+            pixelSize /= float2(1, 1) * abs(mul((float2x2)UNITY_MATRIX_P, _ScreenParams.xy));
+
+            float4 clampedRect = clamp(_ClipRect, -2e10, 2e10);
+            float2 maskUV = (v.vertex.xy - clampedRect.xy) / (clampedRect.zw - clampedRect.xy);
+            OUT.texcoord = TRANSFORM_TEX(v.texcoord.xy, _MainTex);
+            OUT.mask = float4(v.vertex.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_UIMaskSoftnessX, _UIMaskSoftnessY) + abs(pixelSize.xy)));
+                
+            if (_UIVertexColorAlwaysGammaSpace)
+            {
+                if(!IsGammaSpace())
+                {
+                    v.color.rgb = UIGammaToLinear(v.color.rgb);
+                }
+            }
+              
+            OUT.color = v.color * _Color;
+            OUT.grabPassPosition = ComputeGrabScreenPos(OUT.vertex);
+            return OUT;
+        }
+        
+        float4 GRABPIXEL(float4 grabPassPosition, int i, int j, int nIndex)
+        {
+            float4 grabPosUV = UNITY_PROJ_COORD(grabPassPosition); 
+            grabPosUV.xy /= grabPosUV.w;
+
+            float _BlurSizeXX =  _BlurSizeX + nIndex * _BlurSpread;
+            float _BlurSizeYY =  _BlurSizeX + nIndex * _BlurSpread;
+            return tex2D(_GrabTexture, float2(grabPosUV.x + _GrabTexture_TexelSize.x * i * _BlurSizeXX, grabPosUV.y + _GrabTexture_TexelSize.y * j * _BlurSizeYY));
         }
 
-        // Pass
-        // {
-        //     Name "Default2"
-        //     Tags {"LightMode" = "Always"}
-        // CGPROGRAM
-        //     #pragma vertex vert
-        //     #pragma fragment frag
-        //     #pragma target 2.0
+        float4 MoHu_Hor_All(v2f IN, int nIndex)
+        {
+            float4 averageColor = (0, 0, 0, 0);
+            for(int i = 0; i < 9; i++)
+            {
+                averageColor += GRABPIXEL(IN.grabPassPosition, i - 4, 0, nIndex) * weightArray[i];
+            }
+            
+            averageColor.rgb *= averageColor.a;
+            return averageColor;
+        }
 
-        //     #include "UnityCG.cginc"
-        //     #include "UnityUI.cginc"
+         float4 MoHu_Ver_All(v2f IN, int nIndex)
+        {
+            float4 averageColor = (0, 0, 0, 0);
+            for(int i = 0; i < 9; i++)
+            {
+                averageColor += GRABPIXEL(IN.grabPassPosition, 0, i - 4, nIndex) * weightArray[i];
+            }
+            
+            averageColor.rgb *= averageColor.a;
+            return averageColor;
+        }
+        
+        float4 Frag_Hor_MoHu1(v2f IN) : SV_Target
+        {
+            return MoHu_Hor_All(IN, 0);
+        }
 
-        //     #pragma multi_compile_local _ UNITY_UI_CLIP_RECT
-        //     #pragma multi_compile_local _ UNITY_UI_ALPHACLIP
+        float4 Frag_Ver_MoHu1(v2f IN) : SV_Target
+        {
+            return MoHu_Ver_All(IN, 0);
+        }
 
+        float4 Frag_Hor_MoHu2(v2f IN) : SV_Target
+        {
+            return MoHu_Hor_All(IN, 1);
+        }
 
-        //     struct appdata_t
-        //     {
-        //         float4 vertex   : POSITION;
-        //         float4 color    : COLOR;
-        //         float2 texcoord : TEXCOORD0;
-        //         float3 normal   : NORMAL;
-        //         UNITY_VERTEX_INPUT_INSTANCE_ID
-        //     };
+        float4 Frag_Ver_MoHu2(v2f IN) : SV_Target
+        {
+            return MoHu_Ver_All(IN, 1);
+        }
 
-        //     struct v2f
-        //     {
-        //         float4 vertex   : SV_POSITION;
-        //         fixed4 color    : COLOR;
-        //         float2 texcoord  : TEXCOORD0;
-        //         float4 worldPosition : TEXCOORD1;
-        //         float4  mask : TEXCOORD2;
+        float4 Frag_Hor_MoHu3(v2f IN) : SV_Target
+        {
+            return MoHu_Hor_All(IN, 2);
+        }
+
+        float4 Frag_Ver_MoHu3(v2f IN) : SV_Target
+        {
+            return MoHu_Ver_All(IN, 2);
+        }
+        ENDCG
+
+        CGINCLUDE
+            float4 _GlowColor;
+            float _GlowPower;
+            v2f Vert_Bloom(appdata_t v)
+            {
+                v2f OUT;
+                UNITY_SETUP_INSTANCE_ID(v);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+                float4 vPosition = UnityObjectToClipPos(v.vertex);
+                OUT.worldPosition = v.vertex;
+                OUT.vertex = vPosition;
                     
-        //         float3 worldvertpos : TEXCOORD3;
-        //         float3 normal : TEXCOORD4;
-                    
-        //         UNITY_VERTEX_OUTPUT_STEREO
-        //     };
+                float2 pixelSize = vPosition.w;
+                pixelSize /= float2(1, 1) * abs(mul((float2x2)UNITY_MATRIX_P, _ScreenParams.xy));
 
-        //     sampler2D _MainTex;
-        //     fixed4 _Color;
-        //     fixed4 _TextureSampleAdd;
-        //     float4 _ClipRect;
-        //     float4 _MainTex_ST;
-        //     float _UIMaskSoftnessX;
-        //     float _UIMaskSoftnessY;
-        //     int _UIVertexColorAlwaysGammaSpace;
-
-        //     uniform float4 _AtmoColor;
-        //     uniform float _Size;
-        //     uniform float _Falloff;
-        //     uniform float _Transparency;
+                float4 clampedRect = clamp(_ClipRect, -2e10, 2e10);
+                float2 maskUV = (v.vertex.xy - clampedRect.xy) / (clampedRect.zw - clampedRect.xy);
+                OUT.texcoord = TRANSFORM_TEX(v.texcoord.xy, _MainTex);
+                OUT.mask = float4(v.vertex.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_UIMaskSoftnessX, _UIMaskSoftnessY) + abs(pixelSize.xy)));
                 
-        //     v2f vert(appdata_t v)
-        //     {
-        //         v2f OUT;
-        //         UNITY_SETUP_INSTANCE_ID(v);
-        //         UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
-        //         float4 vPosition = UnityObjectToClipPos(v.vertex);
-        //         OUT.worldPosition = v.vertex;
-        //         OUT.vertex = vPosition;
-                    
-        //         float2 pixelSize = vPosition.w;
-        //         pixelSize /= float2(1, 1) * abs(mul((float2x2)UNITY_MATRIX_P, _ScreenParams.xy));
+                if (_UIVertexColorAlwaysGammaSpace)
+                {
+                    if(!IsGammaSpace())
+                    {
+                        v.color.rgb = UIGammaToLinear(v.color.rgb);
+                    }
+                }
+              
+                OUT.color = v.color * _Color;
+                OUT.grabPassPosition = ComputeGrabScreenPos(OUT.vertex);
+                return OUT;
+            }
+            
+            float4 Frag_Bloom(v2f IN) : SV_Target
+            {
+                float4 color = GRABPIXEL(IN.grabPassPosition, 0, 0, 0);
+                color.rgb *= color.a;
+                return color;
+            }
+        ENDCG
 
-        //         float4 clampedRect = clamp(_ClipRect, -2e10, 2e10);
-        //         float2 maskUV = (v.vertex.xy - clampedRect.xy) / (clampedRect.zw - clampedRect.xy);
-        //         OUT.texcoord = TRANSFORM_TEX(v.texcoord.xy, _MainTex);
-        //         OUT.mask = float4(v.vertex.xy * 2 - clampedRect.xy - clampedRect.zw, 0.25 / (0.25 * half2(_UIMaskSoftnessX, _UIMaskSoftnessY) + abs(pixelSize.xy)));
+        Pass
+        {
+            Name "Pass1"
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            ENDCG
+        }
 
+        GrabPass {}
+        Pass
+        {
+            Name "Mohu1"
 
-        //         if (_UIVertexColorAlwaysGammaSpace)
-        //         {
-        //             if(!IsGammaSpace())
-        //             {
-        //                 v.color.rgb = UIGammaToLinear(v.color.rgb);
-        //             }
-        //         }
+            CGPROGRAM
+            #pragma vertex Vert_MoHu
+            #pragma fragment Frag_Hor_MoHu1
+            ENDCG
+        }
 
-        //         OUT.worldvertpos = mul(unity_ObjectToWorld, v.vertex).xyz;
-        //         OUT.normal = v.normal;
-        //         OUT.color = v.color * _Color;
-        //         return OUT;
-        //     }
-                
-        //     float4 frag(v2f IN) : Color
-        //     {
-        //         IN.normal = normalize(IN.normal);
-        //         float3 viewdir = normalize(UnityWorldSpaceViewDir(IN.worldvertpos));
-        //         float4 color = _AtmoColor;
-                    
-        //         float tt = saturate(dot(viewdir, IN.normal));
-        //         color.a = pow(tt, _Falloff);
-        //         color.a *= _Transparency * _Color * dot(normalize(UnityWorldSpaceLightDir(IN.worldvertpos)), IN.normal);
-        //         return color;
+        GrabPass {}
+        Pass
+        {
+            Name "Mohu2"
+            CGPROGRAM
+            #pragma vertex Vert_MoHu
+            #pragma fragment Frag_Ver_MoHu1
+            ENDCG
+        }
 
-        //         return float4(1, 1, 1, 0);
-        //     }
-        // ENDCG
-        // }
+        GrabPass {}
+        Pass
+        {
+            Name "Mohu3"
+            CGPROGRAM
+            #pragma vertex Vert_MoHu
+            #pragma fragment Frag_Hor_MoHu2
+            ENDCG
+        }
+
+        GrabPass {}
+        Pass
+        {
+            Name "Mohu4"
+            CGPROGRAM
+            #pragma vertex Vert_MoHu
+            #pragma fragment Frag_Ver_MoHu2
+            ENDCG
+        }
+
+        GrabPass {}
+        Pass
+        {
+            Name "Mohu5"
+            CGPROGRAM
+            #pragma vertex Vert_MoHu
+            #pragma fragment Frag_Hor_MoHu3
+            ENDCG
+        }
+
+        GrabPass {}
+        Pass
+        {
+            Name "Mohu6"
+            CGPROGRAM
+            #pragma vertex Vert_MoHu
+            #pragma fragment Frag_Ver_MoHu3
+            ENDCG
+        }
+
+        GrabPass {}
+        Pass
+        {
+            Name "Pass Bloom"
+            CGPROGRAM
+            #pragma vertex Vert_Bloom
+            #pragma fragment Frag_Bloom
+            ENDCG
+        }
     }
 }
