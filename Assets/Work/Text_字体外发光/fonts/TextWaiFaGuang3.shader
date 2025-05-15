@@ -256,27 +256,12 @@ Shader "Customer/UI/TextWaiFaGuang3"
 
             float4 Frag_MoHu(v2f IN): SV_Target
             {
-                const half alphaPrecision = half(0xff);
-                const half invAlphaPrecision = half(1.0/alphaPrecision);
-                IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
-
-                half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
-
-                #ifdef UNITY_UI_CLIP_RECT
-                    half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-                    color.a *= m.x * m.y;
-                #endif
-
-                #ifdef UNITY_UI_ALPHACLIP
-                    clip (color.a - 0.001);
-                #endif
-
                 float weight[3] = {0.4026, 0.2442, 0.0545};
 			    float4 sum = tex2D(_MainTex, IN.uv[0]) * weight[0];
 			    for (int j = 1; j < 3; j++) 
                 {
-				    sum += tex2D(_MainTex, IN.uv[j * 2 - 1]) * weight[j];
-				    sum += tex2D(_MainTex, IN.uv[j * 2]) * weight[j];
+				    sum += GRABPIXEL(_MainTex, IN.uv[j * 2 - 1]) * weight[j];
+				    sum += GRABPIXEL(_MainTex, IN.uv[j * 2]) * weight[j];
 			    }
                 
                 sum.rgb *= sum.a;
@@ -361,9 +346,6 @@ Shader "Customer/UI/TextWaiFaGuang3"
                 #ifdef UNITY_UI_ALPHACLIP
                     clip (color.a - 0.001);
                 #endif
-                //color.rgb *= color.a;
-
-                //color = color + GRABPIXEL(IN.grabPassPosition);
                 color.rgb *= color.a;
                 return color;
             }
