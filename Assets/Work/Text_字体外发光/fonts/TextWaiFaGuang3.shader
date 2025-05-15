@@ -22,6 +22,8 @@ Shader "Customer/UI/TextWaiFaGuang3"
          _BlurSizeX("_BlurSizeX", Float) = 2
          _BlurSizeY("_BlurSizeY", Float) = 2
          _BlurSpread("_BlurSpread", Float) = 2
+
+         _VertexSO("_VertexSO", Vector) = (1, 1, 0, 0)
     }
 
     SubShader
@@ -93,7 +95,7 @@ Shader "Customer/UI/TextWaiFaGuang3"
             float _LuminanceThreshold;
             float4 _GlowColor;
             float _GlowPower;
-
+            float4 _VertexSO;
             fixed4 _MainTex_TexelSize;
             sampler2D _GrabTexture;
             float4 _GrabTexture_TexelSize;
@@ -108,6 +110,9 @@ Shader "Customer/UI/TextWaiFaGuang3"
             v2f vert(appdata_t v)
             {
                 v2f OUT;
+
+                 v.vertex.xy += _VertexSO.zw;
+                 v.vertex *= _VertexSO.x;
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
                 float4 vPosition = UnityObjectToClipPos(v.vertex);
@@ -165,10 +170,10 @@ Shader "Customer/UI/TextWaiFaGuang3"
                 #endif
 
                 color.rgb *= color.a;
+                color *= _GlowColor * _GlowPower;
+                //color = fragExtractBright(color);
                 //color *= _GlowColor * _GlowPower;
-                color = fragExtractBright(color);
-                //color *= _GlowColor * _GlowPower;
-                color.rgb *= color.a;
+                //color.rgb *= color.a;
                 return color;
             }
         ENDCG
@@ -254,13 +259,13 @@ Shader "Customer/UI/TextWaiFaGuang3"
                 return OUT;
             }
 
-            float4 Frag_MoHu(v2f IN): SV_Target
+            float4 GetBrightColor(v2f IN, float2 uv)
             {
-                const half alphaPrecision = half(0xff);
+               const half alphaPrecision = half(0xff);
                 const half invAlphaPrecision = half(1.0/alphaPrecision);
                 IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
 
-                half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
+                half4 color = IN.color * (tex2D(_MainTex, uv) + _TextureSampleAdd);
 
                 #ifdef UNITY_UI_CLIP_RECT
                     half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
@@ -270,17 +275,25 @@ Shader "Customer/UI/TextWaiFaGuang3"
                 #ifdef UNITY_UI_ALPHACLIP
                     clip (color.a - 0.001);
                 #endif
+                color.rgb *= color.a;
 
+                color = fragExtractBright(color);
+                return color;
+            }
+
+            float4 Frag_MoHu(v2f IN): SV_Target
+            {
                 float weight[3] = {0.4026, 0.2442, 0.0545};
 			    float4 sum = tex2D(_MainTex, IN.uv[0]) * weight[0];
 			    for (int j = 1; j < 3; j++) 
                 {
-				    sum += tex2D(_MainTex, IN.uv[j * 2 - 1]) * weight[j];
-				    sum += tex2D(_MainTex, IN.uv[j * 2]) * weight[j];
+				    sum += GetBrightColor(IN, IN.uv[j * 2 - 1]) * weight[j];
+				    sum += GetBrightColor(IN, IN.uv[j * 2]) * weight[j];
 			    }
                 
                 sum.rgb *= sum.a;
-			    return sum;
+                float4 color = sum;
+			    return color;
             }
         
             v2f Ver_Hor_MoHu_1(appdata_t v)
@@ -361,9 +374,6 @@ Shader "Customer/UI/TextWaiFaGuang3"
                 #ifdef UNITY_UI_ALPHACLIP
                     clip (color.a - 0.001);
                 #endif
-                //color.rgb *= color.a;
-
-                //color = color + GRABPIXEL(IN.grabPassPosition);
                 color.rgb *= color.a;
                 return color;
             }

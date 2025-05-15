@@ -17,7 +17,6 @@ using System.Text;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using System;
-using LuaInterface;
 
     //[ExecuteInEditMode]
 public class InlineText : Text, IPointerClickHandler
@@ -91,8 +90,6 @@ public class InlineText : Text, IPointerClickHandler
     public HrefClickEvent OnHrefClick = new HrefClickEvent();
     // 超链接信息列表  
     private readonly List<HrefInfo> _ListHrefInfos = new List<HrefInfo>();
-
-    private LuaFunction _OnHrefClick;
     #endregion
 
     protected override void Awake()
@@ -648,10 +645,6 @@ public class InlineText : Text, IPointerClickHandler
 
 
     #region 点击事件检测是否点击到超链接文本
-    public void RegisterHrefClickEvent(LuaFunction callBack)
-    {
-        this._OnHrefClick = callBack;
-    }
 
     public void OnPointerClick(PointerEventData eventData)
     {
@@ -671,10 +664,6 @@ public class InlineText : Text, IPointerClickHandler
                     Debug.LogWarning("---click hit----");
                     OnHrefClick.Invoke(hrefInfo.name);
                     //lua callback
-                    if (this._OnHrefClick != null && LuaManager.Instance.Lua != null)
-                    {
-                        this._OnHrefClick.Call(hrefInfo.ID1, hrefInfo.ID2, hrefInfo.ID3, hrefInfo.ID4, hrefInfo.ID5, hrefInfo.name);
-                    }
                     return;
                 }
             }
