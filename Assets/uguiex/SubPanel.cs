@@ -1,6 +1,4 @@
-﻿using LuaInterface;
-using System;
-using UnityAssist;
+﻿using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -14,8 +12,6 @@ namespace UnityEngine.UI
 		private String m_panelGUID;
 
 #if UNITY_EDITOR
-		[UnityEditorOnly]
-        [NoToLua]
 		public GameObject LoadPanel()
 		{
 			if (m_panelGUID != null)
@@ -24,8 +20,6 @@ namespace UnityEngine.UI
 				return null;
 		}
 
-		[UnityEditorOnly]
-        [NoToLua]
         public void SetPanel(GameObject panel)
 		{
 			if (panel != null)
@@ -39,8 +33,6 @@ namespace UnityEngine.UI
 		}
 
 		[ContextMenu("Generate")]
-		[UnityEditorOnly]
-        [NoToLua]
         public void Generate()
 		{
 			ClearInternal();

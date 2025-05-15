@@ -1,11 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.Events;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
-
-using LuaInterface;
+using UnityEngine.UI;
 
 public class UGUIPlaySound : MonoBehaviour, IMoveHandler,
         IPointerDownHandler, IPointerUpHandler,
@@ -77,17 +72,17 @@ public class UGUIPlaySound : MonoBehaviour, IMoveHandler,
 
     void TryPlaySound()
     {
-        if (LuaManager.Instance.Lua != null)
-        {
-            if (audioName == "")
-            {
-                audioName = "sound_dianji";
-            }
-            LuaFunction lf = LuaManager.Instance.GetFunction("PlayUISound");
-            lf.Call(audioName);
-            lf.Dispose();
-            lf = null;
-        }
+        //if (LuaManager.Instance.Lua != null)
+        //{
+        //    if (audioName == "")
+        //    {
+        //        audioName = "sound_dianji";
+        //    }
+        //    LuaFunction lf = LuaManager.Instance.GetFunction("PlayUISound");
+        //    lf.Call(audioName);
+        //    lf.Dispose();
+        //    lf = null;
+        //}
         //else
         //{
         //    AudioClip clip = Resources.Load<AudioClip>("sound_dianji");
