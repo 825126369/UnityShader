@@ -9,6 +9,8 @@ public class TextGlow : BaseMeshEffect
     [SerializeField]
     private Vector2 m_EffectDistance = new Vector2(1f, -1f);
     [SerializeField]
+    private float m_Scale = 1f;
+    [SerializeField]
     private bool m_UseGraphicAlpha = true;
 
     private const float kMaxEffectDistance = 600f;
@@ -116,6 +118,51 @@ public class TextGlow : BaseMeshEffect
         ApplyShadowZeroAlloc(verts, color, start, end, x, y);
     }
 
+    /*
+        AB
+        CD
+        两个三角形，分别是ABD DCA
+    */
+    protected void ApplyScale(List<UIVertex> m_VetexList, int nOriCount, Color32 color, float fScale)
+    {
+        int i = 0;
+        while (i < nOriCount)
+        {
+            UIVertex v1 = m_VetexList[i];
+            UIVertex v2 = m_VetexList[i + 1];
+            UIVertex v3 = m_VetexList[i + 2];
+            UIVertex v4 = m_VetexList[i + 3];
+            UIVertex v5 = m_VetexList[i + 4];
+            UIVertex v6 = m_VetexList[i + 5];
+
+            Vector3 max = m_VetexList[i + 1].position;
+            Vector3 min = m_VetexList[i + 4].position;
+            Bounds mBonuds = new Bounds();
+            mBonuds.SetMinMax(min, max);
+            mBonuds.Expand(fScale);
+            v1.position = new Vector3(mBonuds.min.x, mBonuds.max.y, 0);
+            v2.position = new Vector3(mBonuds.max.x, mBonuds.max.y, 0);
+            v3.position = new Vector3(mBonuds.max.x, mBonuds.min.y, 0);
+            v4.position = new Vector3(mBonuds.max.x, mBonuds.min.y, 0);
+            v5.position = new Vector3(mBonuds.min.x, mBonuds.min.y, 0);
+            v6.position = new Vector3(mBonuds.min.x, mBonuds.max.y, 0);
+            v1.color = color;
+            v2.color = color;
+            v3.color = color;
+            v4.color = color;
+            v5.color = color;
+            v6.color = color;
+
+            m_VetexList.Add(v1);
+            m_VetexList.Add(v2);
+            m_VetexList.Add(v3);
+            m_VetexList.Add(v4);
+            m_VetexList.Add(v5);
+            m_VetexList.Add(v6);
+            i += 6;
+        }
+    }
+
     public override void ModifyMesh(VertexHelper vh)
     {
         if (!IsActive())
@@ -125,6 +172,7 @@ public class TextGlow : BaseMeshEffect
         vh.GetUIVertexStream(output);
 
         ApplyShadow(output, effectColor, 0, output.Count, effectDistance.x, effectDistance.y);
+        ApplyScale(output, output.Count, effectColor, m_Scale);
         vh.Clear();
         vh.AddUIVertexTriangleStream(output);
         ListPool<UIVertex>.Release(output);
