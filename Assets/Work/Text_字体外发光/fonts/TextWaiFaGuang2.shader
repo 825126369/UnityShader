@@ -22,6 +22,8 @@ Shader "Customer/UI/TextWaiFaGuang2"
          _BlurSizeX("_BlurSizeX", Float) = 2
          _BlurSizeY("_BlurSizeY", Float) = 2
          _BlurSpread("_BlurSpread", Float) = 2
+         _DownsampleFactor("_DownsampleFactor", Float) = 2
+         _ClipAlpha("_ClipAlpha", Float) = 0
     }
 
     SubShader
@@ -48,8 +50,8 @@ Shader "Customer/UI/TextWaiFaGuang2"
         Lighting Off
         ZWrite Off
         ZTest [unity_GUIZTestMode]
-        Blend One OneMinusSrcAlpha
-       // Blend One One
+       // Blend One OneMinusSrcAlpha
+        Blend One One
         ColorMask [_ColorMask]
         
         CGINCLUDE
@@ -98,8 +100,30 @@ Shader "Customer/UI/TextWaiFaGuang2"
             float _BlurSizeY;
             float _BlurSpread;
             fixed4 _MainTex_TexelSize;
+            float _DownsampleFactor;
+            float _ClipAlpha;
+
             sampler2D _GrabTexture;
+            sampler2D _BackgroundTexture;
+            sampler2D GrabPass_Teture2;
+            sampler2D GrabPass_Teture3;
+            sampler2D GrabPass_Teture4;
+            sampler2D GrabPass_Teture5;
+            sampler2D GrabPass_Teture6;
+            sampler2D GrabPass_Teture7;
+            sampler2D GrabPass_Teture8;
+            sampler2D GrabPass_Teture9;
+
             float4 _GrabTexture_TexelSize;
+            float4 _BackgroundTexture_TexelSize;
+            float4 GrabPass_Teture2_TexelSize;
+            float4 GrabPass_Teture3_TexelSize;
+            float4 GrabPass_Teture4_TexelSize;
+            float4 GrabPass_Teture5_TexelSize;
+            float4 GrabPass_Teture6_TexelSize;
+            float4 GrabPass_Teture7_TexelSize;
+            float4 GrabPass_Teture8_TexelSize;
+            float4 GrabPass_Teture9_TexelSize;
 
             static const float weightArray[9] = {
 		        0.05, 0.09, 0.12,
@@ -131,6 +155,8 @@ Shader "Customer/UI/TextWaiFaGuang2"
                         v.color.rgb = UIGammaToLinear(v.color.rgb);
                     }
                 }
+
+
                 
                 OUT.color = v.color * _Color;
                 OUT.grabPassPosition = ComputeGrabScreenPos(OUT.vertex);
@@ -153,19 +179,36 @@ Shader "Customer/UI/TextWaiFaGuang2"
         float4 GRABPIXEL(float4 grabPassPosition, int i, int j, int nIndex)
         {
             float4 grabPosUV = UNITY_PROJ_COORD(grabPassPosition); 
-            grabPosUV.xy /= grabPosUV.w;
+            grabPosUV.xy /= grabPosUV.w * _DownsampleFactor;
 
             float _BlurSizeXX =  _BlurSizeX + nIndex * _BlurSpread;
             float _BlurSizeYY =  _BlurSizeY + nIndex * _BlurSpread;
             return tex2D(_GrabTexture, float2(grabPosUV.x + _GrabTexture_TexelSize.x * i * _BlurSizeXX, grabPosUV.y + _GrabTexture_TexelSize.y * j * _BlurSizeYY));
         }
 
+            float4 GRABPIXEL2(float4 grabPassPosition)
+            {
+                float4 grabPosUV = UNITY_PROJ_COORD(grabPassPosition); 
+                grabPosUV.xy /= grabPosUV.w * _DownsampleFactor;
+                return tex2D(_BackgroundTexture, float2(grabPosUV.xy));
+            }
+
+            float4 frag2(v2f IN) : SV_Target
+            {
+                float4 color = tex2Dproj(_GrabTexture, IN.grabPassPosition);
+                // if(color.r == 0)
+                // {
+                //     color.a = 0;
+                // }
+                //color.rgb *= color.a;
+                return color;
+            }
+            
             float4 frag(v2f IN) : SV_Target
             {
-                float4 color = GRABPIXEL(IN.grabPassPosition, 0, 0, 0);
-                //color *= _GlowColor * _GlowPower;
-                //color = fragExtractBright(color);
-                color.rgb *= color.a;
+                float4 color = tex2Dproj(_BackgroundTexture, IN.grabPassPosition);
+                color = fragExtractBright(color);
+     
                 return color;
             }
         ENDCG
@@ -204,6 +247,8 @@ Shader "Customer/UI/TextWaiFaGuang2"
 
         float4 MoHu_Hor_All(v2f IN, int nIndex)
         {
+           // clip(-1);
+
             float4 averageColor = (0, 0, 0, 0);
             for(int i = 0; i < 9; i++)
             {
@@ -211,11 +256,17 @@ Shader "Customer/UI/TextWaiFaGuang2"
             }
             
             averageColor.rgb *= averageColor.a;
+
+                         // averageColor = fragExtractBright(averageColor);
+                      //clip(averageColor.a - _ClipAlpha);
+
+                                    //clip(averageColor.r - _ClipAlpha);
             return averageColor;
         }
 
          float4 MoHu_Ver_All(v2f IN, int nIndex)
         {
+               //  clip(-1);
             float4 averageColor = (0, 0, 0, 0);
             for(int i = 0; i < 9; i++)
             {
@@ -223,6 +274,10 @@ Shader "Customer/UI/TextWaiFaGuang2"
             }
             
             averageColor.rgb *= averageColor.a;
+              //averageColor = fragExtractBright(averageColor);
+            //clip(averageColor.a - _ClipAlpha);
+
+                          //clip(averageColor.r - _ClipAlpha);
             return averageColor;
         }
         
@@ -290,8 +345,18 @@ Shader "Customer/UI/TextWaiFaGuang2"
             
             float4 Frag_Bloom(v2f IN) : SV_Target
             {
-                float4 color = GRABPIXEL(IN.grabPassPosition, 0, 0, 0);
-                color.rgb *= color.a;
+                float4 color1 = tex2Dproj(_BackgroundTexture, IN.grabPassPosition);
+               // color1.rgb *= color1.a;
+
+               // float4 color2 = tex2Dproj(_GrabTexture, IN.grabPassPosition);
+               //clip(color1.a - _ClipAlpha);
+
+                //clip(color.a - _ClipAlpha);
+                //color.rgb *= color.a;
+
+                float4 color = color1;
+                //color.rgb *=color.a;
+                color *= _GlowPower;
                 return color;
             }
         ENDCG
@@ -299,75 +364,84 @@ Shader "Customer/UI/TextWaiFaGuang2"
         GrabPass {}
         Pass
         {
-            Name "Pass1"
+            Name "Pass0"
             CGPROGRAM
             #pragma vertex vert
-            #pragma fragment frag
+            #pragma fragment frag2
             ENDCG
         }
 
-        GrabPass {}
-        Pass
-        {
-            Name "Mohu1"
-
-            CGPROGRAM
-            #pragma vertex Vert_MoHu
-            #pragma fragment Frag_Hor_MoHu1
-            ENDCG
-        }
-
-        GrabPass {}
-        Pass
-        {
-            Name "Mohu2"
-            CGPROGRAM
-            #pragma vertex Vert_MoHu
-            #pragma fragment Frag_Ver_MoHu1
-            ENDCG
-        }
-
-        GrabPass {}
-        Pass
-        {
-            Name "Mohu3"
-            CGPROGRAM
-            #pragma vertex Vert_MoHu
-            #pragma fragment Frag_Hor_MoHu2
-            ENDCG
-        }
-
-        GrabPass {}
-        Pass
-        {
-            Name "Mohu4"
-            CGPROGRAM
-            #pragma vertex Vert_MoHu
-            #pragma fragment Frag_Ver_MoHu2
-            ENDCG
-        }
-
-        GrabPass {}
-        Pass
-        {
-            Name "Mohu5"
-            CGPROGRAM
-            #pragma vertex Vert_MoHu
-            #pragma fragment Frag_Hor_MoHu3
-            ENDCG
-        }
-
-        GrabPass {}
-        Pass
-        {
-            Name "Mohu6"
-            CGPROGRAM
-            #pragma vertex Vert_MoHu
-            #pragma fragment Frag_Ver_MoHu3
-            ENDCG
-        }
+        // GrabPass { "_BackgroundTexture"}
+        // Pass
+        // {
+        //     Name "Pass1"
+        //     CGPROGRAM
+        //     #pragma vertex vert
+        //     #pragma fragment frag
+        //     ENDCG
+        // }
 
         // GrabPass {}
+        // Pass
+        // {
+        //     Name "Mohu1"
+
+        //     CGPROGRAM
+        //     #pragma vertex Vert_MoHu
+        //     #pragma fragment Frag_Hor_MoHu1
+        //     ENDCG
+        // }
+
+        // GrabPass{}
+        // Pass
+        // {
+        //     Name "Mohu2"
+        //     CGPROGRAM
+        //     #pragma vertex Vert_MoHu
+        //     #pragma fragment Frag_Ver_MoHu1
+        //     ENDCG
+        // }
+
+        // GrabPass{}
+        // Pass
+        // {
+        //     Name "Mohu3"
+        //     CGPROGRAM
+        //     #pragma vertex Vert_MoHu
+        //     #pragma fragment Frag_Hor_MoHu2
+        //     ENDCG
+        // }
+
+        // GrabPass{}
+        // Pass
+        // {
+        //     Name "Mohu4"
+        //     CGPROGRAM
+        //     #pragma vertex Vert_MoHu
+        //     #pragma fragment Frag_Ver_MoHu2
+        //     ENDCG
+        // }
+
+        // GrabPass{}
+        // Pass
+        // {
+        //     Name "Mohu5"
+        //     CGPROGRAM
+        //     #pragma vertex Vert_MoHu
+        //     #pragma fragment Frag_Hor_MoHu3
+        //     ENDCG
+        // }
+
+        // GrabPass{}
+        // Pass
+        // {
+        //     Name "Mohu6"
+        //     CGPROGRAM
+        //     #pragma vertex Vert_MoHu
+        //     #pragma fragment Frag_Ver_MoHu3
+        //     ENDCG
+        // }
+        
         // Pass
         // {
         //     Name "Pass Bloom"

@@ -491,10 +491,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38a84af5dc316d040936bc992c3d5658, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  iterations: 4
-  blurSpread: 2.42
+  iterations: 3
+  blurSpread: 1.38
   downSample: 8
-  luminanceThreshold: 0
+  luminanceThreshold: 0.86
 --- !u!1 &1049430295
 GameObject:
   m_ObjectHideFlags: 0
