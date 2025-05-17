@@ -82,6 +82,8 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 float4 worldPosition : TEXCOORD1;
                 float4  mask : TEXCOORD2;
                 UNITY_VERTEX_OUTPUT_STEREO
+
+                float4 param: TEXCOORD3;		// alphaClip, scale, bias, weight
             };
 
             sampler2D _MainTex;
@@ -126,6 +128,15 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 }
 
                 OUT.color = v.color * _Color;
+
+               // --------------------------------------------------------------------------------
+			    float scale = rsqrt(dot(pixelSize, pixelSize));
+
+                float alphaClip = 1.0;
+			    alphaClip = min(alphaClip, 1.0 - _GlowOffset - _GlowOuter);
+			    alphaClip = alphaClip / 2.0 - (0.5 / scale) - weight;
+
+                OUT.param =	float4(alphaClip, scale, bias, weight);
                 return OUT;
             }
 
@@ -161,7 +172,11 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 clip (color.a - 0.001);
                 #endif
                 
-                float4 glowColor = GetGlowColor(0.5, 1.0);
+ 			    float   scale	= IN.param.y;
+			    float	bias	= IN.param.z;
+			    float	weight	= IN.param.w;
+			    float	sd = (bias - c) * scale;
+                float4 glowColor = GetGlowColor(sd, scale);
                 color.rgb += glowColor.rgb * glowColor.a;
                 color.rgb *= color.a;
                 return color;
