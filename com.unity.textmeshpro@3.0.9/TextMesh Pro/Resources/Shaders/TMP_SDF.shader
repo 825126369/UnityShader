@@ -182,11 +182,10 @@ SubShader {
 
 			float weight = lerp(_WeightNormal, _WeightBold, bold) / 4.0;
 			weight = (weight + _FaceDilate) * _ScaleRatioA * 0.5;
-
+			
 			float bias =(.5 - weight) + (.5 / scale);
-
 			float alphaClip = (1.0 - _OutlineWidth * _ScaleRatioA - _OutlineSoftness * _ScaleRatioA);
-		
+
 		#if GLOW_ON
 			alphaClip = min(alphaClip, 1.0 - _GlowOffset * _ScaleRatioB - _GlowOuter * _ScaleRatioB);
 		#endif
