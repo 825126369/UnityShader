@@ -268,7 +268,7 @@ SubShader {
 			n = normalize(n- bump);
 
 			float3 light = normalize(float3(sin(_LightAngle), cos(_LightAngle), -1.0));
-
+			
 			float3 col = GetSpecular(n, light);
 			faceColor.rgb += col*faceColor.a;
 			faceColor.rgb *= 1-(dot(n, light)*_Diffuse);

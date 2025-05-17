@@ -11,8 +11,7 @@ Material:
   m_Shader: {fileID: 4800000, guid: 68e6db2ebdc24f95958faec2be5558d6, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - GLOW_ON
+  m_ValidKeywords: []
   m_InvalidKeywords:
   - RATIOS_OFF
   m_LightmapFlags: 1
@@ -57,14 +56,14 @@ Material:
     - _BumpOutline: 0.5
     - _ColorMask: 15
     - _Diffuse: 0.5
-    - _FaceDilate: 0.09
+    - _FaceDilate: 0.08
     - _FaceShininess: 0
     - _FaceUVSpeedX: 0
     - _FaceUVSpeedY: 0
-    - _GlowInner: 1
-    - _GlowOffset: 1
-    - _GlowOuter: 1
-    - _GlowPower: 1
+    - _GlowInner: 0
+    - _GlowOffset: 0.04
+    - _GlowOuter: 0.183
+    - _GlowPower: 0.646
     - _GradientScale: 9.93
     - _LightAngle: 3.1416
     - _MaskSoftnessX: 0

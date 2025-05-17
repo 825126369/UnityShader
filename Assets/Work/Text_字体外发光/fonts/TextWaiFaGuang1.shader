@@ -17,6 +17,8 @@ Shader "Customer/UI/TextWaiFaGuang1"
 
         [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
 
+        _FaceColor			("Face Color", Color) = (1,1,1,1)
+
         _GlowColor			("_GlowColor", Color) = (0, 1, 0, 0.5)
 	    _GlowOffset			("_GlowOffset", Range(-1,1)) = 0
 	    _GlowInner			("_GlowInner", Range(0,1)) = 0.05
@@ -97,6 +99,7 @@ Shader "Customer/UI/TextWaiFaGuang1"
             float _UIMaskSoftnessY;
             int _UIVertexColorAlwaysGammaSpace;
 
+            float4 _FaceColor;
             uniform fixed4 		_GlowColor;					// RGBA : Color + Intesity
             uniform float 		_GlowOffset;				// v[-1, 1]
             uniform float 		_GlowOuter;					// v[ 0, 1]
@@ -135,7 +138,7 @@ Shader "Customer/UI/TextWaiFaGuang1"
                // --------------------------------------------------------------------------------
 			    float scale = rsqrt(dot(pixelSize, pixelSize));
                 scale *= abs(v.texcoord1.y) * _GradientScale;
-
+                scale = 1;
        //          float weight = lerp(_WeightNormal, _WeightBold, bold) / 4.0;
 			    // weight = (weight + _FaceDilate) * _ScaleRatioA * 0.5;
 
@@ -162,6 +165,14 @@ Shader "Customer/UI/TextWaiFaGuang1"
 	            return float4(_GlowColor.rgb, saturate(_GlowColor.a * glow * 2));
             }
 
+            fixed4 GetColor(half d, fixed4 faceColor)
+            {
+	            half faceAlpha = 1 - saturate(d / (1.0));
+	            faceColor.rgb *= faceColor.a;
+	            faceColor *= faceAlpha;
+	            return faceColor;
+            }
+
             fixed4 frag(v2f IN) : SV_Target
             {
                 //Round up the alpha color coming from the interpolator (to 1.0/256.0 steps)
@@ -181,16 +192,31 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 #ifdef UNITY_UI_ALPHACLIP
                 clip (color.a - 0.001);
                 #endif
+                color.rgb *= color.a;
+
+
                 
+
                 float c = color.a;
  			    float   scale	= IN.param.y;
 			    float	bias	= IN.param.z;
 			    float	weight	= IN.param.w;
 			    float	sd = (bias - c) * scale;
+
+                half4 faceColor = _FaceColor;
+                faceColor.rgb *= IN.color.rgb;
+                faceColor = GetColor(sd, faceColor);
+
                 float4 glowColor = GetGlowColor(sd, scale);
-                color.rgb += glowColor.rgb * glowColor.a;
-                color.rgb *= color.a;
-                return color;
+                faceColor.rgb += glowColor.rgb * glowColor.a;
+              //  color.rgb *= color.a;
+
+              
+		        #if UNITY_UI_ALPHACLIP
+			        clip(faceColor.a - 0.001);
+		        #endif
+
+                return faceColor * IN.color.a;
             }
         ENDCG
         }
