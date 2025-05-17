@@ -57,15 +57,15 @@ Material:
     - _BumpOutline: 0.5
     - _ColorMask: 15
     - _Diffuse: 0.5
-    - _FaceDilate: 0
+    - _FaceDilate: 0.09
     - _FaceShininess: 0
     - _FaceUVSpeedX: 0
     - _FaceUVSpeedY: 0
-    - _GlowInner: 0.342
-    - _GlowOffset: -0.33
+    - _GlowInner: 1
+    - _GlowOffset: 1
     - _GlowOuter: 1
-    - _GlowPower: 0.779
-    - _GradientScale: 10
+    - _GlowPower: 1
+    - _GradientScale: 9.93
     - _LightAngle: 3.1416
     - _MaskSoftnessX: 0
     - _MaskSoftnessY: 0

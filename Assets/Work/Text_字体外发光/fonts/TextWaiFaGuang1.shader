@@ -22,6 +22,7 @@ Shader "Customer/UI/TextWaiFaGuang1"
 	    _GlowInner			("_GlowInner", Range(0,1)) = 0.05
 	    _GlowOuter			("_GlowOuter", Range(0,1)) = 0.05
 	    _GlowPower			("_GlowPower", Range(0, 1)) = 0.75
+        _GradientScale    ("_GradientScale", Range(0, 100)) = 0.75
     }
 
     SubShader
@@ -71,6 +72,7 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 float4 vertex   : POSITION;
                 float4 color    : COLOR;
                 float2 texcoord : TEXCOORD0;
+                float2 texcoord1 : TEXCOORD1;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -100,6 +102,7 @@ Shader "Customer/UI/TextWaiFaGuang1"
             uniform float 		_GlowOuter;					// v[ 0, 1]
             uniform float 		_GlowInner;					// v[ 0, 1]
             uniform float 		_GlowPower;					// v[ 1, 1/(1+4*4)]
+            uniform float 		_GradientScale;				// v[ 0, 100]
 
             v2f vert(appdata_t v)
             {
@@ -131,6 +134,13 @@ Shader "Customer/UI/TextWaiFaGuang1"
 
                // --------------------------------------------------------------------------------
 			    float scale = rsqrt(dot(pixelSize, pixelSize));
+                scale *= abs(v.texcoord1.y) * _GradientScale;
+
+       //          float weight = lerp(_WeightNormal, _WeightBold, bold) / 4.0;
+			    // weight = (weight + _FaceDilate) * _ScaleRatioA * 0.5;
+
+                float weight = 0;
+			    float bias = 1.0;
 
                 float alphaClip = 1.0;
 			    alphaClip = min(alphaClip, 1.0 - _GlowOffset - _GlowOuter);
@@ -172,6 +182,7 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 clip (color.a - 0.001);
                 #endif
                 
+                float c = color.a;
  			    float   scale	= IN.param.y;
 			    float	bias	= IN.param.z;
 			    float	weight	= IN.param.w;
