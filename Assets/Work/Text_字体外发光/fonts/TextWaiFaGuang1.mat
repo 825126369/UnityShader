@@ -66,15 +66,15 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _FaceDilate: -0.07
+    - _FaceDilate: 0
     - _FaceSoftness: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _GlowInner: 0.563
-    - _GlowOffset: -0.47
-    - _GlowOuter: 0.568
-    - _GlowPower: 0.632
+    - _GlowInner: 0
+    - _GlowOffset: 0
+    - _GlowOuter: 1
+    - _GlowPower: 0.5
     - _GradientScale: 0
     - _Metallic: 0
     - _Mode: 0
@@ -95,12 +95,12 @@ Material:
     - _UseUIAlphaClip: 0
     - _VertexOffsetX: 0
     - _VertexOffsetY: 0
-    - _WeightBold: 5
+    - _WeightBold: 6.14
     - _WeightNormal: 0
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _FaceColor: {r: 0.9528302, g: 0.9528302, b: 0.9528302, a: 1}
-    - _GlowColor: {r: 0.827451, g: 1, b: 0, a: 0.31764707}
+    - _FaceColor: {r: 0.99999994, g: 0.99999994, b: 0.99999994, a: 1}
+    - _GlowColor: {r: 0.33333325, g: 1, b: 0, a: 1}
   m_BuildTextureStacks: []

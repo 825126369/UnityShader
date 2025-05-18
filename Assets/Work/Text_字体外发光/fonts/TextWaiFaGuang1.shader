@@ -5,7 +5,7 @@ Shader "Customer/UI/TextWaiFaGuang1"
     Properties
     {
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
-        _Color ("Tint", Color) = (1,1,1,1)
+        [HDR] _Color ("Tint", Color) = (1,1,1,1)
 
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -25,11 +25,11 @@ Shader "Customer/UI/TextWaiFaGuang1"
         _WeightNormal		("Weight Normal", float) = 0
 	    _WeightBold			("Weight Bold", float) = 0.5
         
-        _FaceColor			("Face Color", Color) = (1,1,1,1)
+        [HDR] _FaceColor			("Face Color", Color) = (1,1,1,1)
         _FaceSoftness       ("_FaceSoftness", Range(0,1)) = 0
         _FaceDilate         ("_FaceDilate", Range(-1,1)) = 0
 
-        _GlowColor			("_GlowColor", Color) = (0, 1, 0, 0.5)
+        [HDR] _GlowColor			("_GlowColor", Color) = (0, 1, 0, 0.5)
 	    _GlowOffset			("_GlowOffset", Range(-1,1)) = 0
 	    _GlowInner			("_GlowInner", Range(0,1)) = 0.05
 	    _GlowOuter			("_GlowOuter", Range(0,1)) = 0.05
