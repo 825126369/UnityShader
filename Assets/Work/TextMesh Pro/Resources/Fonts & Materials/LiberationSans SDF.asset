@@ -63,7 +63,7 @@ Material:
     - _FaceUVSpeedY: 0
     - _GlowInner: 0
     - _GlowOffset: 0
-    - _GlowOuter: 1
+    - _GlowOuter: 0.5
     - _GlowPower: 0.5
     - _GradientScale: 9.93
     - _LightAngle: 3.1416
@@ -74,7 +74,7 @@ Material:
     - _OutlineUVSpeedX: 0
     - _OutlineUVSpeedY: 0
     - _OutlineWidth: 0
-    - _PerspectiveFilter: 0.576
+    - _PerspectiveFilter: 0.454
     - _Reflectivity: 10
     - _ScaleRatioA: 1
     - _ScaleRatioB: 1
@@ -82,7 +82,7 @@ Material:
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
-    - _Sharpness: -0.09
+    - _Sharpness: 0
     - _SpecularPower: 2
     - _Stencil: 0
     - _StencilComp: 8
@@ -95,8 +95,8 @@ Material:
     - _UnderlayOffsetX: 0
     - _UnderlayOffsetY: 0
     - _UnderlaySoftness: 0
-    - _VertexOffsetX: 1.5
-    - _VertexOffsetY: 2.24
+    - _VertexOffsetX: 0
+    - _VertexOffsetY: 0
     - _WeightBold: 0.75
     - _WeightNormal: 0
     m_Colors:

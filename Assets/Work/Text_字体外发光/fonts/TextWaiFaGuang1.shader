@@ -163,6 +163,9 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 float alphaClip = (1.0 - _FaceSoftness);
 			    alphaClip = min(alphaClip, 1.0 - _GlowOffset - _GlowOuter);
 			    alphaClip = alphaClip / 2.0 - (0.5 / scale) - weight;
+                
+       //          float2 textureUV = UnpackUV(input.texcoord1.x);
+			    // float2 faceUV = TRANSFORM_TEX(textureUV, _FaceTex);
 
                 OUT.param =	float4(alphaClip, scale, bias, weight);
                 return OUT;
@@ -194,16 +197,8 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 const half invAlphaPrecision = half(1.0/alphaPrecision);
                 IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
 
-                half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
-                #ifdef UNITY_UI_CLIP_RECT
-                    half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-                    color.a *= m.x * m.y;
-                #endif
-
-                #ifdef UNITY_UI_ALPHACLIP
-                    clip (color.a - 0.001);
-                #endif
-                color.rgb *= color.a;
+                 half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
+                // color.rgb *= color.a;
 
                 //-------------------------------------------------------
                 float c = color.a;

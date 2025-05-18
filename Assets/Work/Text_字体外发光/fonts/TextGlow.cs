@@ -135,6 +135,13 @@ public class TextGlow : BaseMeshEffect
             UIVertex v5 = m_VetexList[i + 4];
             UIVertex v6 = m_VetexList[i + 5];
 
+            m_VetexList.Add(v1);
+            m_VetexList.Add(v2);
+            m_VetexList.Add(v3);
+            m_VetexList.Add(v4);
+            m_VetexList.Add(v5);
+            m_VetexList.Add(v6);
+
             Vector3 max = m_VetexList[i + 1].position;
             Vector3 min = m_VetexList[i + 4].position;
             Bounds mBonuds = new Bounds();
@@ -153,12 +160,12 @@ public class TextGlow : BaseMeshEffect
             v5.color = color;
             v6.color = color;
 
-            m_VetexList.Add(v1);
-            m_VetexList.Add(v2);
-            m_VetexList.Add(v3);
-            m_VetexList.Add(v4);
-            m_VetexList.Add(v5);
-            m_VetexList.Add(v6);
+            m_VetexList[i] = v1;
+            m_VetexList[i + 1] = v2;
+            m_VetexList[i + 2] = v3;
+            m_VetexList[i + 3] = v4;
+            m_VetexList[i + 4] = v5;
+            m_VetexList[i + 5] = v6;
             i += 6;
         }
     }
