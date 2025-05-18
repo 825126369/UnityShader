@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class TextGlow : BaseMeshEffect
 {
@@ -160,12 +161,12 @@ public class TextGlow : BaseMeshEffect
             v5.color = color;
             v6.color = color;
 
-            v1.uv1 = new Vector4(0, 0);
-            v2.uv1 = new Vector4(0, 1);
-            v3.uv1 = new Vector4(1, 1);
-            v4.uv1 = new Vector4(1, 1);
-            v5.uv1 = new Vector4(1, 0);
-            v6.uv1 = new Vector4(0, 0);
+            v1.uv1 = v1.uv0 * (1 + fScale);
+            v2.uv1 = v2.uv0 * (1 + fScale);
+            v3.uv1 = v3.uv0 * (1 + fScale);
+            v4.uv1 = v4.uv0 * (1 + fScale);
+            v5.uv1 = v5.uv0 * (1 + fScale);
+            v6.uv1 = v6.uv0 * (1 + fScale);
 
             m_VetexList[i] = v1;
             m_VetexList[i + 1] = v2;

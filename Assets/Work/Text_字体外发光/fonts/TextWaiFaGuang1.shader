@@ -24,10 +24,19 @@ Shader "Customer/UI/TextWaiFaGuang1"
 
         _WeightNormal		("Weight Normal", float) = 0
 	    _WeightBold			("Weight Bold", float) = 0.5
+
+        _ShaderFlags		("Flags", float) = 0
+	    _ScaleRatioA		("Scale RatioA", float) = 1
+	    _ScaleRatioB		("Scale RatioB", float) = 1
+	    _ScaleRatioC		("Scale RatioC", float) = 1
+
+
         
         [HDR] _FaceColor			("Face Color", Color) = (1,1,1,1)
         _FaceSoftness       ("_FaceSoftness", Range(0,1)) = 0
         _FaceDilate         ("_FaceDilate", Range(-1,1)) = 0
+
+        [HDR] _OutlineColor		("Outline Color", Color) = (0,0,0,1)
 
         [HDR] _GlowColor			("_GlowColor", Color) = (0, 1, 0, 0.5)
 	    _GlowOffset			("_GlowOffset", Range(-1,1)) = 0
@@ -72,12 +81,38 @@ Shader "Customer/UI/TextWaiFaGuang1"
             #pragma fragment frag
             #pragma target 2.0
 
-            #include "UnityCG.cginc"
-            #include "UnityUI.cginc"
-
             #pragma multi_compile_local _ UNITY_UI_CLIP_RECT
             #pragma multi_compile_local _ UNITY_UI_ALPHACLIP
+                
+            sampler2D _MainTex;
+            fixed4 _Color;
+            fixed4 _TextureSampleAdd;
+            float4 _ClipRect;
+            float4 _MainTex_ST;
+            float _UIMaskSoftnessX;
+            float _UIMaskSoftnessY;
+            int _UIVertexColorAlwaysGammaSpace;
 
+            float _WeightNormal;
+            float _WeightBold;
+            float4 _FaceColor;
+            float _FaceSoftness;
+            float _FaceDilate;
+            float4 _OutlineColor;
+            fixed4 		_GlowColor;					// RGBA : Color + Intesity
+            float 		_GlowOffset;				// v[-1, 1]
+            float 		_GlowOuter;					// v[ 0, 1]
+            float 		_GlowInner;					// v[ 0, 1]
+            float 		_GlowPower;					// v[ 1, 1/(1+4*4)]
+            float 		_GradientScale;				// v[ 0, 100]
+
+            float _ScaleRatioA;
+	        float _ScaleRatioB;
+	        float _ScaleRatioC;
+
+            #include "UnityCG.cginc"
+            #include "UnityUI.cginc"
+		    #include "TextGlow.cginc"
 
             struct appdata_t
             {
@@ -100,27 +135,6 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 float4 param: TEXCOORD3;		// alphaClip, scale, bias, weight
                 float2 faceUV: TEXCOORD4;
             };
-
-            sampler2D _MainTex;
-            fixed4 _Color;
-            fixed4 _TextureSampleAdd;
-            float4 _ClipRect;
-            float4 _MainTex_ST;
-            float _UIMaskSoftnessX;
-            float _UIMaskSoftnessY;
-            int _UIVertexColorAlwaysGammaSpace;
-
-            float _WeightNormal;
-            float _WeightBold;
-            float4 _FaceColor;
-            float _FaceSoftness;
-            float _FaceDilate;
-            uniform fixed4 		_GlowColor;					// RGBA : Color + Intesity
-            uniform float 		_GlowOffset;				// v[-1, 1]
-            uniform float 		_GlowOuter;					// v[ 0, 1]
-            uniform float 		_GlowInner;					// v[ 0, 1]
-            uniform float 		_GlowPower;					// v[ 1, 1/(1+4*4)]
-            uniform float 		_GradientScale;				// v[ 0, 100]
 
             v2f vert(appdata_t v)
             {
@@ -165,31 +179,11 @@ Shader "Customer/UI/TextWaiFaGuang1"
 			    alphaClip = min(alphaClip, 1.0 - _GlowOffset - _GlowOuter);
 			    alphaClip = alphaClip / 2.0 - (0.5 / scale) - weight;
                 
-                float2 textureUV = float2(1, 1);
+                float2 textureUV = v.texcoord1;
 			    float2 faceUV = textureUV;
                 OUT.faceUV = faceUV;
                 OUT.param =	float4(alphaClip, scale, bias, weight);
                 return OUT;
-            }
-
-            float4 GetGlowColor(float d, float scale)
-            {
-                float _ScaleRatioB = 1;
-
-	            float glow = d - (_GlowOffset*_ScaleRatioB) * 0.5 * scale;
-	            float t = lerp(_GlowInner, (_GlowOuter * _ScaleRatioB), step(0.0, glow)) * 0.5 * scale;
-	            glow = saturate(abs(glow/(1.0 + t)));
-	            glow = 1.0-pow(glow, _GlowPower);
-	            glow *= sqrt(min(1.0, t)); // Fade off glow thinner than 1 screen pixel
-	            return float4(_GlowColor.rgb, saturate(_GlowColor.a * glow * 2));
-            }
-
-            fixed4 GetColor(half d, fixed4 faceColor, half softness)
-            {
-	            half faceAlpha = 1 - saturate((d + softness * 0.5) / (1.0 + softness));
-	            faceColor.rgb *= faceColor.a;
-	            faceColor *= faceAlpha;
-	            return faceColor;
             }
 
             fixed4 frag(v2f IN) : SV_Target
@@ -208,10 +202,10 @@ Shader "Customer/UI/TextWaiFaGuang1"
 			    float	weight	= IN.param.w;
 			    float	sd = (bias - c) * scale;
 
-                float softness = (_FaceSoftness) * scale;
+                float softness = _FaceSoftness * scale;
                 half4 faceColor = _FaceColor;
                 faceColor.rgb *= IN.color.rgb;
-                faceColor =  GetColor(sd, faceColor, softness);
+                faceColor =  GetColor(sd, faceColor,_OutlineColor, 0, softness);
 
                 float4 glowColor = GetGlowColor(sd, scale);
                 faceColor.rgb += glowColor.rgb * glowColor.a;
