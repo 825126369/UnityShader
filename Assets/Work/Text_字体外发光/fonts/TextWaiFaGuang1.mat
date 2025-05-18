@@ -67,16 +67,16 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _FaceDilate: 0.02
+    - _FaceDilate: 0.05
     - _FaceSoftness: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _GlowInner: 0
-    - _GlowOffset: 0.66
+    - _GlowInner: 1
+    - _GlowOffset: 0.2
     - _GlowOuter: 1
-    - _GlowPower: 0.804
-    - _GradientScale: 0
+    - _GlowPower: 0.972
+    - _GradientScale: 10
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1

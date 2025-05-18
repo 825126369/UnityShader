@@ -98,6 +98,7 @@ Shader "Customer/UI/TextWaiFaGuang1"
                 UNITY_VERTEX_OUTPUT_STEREO
 
                 float4 param: TEXCOORD3;		// alphaClip, scale, bias, weight
+                float2 faceUV: TEXCOORD4;
             };
 
             sampler2D _MainTex;
@@ -164,9 +165,9 @@ Shader "Customer/UI/TextWaiFaGuang1"
 			    alphaClip = min(alphaClip, 1.0 - _GlowOffset - _GlowOuter);
 			    alphaClip = alphaClip / 2.0 - (0.5 / scale) - weight;
                 
-       //          float2 textureUV = UnpackUV(input.texcoord1.x);
-			    // float2 faceUV = TRANSFORM_TEX(textureUV, _FaceTex);
-
+                float2 textureUV = float2(1, 1);
+			    float2 faceUV = textureUV;
+                OUT.faceUV = faceUV;
                 OUT.param =	float4(alphaClip, scale, bias, weight);
                 return OUT;
             }

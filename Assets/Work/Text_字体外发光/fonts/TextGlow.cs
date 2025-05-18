@@ -160,6 +160,13 @@ public class TextGlow : BaseMeshEffect
             v5.color = color;
             v6.color = color;
 
+            v1.uv1 = new Vector4(0, 0);
+            v2.uv1 = new Vector4(0, 1);
+            v3.uv1 = new Vector4(1, 1);
+            v4.uv1 = new Vector4(1, 1);
+            v5.uv1 = new Vector4(1, 0);
+            v6.uv1 = new Vector4(0, 0);
+
             m_VetexList[i] = v1;
             m_VetexList[i + 1] = v2;
             m_VetexList[i + 2] = v3;
