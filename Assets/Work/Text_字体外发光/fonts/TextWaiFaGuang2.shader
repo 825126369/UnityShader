@@ -185,15 +185,24 @@ Shader "Customer/UI/TextWaiFaGuang2"
             float _BlurSizeYY =  _BlurSizeY + nIndex * _BlurSpread;
             return tex2D(_GrabTexture, float2(grabPosUV.x + _GrabTexture_TexelSize.x * i * _BlurSizeXX, grabPosUV.y + _GrabTexture_TexelSize.y * j * _BlurSizeYY));
         }
+
+            // float4 GetGlowColor(float d, float scale)
+            // {
+	           //  float glow = d - (_GlowOffset) * 0.5 * scale;
+	           //  float t = lerp(_GlowInner, _GlowOuter, step(0.0, glow)) * 0.5 * scale;
+	           //  glow = saturate(abs(glow / (1.0 + t)));
+	           //  glow = 1.0 - pow(glow, _GlowPower);
+	           //  glow *= sqrt(min(1.0, t));
+	           //  return float4(_GlowColor.rgb, saturate(_GlowColor.a * glow * 2));
+            // }
             
             float4 frag(v2f IN) : SV_Target
             {
                 float4 color = tex2Dproj(_BackgroundTexture, IN.grabPassPosition);
                 //color.a *= color.r;
                 color.rgb *= color.a;
-                color *= _GlowColor * _GlowPower;
+               // color *= _GlowColor * _GlowPower;
                 color = fragExtractBright(color);
-                
                 return color;
             }
         ENDCG
@@ -240,7 +249,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
                 averageColor += GRABPIXEL(IN.grabPassPosition, i - 4, 0, nIndex) * weightArray[i];
             }
             
-            averageColor.a *= averageColor.r;
+            //averageColor.a *= averageColor.r;
             averageColor.rgb *= averageColor.a;
 
                          // averageColor = fragExtractBright(averageColor);
@@ -259,7 +268,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
                 averageColor += GRABPIXEL(IN.grabPassPosition, 0, i - 4, nIndex) * weightArray[i];
             }
             
-            averageColor.a *= averageColor.r;
+            //averageColor.a *= averageColor.r;
             averageColor.rgb *= averageColor.a;
               //averageColor = fragExtractBright(averageColor);
             //clip(averageColor.a - _ClipAlpha);
@@ -342,16 +351,6 @@ Shader "Customer/UI/TextWaiFaGuang2"
             }
         ENDCG
 
-        // GrabPass {}
-        // Pass
-        // {
-        //     Name "Pass0"
-        //     CGPROGRAM
-        //     #pragma vertex vert
-        //     #pragma fragment frag
-        //     ENDCG
-        // }
-
         GrabPass { "_BackgroundTexture"}
         Pass
         {
@@ -409,7 +408,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
         GrabPass{}
         Pass
         {
-                    Blend One OneMinusSrcAlpha
+            Blend One OneMinusSrcAlpha
             Name "Mohu5"
             CGPROGRAM
             #pragma vertex Vert_MoHu
@@ -420,7 +419,7 @@ Shader "Customer/UI/TextWaiFaGuang2"
         GrabPass{}
         Pass
         {
-                    Blend One OneMinusSrcAlpha
+            Blend One OneMinusSrcAlpha
             Name "Mohu6"
             CGPROGRAM
             #pragma vertex Vert_MoHu

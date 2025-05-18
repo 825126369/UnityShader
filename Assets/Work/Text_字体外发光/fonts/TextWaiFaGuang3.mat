@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: TextWaiFaGuang1
-  m_Shader: {fileID: 4800000, guid: d2066253dd6a0d84188972e18d3b8c46, type: 3}
+  m_Name: TextWaiFaGuang3
+  m_Shader: {fileID: 4800000, guid: 607bc3df42d0ac843975f8b7d2e03302, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -19,7 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: _GlowOuter
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -61,28 +61,25 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BlurSize: 0
     - _BumpScale: 1
     - _ColorMask: 15
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _FaceDilate: -0.07
-    - _FaceSoftness: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _GlowInner: 0.563
-    - _GlowOffset: -0.47
-    - _GlowOuter: 0.568
-    - _GlowPower: 0.632
+    - _GlowInner: 0.003
+    - _GlowOffset: 0.05
+    - _GlowOuter: 0
+    - _GlowPower: 0
+    - _GlowSize: 0.45
     - _GradientScale: 0
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _ScaleX: 0
-    - _ScaleY: 0
-    - _Sharpness: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -93,14 +90,10 @@ Material:
     - _StencilWriteMask: 255
     - _UVSec: 0
     - _UseUIAlphaClip: 0
-    - _VertexOffsetX: 0
-    - _VertexOffsetY: 0
-    - _WeightBold: 5
-    - _WeightNormal: 0
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _FaceColor: {r: 0.9528302, g: 0.9528302, b: 0.9528302, a: 1}
-    - _GlowColor: {r: 0.827451, g: 1, b: 0, a: 0.31764707}
+    - _FaceColor: {r: 1, g: 0.98475426, b: 0, a: 1}
+    - _GlowColor: {r: 0.91974485, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []

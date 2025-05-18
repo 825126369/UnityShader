@@ -1,6 +1,6 @@
 // Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
 
-Shader "Customer/UI/TextWaiFaGuang1"
+Shader "Customer/UI/TextWaiFaGuang3"
 {
     Properties
     {
@@ -17,24 +17,18 @@ Shader "Customer/UI/TextWaiFaGuang1"
 
         [Toggle(UNITY_UI_ALPHACLIP)] _UseUIAlphaClip ("Use Alpha Clip", Float) = 0
 
-        _VertexOffsetX		("Vertex OffsetX", float) = 0
-	    _VertexOffsetY		("Vertex OffsetY", float) = 0
-        _ScaleX				("Scale X", float) = 1.0
-	    _ScaleY				("Scale Y", float) = 1.0
-
-        _WeightNormal		("Weight Normal", float) = 0
-	    _WeightBold			("Weight Bold", float) = 0.5
-        
         _FaceColor			("Face Color", Color) = (1,1,1,1)
-        _FaceSoftness       ("_FaceSoftness", Range(0,1)) = 0
-        _FaceDilate         ("_FaceDilate", Range(-1,1)) = 0
 
         _GlowColor			("_GlowColor", Color) = (0, 1, 0, 0.5)
+        _GlowSize			("_GlowSize", Range(-1, 1)) = 0
+        _GlowPower			("_GlowPower", Range(0, 1)) = 0.75
+
 	    _GlowOffset			("_GlowOffset", Range(-1,1)) = 0
 	    _GlowInner			("_GlowInner", Range(0,1)) = 0.05
 	    _GlowOuter			("_GlowOuter", Range(0,1)) = 0.05
-	    _GlowPower			("_GlowPower", Range(0, 1)) = 0.75
-        _GradientScale      ("_GradientScale", Range(0, 100)) = 0.75
+        _GradientScale    ("_GradientScale", Range(0, 100)) = 0.75
+
+        _BlurSize("_BlurSize", Range(0, 0.5)) = 0
     }
 
     SubShader
@@ -109,11 +103,9 @@ Shader "Customer/UI/TextWaiFaGuang1"
             float _UIMaskSoftnessY;
             int _UIVertexColorAlwaysGammaSpace;
 
-            float _WeightNormal;
-            float _WeightBold;
             float4 _FaceColor;
-            float _FaceSoftness;
-            float _FaceDilate;
+            float _GlowSize;
+            float _BlurSize;
             uniform fixed4 		_GlowColor;					// RGBA : Color + Intesity
             uniform float 		_GlowOffset;				// v[-1, 1]
             uniform float 		_GlowOuter;					// v[ 0, 1]
@@ -149,18 +141,17 @@ Shader "Customer/UI/TextWaiFaGuang1"
 
                 OUT.color = v.color * _Color;
 
-                
-                // --------------------------------------------------------------------------------
+               // --------------------------------------------------------------------------------
 			    float scale = rsqrt(dot(pixelSize, pixelSize));
                 scale *= abs(v.texcoord1.y) * _GradientScale;
                 scale = 1;
+       //          float weight = lerp(_WeightNormal, _WeightBold, bold) / 4.0;
+			    // weight = (weight + _FaceDilate) * _ScaleRatioA * 0.5;
 
-                float bold = step(v.texcoord1.y, 0);
-                float weight = lerp(_WeightNormal, _WeightBold, bold) / 4.0;
-			    weight = (weight + _FaceDilate) * 0.5;
+                float weight = 0;
+			    float bias = 1.0;
 
-	            float bias =(0.5 - weight) + (0.5 / scale);
-                float alphaClip = (1.0 - _FaceSoftness);
+                float alphaClip = 1.0;
 			    alphaClip = min(alphaClip, 1.0 - _GlowOffset - _GlowOuter);
 			    alphaClip = alphaClip / 2.0 - (0.5 / scale) - weight;
 
@@ -180,9 +171,9 @@ Shader "Customer/UI/TextWaiFaGuang1"
 	            return float4(_GlowColor.rgb, saturate(_GlowColor.a * glow * 2));
             }
 
-            fixed4 GetColor(half d, fixed4 faceColor, half softness)
+            fixed4 GetColor(half d, fixed4 faceColor)
             {
-	            half faceAlpha = 1 - saturate((d + softness * 0.5) / (1.0 + softness));
+	            half faceAlpha = 1 - saturate(d / (1.0));
 	            faceColor.rgb *= faceColor.a;
 	            faceColor *= faceAlpha;
 	            return faceColor;
@@ -190,47 +181,39 @@ Shader "Customer/UI/TextWaiFaGuang1"
 
             fixed4 frag(v2f IN) : SV_Target
             {
+                //Round up the alpha color coming from the interpolator (to 1.0/256.0 steps)
+                //The incoming alpha could have numerical instability, which makes it very sensible to
+                //HDR color transparency blend, when it blends with the world's texture.
                 const half alphaPrecision = half(0xff);
                 const half invAlphaPrecision = half(1.0/alphaPrecision);
                 IN.color.a = round(IN.color.a * alphaPrecision)*invAlphaPrecision;
 
                 half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
+
                 #ifdef UNITY_UI_CLIP_RECT
-                    half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
-                    color.a *= m.x * m.y;
+                half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
+                color.a *= m.x * m.y;
                 #endif
 
                 #ifdef UNITY_UI_ALPHACLIP
-                    clip (color.a - 0.001);
+                clip (color.a - 0.001);
                 #endif
                 color.rgb *= color.a;
 
-                //-------------------------------------------------------
-                float c = color.a;
- 			    float   scale	= IN.param.y;
-			    float	bias	= IN.param.z;
-			    float	weight	= IN.param.w;
-			    float	sd = (bias - c) * scale;
+                float glow = smoothstep(0.5 - _GlowSize, 0.5, color.a);
+                glow = pow(glow, _GlowPower);
+                return lerp(color, _GlowColor, glow);
+                
+                // float glow = smoothstep(0.5 - _GlowSize, 0.5, dot(IN.texcoord - 0.5, IN.texcoord - 0.5)) * IN.color;
+                // return color + _GlowColor * glow;
 
-                float softness = (_FaceSoftness) * scale;
-                half4 faceColor = _FaceColor;
-                faceColor.rgb *= IN.color.rgb;
-                faceColor =  GetColor(sd, faceColor, softness);
-
-                float4 glowColor = GetGlowColor(sd, scale);
-                faceColor.rgb += glowColor.rgb * glowColor.a;
-                //color.rgb *= color.a;
-
-		        #if UNITY_UI_CLIP_RECT
-			        half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(input.mask.xy)) * input.mask.zw);
-			        faceColor *= m.x * m.y;
-		        #endif
-
-		        #if UNITY_UI_ALPHACLIP
-			        clip(faceColor.a - 0.001);
-		        #endif
-
-                return faceColor * IN.color.a;
+                // float2 offset = float2(_BlurSize, 0);
+                // fixed4 col = tex2D(_MainTex, IN.texcoord) * 0.25;
+                // col += tex2D(_MainTex, IN.texcoord + offset) * 0.25;
+                // col += tex2D(_MainTex, IN.texcoord - offset) * 0.25;
+                // col += tex2D(_MainTex, IN.texcoord + float2(0, _BlurSize)) * 0.25;
+                // col += tex2D(_MainTex, IN.texcoord - float2(0, _BlurSize)) * 0.25;
+                // return col;
             }
         ENDCG
         }
