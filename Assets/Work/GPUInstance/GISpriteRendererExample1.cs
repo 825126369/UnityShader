@@ -52,7 +52,7 @@ public class GISpriteRendererExample1 : MonoBehaviour
 
             matrices[i] = Matrix4x4.identity;
             matrices[i].SetTRS(
-                new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), 0), 
+                new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)), 
                 Quaternion.identity,
                 Vector3.one);
 

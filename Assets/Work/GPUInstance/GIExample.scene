@@ -377,7 +377,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   instancedMaterial: {fileID: 2100000, guid: 5b0df70a6eb4897439369df4c1a6e5a6, type: 2}
   spriteTexture: {fileID: 2800000, guid: ed783ff9e5e044ae0a026a3431590d5d, type: 3}
-  instanceCount: 100
+  instanceCount: 10000
 --- !u!1 &1939685378
 GameObject:
   m_ObjectHideFlags: 0
