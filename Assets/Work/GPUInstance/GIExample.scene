@@ -124,6 +124,54 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &384478934
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 7
+  m_Component:
+  - component: {fileID: 384478936}
+  - component: {fileID: 384478937}
+  m_Layer: 0
+  m_HasEditorInfo: 1
+  m_Name: GpuInstance2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &384478936
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384478934}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &384478937
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 384478934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5930b0c8f1b547642a6686b4d978de34, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  instancedMaterial: {fileID: 2100000, guid: 3f2e2ae3a7915a349be975e2e42b11a4, type: 2}
+  spriteTexture: {fileID: 2800000, guid: ab81dae6e7d724f8db8ae0ee24969f4d, type: 3}
+  instanceCount: 10000
 --- !u!1 &416171293
 GameObject:
   m_ObjectHideFlags: 0
@@ -431,7 +479,7 @@ GameObject:
   - component: {fileID: 1394456602}
   m_Layer: 0
   m_HasEditorInfo: 1
-  m_Name: Pool
+  m_Name: GpuInstance1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -568,6 +616,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 1939685381}
   - {fileID: 416171295}
-  - {fileID: 1394456600}
   - {fileID: 835049720}
   - {fileID: 1194510782}
+  - {fileID: 1394456600}
+  - {fileID: 384478936}

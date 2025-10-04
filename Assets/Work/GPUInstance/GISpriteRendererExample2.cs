@@ -1,11 +1,7 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
-using static UnityEditor.PlayerSettings;
 
 [ExecuteAlways]
-public class GISpriteRendererExample1 : MonoBehaviour
+public class GISpriteRendererExample2 : MonoBehaviour
 {
     public Material instancedMaterial;
     public Texture2D spriteTexture;
@@ -15,6 +11,7 @@ public class GISpriteRendererExample1 : MonoBehaviour
     private Vector4[] colors;
     private Vector4[] _Flip;
     private Vector4[] transforms;
+    private ComputeBuffer instanceBuffer;
 
     void OnEnable()
     {
@@ -59,7 +56,7 @@ public class GISpriteRendererExample1 : MonoBehaviour
 
             matrices[i] = Matrix4x4.identity;
             matrices[i].SetTRS(
-                new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)), 
+                new Vector3(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10)),
                 Quaternion.identity,
                 Vector3.one);
 
@@ -67,6 +64,11 @@ public class GISpriteRendererExample1 : MonoBehaviour
             _Flip[i] = Vector4.one;
             transforms[i] = new Vector4(pos.x, pos.y, scale.x, scale.y);
         }
+
+
+        instanceBuffer = new ComputeBuffer(instanceCount, 16 * 4, ComputeBufferType.IndirectArguments); // 每个矩阵16个float
+        instanceBuffer.SetData(matrices);
+
     }
 
     void Update()
@@ -83,18 +85,26 @@ public class GISpriteRendererExample1 : MonoBehaviour
         props.SetVectorArray("unity_SpriteRendererColorArray", colors);
         props.SetVectorArray("unity_SpriteFlipArray", _Flip);
 
-        Graphics.DrawMeshInstanced(
+        Graphics.DrawMeshInstancedIndirect(
             mesh,
-            0,                    // submesh index
+            0,
             instancedMaterial,
-            matrices,
-            instanceCount,
+            new Bounds(Vector3.zero, Vector3.one * 20),
+            instanceBuffer,
+            0,
             props
-        );          
+        ); 
+        
     }
 
     void OnDisable()
     {
+        // 释放计算缓冲区
+        if (instanceBuffer != null)
+        {
+            instanceBuffer.Release();
+        }
+
         if (mesh != null)
         {
             DestroyImmediate(mesh);
