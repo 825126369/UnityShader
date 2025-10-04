@@ -42,10 +42,12 @@
             sampler2D _MainTex;
             fixed4 _Color;
 
-            UNITY_INSTANCING_BUFFER_START(InstanceProps)
-                UNITY_DEFINE_INSTANCED_PROP(fixed4, unity_InstanceColor)
-                UNITY_DEFINE_INSTANCED_PROP(float4, unity_InstanceTransform)
-            UNITY_INSTANCING_BUFFER_END(InstanceProps)
+        // #ifdef UNITY_INSTANCING_ENABLED
+        //     UNITY_INSTANCING_BUFFER_START(InstanceProps)
+        //         UNITY_DEFINE_INSTANCED_PROP(fixed4, unity_InstanceColor)
+        //         UNITY_DEFINE_INSTANCED_PROP(float4, unity_InstanceTransform)
+        //     UNITY_INSTANCING_BUFFER_END(InstanceProps)
+        // #endif
 
             v2f vert(appdata v)
             {
@@ -53,7 +55,7 @@
                 UNITY_SETUP_INSTANCE_ID(v);
 
                 // 获取每个实例的颜色和位置（编码在矩阵中）
-                 fixed4 instColor = UNITY_ACCESS_INSTANCED_PROP(InstanceProps, unity_InstanceColor);
+                 //fixed4 instColor = UNITY_ACCESS_INSTANCED_PROP(InstanceProps, unity_InstanceColor);
                 // float4 instPosScale = UNITY_ACCESS_INSTANCED_PROP(InstanceProps, unity_InstanceTransform);
 
                 // 提取位置和缩放（x,y = pos, z,w = scale）

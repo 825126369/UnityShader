@@ -2,13 +2,13 @@ Shader "Customer/GPUInstance/GISpriteRendererExample1"
 {
     Properties
     {
-        [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
+        _MainTex ("Sprite Texture", 2D) = "white" {}
         _Color ("Tint", Color) = (1,1,1,1)
-        [MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
-        [HideInInspector] _RendererColor ("RendererColor", Color) = (1,1,1,1)
-        [HideInInspector] _Flip ("Flip", Vector) = (1,1,1,1)
-        [PerRendererData] _AlphaTex ("External Alpha", 2D) = "white" {}
-        [PerRendererData] _EnableExternalAlpha ("Enable External Alpha", Float) = 0
+        // [MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
+        // [HideInInspector] _RendererColor ("RendererColor", Color) = (1,1,1,1)
+        // [HideInInspector] _Flip ("Flip", Vector) = (1,1,1,1)
+        //  _AlphaTex ("External Alpha", 2D) = "white" {}
+        //  _EnableExternalAlpha ("Enable External Alpha", Float) = 0
     }
 
     SubShader
@@ -36,29 +36,22 @@ Shader "Customer/GPUInstance/GISpriteRendererExample1"
             #pragma multi_compile_instancing
             #pragma multi_compile_local _ PIXELSNAP_ON
             #pragma multi_compile _ ETC1_EXTERNAL_ALPHA
-
            // #include "UnitySprites.cginc"
 
             // Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
 
-            #ifndef UNITY_SPRITES_INCLUDED
-            #define UNITY_SPRITES_INCLUDED
+           #include "UnityCG.cginc"
 
-            #include "UnityCG.cginc"
-
-            #ifdef UNITY_INSTANCING_ENABLED
-
+           #ifdef UNITY_INSTANCING_ENABLED
                 UNITY_INSTANCING_BUFFER_START(PerDrawSprite)
-                    // SpriteRenderer.Color while Non-Batched/Instanced.
                     UNITY_DEFINE_INSTANCED_PROP(fixed4, unity_SpriteRendererColorArray)
-                    // this could be smaller but that's how bit each entry is regardless of type
                     UNITY_DEFINE_INSTANCED_PROP(fixed2, unity_SpriteFlipArray)
+                    UNITY_DEFINE_INSTANCED_PROP(fixed4, unity_InstanceColor)
+                    UNITY_DEFINE_INSTANCED_PROP(float4, unity_InstanceTransform)
                 UNITY_INSTANCING_BUFFER_END(PerDrawSprite)
-
                 #define _RendererColor  UNITY_ACCESS_INSTANCED_PROP(PerDrawSprite, unity_SpriteRendererColorArray)
                 #define _Flip           UNITY_ACCESS_INSTANCED_PROP(PerDrawSprite, unity_SpriteFlipArray)
-
-            #endif // instancing
+           #endif
 
             CBUFFER_START(UnityPerDrawSprite)
             #ifndef UNITY_INSTANCING_ENABLED
@@ -68,7 +61,6 @@ Shader "Customer/GPUInstance/GISpriteRendererExample1"
                 float _EnableExternalAlpha;
             CBUFFER_END
 
-            // Material Color.
             fixed4 _Color;
 
             struct appdata_t
@@ -97,12 +89,17 @@ Shader "Customer/GPUInstance/GISpriteRendererExample1"
                 v2f OUT;
 
                 UNITY_SETUP_INSTANCE_ID (IN);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+                //UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
 
                 OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
-                OUT.vertex = UnityObjectToClipPos(OUT.vertex);
+                //OUT.vertex = UnityObjectToClipPos(OUT.vertex); //这样写关闭GPU实例 
+                OUT.vertex = UnityObjectToClipPos(IN.vertex);    //这样写，开启GPU实例
                 OUT.texcoord = IN.texcoord;
-                OUT.color = IN.color * _Color * _RendererColor;
+                OUT.color =  _Color;
+
+                // OUT.vertex = UnityObjectToClipPos(IN.vertex);
+                // OUT.texcoord = IN.texcoord;
+                // OUT.color = _Color;
 
                 #ifdef PIXELSNAP_ON
                 OUT.vertex = UnityPixelSnap (OUT.vertex);
@@ -118,13 +115,13 @@ Shader "Customer/GPUInstance/GISpriteRendererExample1"
             {
                 fixed4 color = tex2D (_MainTex, uv);
 
-            #if ETC1_EXTERNAL_ALPHA
-                fixed4 alpha = tex2D (_AlphaTex, uv);
-                color.a = lerp (color.a, alpha.r, _EnableExternalAlpha);
-            #endif
+            // #if ETC1_EXTERNAL_ALPHA
+            //     fixed4 alpha = tex2D (_AlphaTex, uv);
+            //     color.a = lerp (color.a, alpha.r, _EnableExternalAlpha);
+            // #endif
 
                 return color;
-            }
+            }       
 
             fixed4 SpriteFrag(v2f IN) : SV_Target
             {
@@ -132,9 +129,6 @@ Shader "Customer/GPUInstance/GISpriteRendererExample1"
                 c.rgb *= c.a;
                 return c;
             }
-
-            #endif // UNITY_SPRITES_INCLUDED
-            
         ENDCG
         }
     }

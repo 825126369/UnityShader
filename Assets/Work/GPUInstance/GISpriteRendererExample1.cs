@@ -11,7 +11,7 @@ public class GISpriteRendererExample1 : MonoBehaviour
     private Matrix4x4[] matrices;
     private Color[] colors;
     
-    void Start()
+    void OnEnable()
     {
         if (instancedMaterial == null || spriteTexture == null)
         {
