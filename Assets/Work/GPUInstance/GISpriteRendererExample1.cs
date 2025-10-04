@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UIElements;
+using static UnityEditor.PlayerSettings;
 
 [ExecuteAlways]
 public class GISpriteRendererExample1 : MonoBehaviour
@@ -9,8 +12,10 @@ public class GISpriteRendererExample1 : MonoBehaviour
     public int instanceCount = 10000;
     private Mesh mesh;
     private Matrix4x4[] matrices;
-    private Color[] colors;
-    
+    private Vector4[] colors;
+    private Vector4[] _Flip;
+    private Vector4[] transforms;
+
     void OnEnable()
     {
         if (instancedMaterial == null || spriteTexture == null)
@@ -43,7 +48,9 @@ public class GISpriteRendererExample1 : MonoBehaviour
         mesh.RecalculateBounds();
 
         matrices = new Matrix4x4[instanceCount];
-        colors = new Color[instanceCount];
+        colors = new Vector4[instanceCount];
+        _Flip = new Vector4[instanceCount];
+        transforms = new Vector4[instanceCount];
 
         for (int i = 0; i < instanceCount; i++)
         {
@@ -57,6 +64,8 @@ public class GISpriteRendererExample1 : MonoBehaviour
                 Vector3.one);
 
             colors[i] = Random.ColorHSV(0.5f, 1f, 1f, 1f, 0.8f, 1f, 1f, 1f);
+            _Flip[i] = Vector4.one;
+            transforms[i] = new Vector4(pos.x, pos.y, scale.x, scale.y);
         }
 
     }
@@ -67,13 +76,21 @@ public class GISpriteRendererExample1 : MonoBehaviour
         Debug.Assert(instancedMaterial != null, "instancedMaterial == null");
         if (mesh == null || instancedMaterial == null)
             return;
-        
+
+        // 创建 MaterialPropertyBlock 并设置数组
+        MaterialPropertyBlock props = new MaterialPropertyBlock();
+        props.SetVectorArray("unity_InstanceColor", colors);
+        props.SetVectorArray("unity_InstanceTransform", transforms);
+        props.SetVectorArray("unity_SpriteRendererColorArray", colors);
+        props.SetVectorArray("unity_SpriteFlipArray", _Flip);
+
         Graphics.DrawMeshInstanced(
             mesh,
             0,                    // submesh index
             instancedMaterial,
             matrices,
-            instanceCount
+            instanceCount,
+            props
         );          
     }
 

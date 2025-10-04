@@ -6,7 +6,7 @@ Shader "Customer/GPUInstance/GISpriteRendererExample1"
         _Color ("Tint", Color) = (1,1,1,1)
         // [MaterialToggle] PixelSnap ("Pixel snap", Float) = 0
         // [HideInInspector] _RendererColor ("RendererColor", Color) = (1,1,1,1)
-        // [HideInInspector] _Flip ("Flip", Vector) = (1,1,1,1)
+        _Flip ("Flip", Vector) = (1,1,1,1)
         //  _AlphaTex ("External Alpha", 2D) = "white" {}
         //  _EnableExternalAlpha ("Enable External Alpha", Float) = 0
     }
@@ -54,10 +54,10 @@ Shader "Customer/GPUInstance/GISpriteRendererExample1"
            #endif
 
             CBUFFER_START(UnityPerDrawSprite)
-            #ifndef UNITY_INSTANCING_ENABLED
-                fixed4 _RendererColor;
-                fixed2 _Flip;
-            #endif
+             #ifndef UNITY_INSTANCING_ENABLED
+                 fixed4 _RendererColor;
+                 fixed2 _Flip;
+             #endif
                 float _EnableExternalAlpha;
             CBUFFER_END
 
@@ -92,8 +92,8 @@ Shader "Customer/GPUInstance/GISpriteRendererExample1"
                 //UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
 
                 OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
-                //OUT.vertex = UnityObjectToClipPos(OUT.vertex); //这样写关闭GPU实例 
-                OUT.vertex = UnityObjectToClipPos(IN.vertex);    //这样写，开启GPU实例
+                OUT.vertex = UnityObjectToClipPos(OUT.vertex); //这样写关闭GPU实例 
+               // OUT.vertex = UnityObjectToClipPos(IN.vertex);    //这样写，开启GPU实例
                 OUT.texcoord = IN.texcoord;
                 OUT.color =  _Color;
 
