@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 [ExecuteAlways]
@@ -64,9 +65,8 @@ public class GISpriteRendererExample2 : MonoBehaviour
             _Flip[i] = Vector4.one;
             transforms[i] = new Vector4(pos.x, pos.y, scale.x, scale.y);
         }
-
-
-        instanceBuffer = new ComputeBuffer(instanceCount, 16 * 4, ComputeBufferType.IndirectArguments); // 每个矩阵16个float
+        
+        instanceBuffer = new ComputeBuffer(instanceCount, Marshal.SizeOf<Matrix4x4>(), ComputeBufferType.IndirectArguments); // 每个矩阵16个float
         instanceBuffer.SetData(matrices);
 
     }
@@ -84,7 +84,7 @@ public class GISpriteRendererExample2 : MonoBehaviour
         props.SetVectorArray("unity_InstanceTransform", transforms);
         props.SetVectorArray("unity_SpriteRendererColorArray", colors);
         props.SetVectorArray("unity_SpriteFlipArray", _Flip);
-
+        
         Graphics.DrawMeshInstancedIndirect(
             mesh,
             0,
