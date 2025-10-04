@@ -1,3 +1,4 @@
 1: 
 材质上的  Enable GPU Instancing 选项，就算勾选了，
 Shader 中的宏定义 UNITY_INSTANCING_ENABLED 也不一定生效(定义)
+前面说的是错的: 之所以没看到上万个实例显示，是因为 _Flip 这个参数，没有通过MaterialPropertyBlock传递。
