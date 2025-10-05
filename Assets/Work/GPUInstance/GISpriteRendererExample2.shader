@@ -41,6 +41,9 @@ Shader "Customer/GPUInstance/GISpriteRendererExample2"
             // Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
 
            #include "UnityCG.cginc"
+           #define UNITY_INDIRECT_DRAW_ARGS IndirectDrawIndexedArgs
+           #include "UnityIndirect.cginc"
+           #include "UnityInstancing.cginc"
 
            #ifdef UNITY_INSTANCING_ENABLED
                 UNITY_INSTANCING_BUFFER_START(PerDrawSprite)
@@ -53,15 +56,15 @@ Shader "Customer/GPUInstance/GISpriteRendererExample2"
                 #define _Flip           UNITY_ACCESS_INSTANCED_PROP(PerDrawSprite, unity_SpriteFlipArray)
            #endif
 
-            CBUFFER_START(UnityPerDrawSprite)
-             #ifndef UNITY_INSTANCING_ENABLED
+           CBUFFER_START(UnityPerDrawSprite)
+              #ifndef UNITY_INSTANCING_ENABLED
                  fixed4 _RendererColor;
                  fixed2 _Flip;
-             #endif
+              #endif
                 float _EnableExternalAlpha;
-            CBUFFER_END
+           CBUFFER_END
 
-            fixed4 _Color;
+           fixed4 _Color;
 
             struct appdata_t
             {
@@ -84,20 +87,35 @@ Shader "Customer/GPUInstance/GISpriteRendererExample2"
                 return float4(pos.xy * flip, pos.z, 1.0);
             }
 
-            v2f SpriteVert(appdata_t IN)
+            uniform float4x4 _ObjectToWorld;
+            StructuredBuffer<float4x4> _Transforms;
+
+            v2f SpriteVert(appdata_t IN, uint svInstanceID : SV_InstanceID)
             {
                 v2f OUT;
 
-                UNITY_SETUP_INSTANCE_ID (IN);
+                UNITY_SETUP_INSTANCE_ID(IN);
+                InitIndirectDrawArgs(0);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
 
+                // uint cmdID = GetCommandID(0);
+                // uint instanceID = GetIndirectInstanceID(svInstanceID);
+
+                // float4 wpos = mul(_ObjectToWorld, IN.vertex + float4(instanceID, cmdID, 0, 0));
+                // OUT.vertex = mul(UNITY_MATRIX_VP, wpos);
+                // OUT.color = float4(cmdID & 1 ? 0.0f : 1.0f, cmdID & 1 ? 1.0f : 0.0f, instanceID / float(GetIndirectInstanceCount()), 0.0f);
+
                 OUT.vertex = UnityFlipSprite(IN.vertex, _Flip);
-                OUT.vertex = UnityObjectToClipPos(IN.vertex); //这样写关闭GPU实例 
+
+                float4x4 obj2world = _Transforms[svInstanceID];
+                OUT.vertex = mul(obj2world, OUT.vertex);
+                OUT.vertex = mul(UNITY_MATRIX_VP, OUT.vertex);
+
                 OUT.texcoord = IN.texcoord;
                 OUT.color =  _Color;
 
                 #ifdef PIXELSNAP_ON
-                OUT.vertex = UnityPixelSnap (OUT.vertex);
+                    OUT.vertex = UnityPixelSnap (OUT.vertex);
                 #endif
 
                 return OUT;

@@ -12,10 +12,22 @@ public class GISpriteRendererExample2 : MonoBehaviour
     private Vector4[] colors;
     private Vector4[] _Flip;
     private Vector4[] transforms;
-    private ComputeBuffer instanceBuffer;
 
-    void OnEnable()
+    GraphicsBuffer commandBuf;
+    GraphicsBuffer.IndirectDrawIndexedArgs[] commandData;
+    GraphicsBuffer positionBuffer;
+
+    void Start()
     {
+        if (SystemInfo.supportsComputeShaders)
+        {
+            Debug.Log("支持 ComputeBuffer 和 Compute Shader");
+        }
+        else
+        {
+            Debug.LogError("不支持 ComputeBuffer，使用降级方案");
+        }
+        
         if (instancedMaterial == null || spriteTexture == null)
         {
             return;
@@ -65,9 +77,12 @@ public class GISpriteRendererExample2 : MonoBehaviour
             _Flip[i] = Vector4.one;
             transforms[i] = new Vector4(pos.x, pos.y, scale.x, scale.y);
         }
-        
-        instanceBuffer = new ComputeBuffer(instanceCount, Marshal.SizeOf<Matrix4x4>(), ComputeBufferType.IndirectArguments); // 每个矩阵16个float
-        instanceBuffer.SetData(matrices);
+
+        positionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, instanceCount, 64); // 每个矩阵16个float
+        positionBuffer.SetData(matrices);
+
+        commandBuf = new GraphicsBuffer( GraphicsBuffer.Target.IndirectArguments, instanceCount, GraphicsBuffer.IndirectDrawIndexedArgs.size);
+        commandData = new GraphicsBuffer.IndirectDrawIndexedArgs[2];
 
     }
 
@@ -80,30 +95,32 @@ public class GISpriteRendererExample2 : MonoBehaviour
 
         // 创建 MaterialPropertyBlock 并设置数组
         MaterialPropertyBlock props = new MaterialPropertyBlock();
+        props.SetTexture("_MainTex", spriteTexture);
         props.SetVectorArray("unity_InstanceColor", colors);
         props.SetVectorArray("unity_InstanceTransform", transforms);
         props.SetVectorArray("unity_SpriteRendererColorArray", colors);
         props.SetVectorArray("unity_SpriteFlipArray", _Flip);
-        
-        Graphics.DrawMeshInstancedIndirect(
-            mesh,
-            0,
-            instancedMaterial,
-            new Bounds(Vector3.zero, Vector3.one * 20),
-            instanceBuffer,
-            0,
-            props
-        ); 
-        
+        props.SetMatrix("_ObjectToWorld", Matrix4x4.Translate(new Vector3(-4.5f, 0, 0)));
+        props.SetBuffer("_Transforms", positionBuffer);
+
+        RenderParams rp = new RenderParams();
+        rp.material = instancedMaterial;
+        rp.worldBounds = new Bounds(Vector3.zero, 10000 * Vector3.one);
+        rp.matProps = props;
+
+        commandData = new GraphicsBuffer.IndirectDrawIndexedArgs[2];
+        commandData[0].indexCountPerInstance = mesh.GetIndexCount(0);
+        commandData[0].instanceCount = (uint)instanceCount;
+        commandData[1].indexCountPerInstance = mesh.GetIndexCount(0);
+        commandData[1].instanceCount = (uint)instanceCount;
+        commandBuf.SetData(commandData);
+        Graphics.RenderMeshIndirect(rp, mesh, commandBuf, commandData.Length);
     }
 
     void OnDisable()
     {
-        // 释放计算缓冲区
-        if (instanceBuffer != null)
-        {
-            instanceBuffer.Release();
-        }
+        commandBuf?.Release();
+        commandBuf = null;
 
         if (mesh != null)
         {
